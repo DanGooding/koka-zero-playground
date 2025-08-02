@@ -7,8 +7,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class CompileService {
@@ -19,25 +18,27 @@ public class CompileService {
     private String koka_zero_config_path;
 
     @Async
-    Future<TypeCheckResult> typecheck(KokaSourceCode sourceCode) throws IOException {
+    CompletableFuture<TypeCheckResult> typecheck(KokaSourceCode sourceCode) {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder(exe_path, "check", "/dev/stdin");
+            Process process = processBuilder.start();
 
-        ProcessBuilder processBuilder = new ProcessBuilder(exe_path, "check", "/dev/stdin");
-        Process process = processBuilder.start();
+            OutputStream stdin = process.getOutputStream();
+            stdin.write(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
+            stdin.close();
 
-        OutputStream stdin = process.getOutputStream();
-        stdin.write(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
-        stdin.close();
-
-        return new FutureTask<>(() -> {
             int exitCode = process.waitFor();
 
             if (exitCode == 0) {
-                return TypeCheckResult.valid();
+                return CompletableFuture.completedFuture(TypeCheckResult.valid());
             }
 
             String error = new String(process.getErrorStream().readAllBytes());
 
-            return TypeCheckResult.invalid(error);
-        });
+            return CompletableFuture.completedFuture(TypeCheckResult.invalid(error));
+
+        }catch (IOException | InterruptedException e) {
+            return CompletableFuture.failedFuture(e);
+        }
     }
 }

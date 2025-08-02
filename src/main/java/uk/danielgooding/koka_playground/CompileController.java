@@ -6,8 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 public class CompileController {
@@ -16,7 +15,7 @@ public class CompileController {
 
     @PostMapping(value = "/typecheck")
     @Async
-    public Future<TypeCheckResult> typecheck(@RequestBody KokaSourceCode sourceCode) throws IOException {
+    public CompletableFuture<TypeCheckResult> typecheck(@RequestBody KokaSourceCode sourceCode) {
         return compileService.typecheck(sourceCode);
     }
 }
