@@ -1,11 +1,14 @@
 package uk.danielgooding.koka_playground;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 @Service
 public class CompileService {
@@ -15,8 +18,8 @@ public class CompileService {
     @Value("${compiler.koka-zero-config-path}")
     private String koka_zero_config_path;
 
-
-    TypeCheckResult typecheck(KokaSourceCode sourceCode) throws IOException, InterruptedException {
+    @Async
+    Future<TypeCheckResult> typecheck(KokaSourceCode sourceCode) throws IOException {
 
         ProcessBuilder processBuilder = new ProcessBuilder(exe_path, "check", "/dev/stdin");
         Process process = processBuilder.start();
@@ -25,14 +28,16 @@ public class CompileService {
         stdin.write(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
         stdin.close();
 
-        int exitCode = process.waitFor();
+        return new FutureTask<>(() -> {
+            int exitCode = process.waitFor();
 
-        if (exitCode == 0) {
-            return TypeCheckResult.valid();
-        }
+            if (exitCode == 0) {
+                return TypeCheckResult.valid();
+            }
 
-        String error = new String(process.getErrorStream().readAllBytes());
+            String error = new String(process.getErrorStream().readAllBytes());
 
-        return TypeCheckResult.invalid(error);
+            return TypeCheckResult.invalid(error);
+        });
     }
 }
