@@ -11,10 +11,7 @@ public class KokaSourceCode {
         this.code = code;
     }
 
-    TypeCheckResult typecheck() {
-        if (!code.contains("effect")) {
-            return TypeCheckResult.invalid("missing 'effect' keyword");
-        }
-        return TypeCheckResult.valid();
+    String getCode() {
+        return code;
     }
 }
