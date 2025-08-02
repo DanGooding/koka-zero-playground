@@ -1,7 +1,6 @@
 package uk.danielgooding.koka_playground;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -17,7 +16,6 @@ public class CompileService {
     @Value("${compiler.koka-zero-config-path}")
     private String koka_zero_config_path;
 
-    @Async
     CompletableFuture<TypeCheckResult> typecheck(KokaSourceCode sourceCode) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(exe_path, "check", "/dev/stdin");
