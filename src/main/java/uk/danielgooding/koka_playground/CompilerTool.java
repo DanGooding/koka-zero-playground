@@ -27,51 +27,52 @@ public class CompilerTool {
     CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {
         InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
         return Subprocess.runNoStdout(
-                new LocalExeHandle(Path.of(compilerExePath)),
+                Path.of(compilerExePath),
                 List.of("check", "/dev/stdin"), toStdin);
     }
 
     CompletableFuture<OrError<LocalExeHandle>> compile(KokaSourceCode sourceCode, boolean optimise) {
 
+        Path outputExePath;
         try {
             Path workDir = Path.of(workdir);
             Files.createDirectories(workDir);
 
             Path runWorkdir = Files.createTempDirectory(Path.of(workdir), "compile");
-            Path outputExePath = runWorkdir.resolve("main.exe");
-
-            List<String> args = new ArrayList<>(List.of(
-                    "compile",
-                    "/dev/stdin",
-                    "-config", kokaZeroConfigPath,
-                    "-o", outputExePath.toString(),
-                    "-save-temps-with", "output"
-            ));
-
-            if (optimise) {
-                args.add("-optimise");
-            }
-
-            InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
-
-            return Subprocess.runNoStdout(
-                            new LocalExeHandle(Path.of(compilerExePath)),
-                            args, toStdin)
-                    .thenApply(
-                            (result) -> {
-                                switch (result) {
-                                    case Failed<Void> error -> {
-                                        return error.castValue();
-                                    }
-                                    case Ok<Void> _void -> {
-                                        return OrError.ok(new LocalExeHandle(outputExePath));
-                                    }
-                                }
-                            }
-                    );
+            outputExePath = runWorkdir.resolve("main.exe");
 
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
         }
+
+        List<String> args = new ArrayList<>(List.of(
+                "compile",
+                "/dev/stdin",
+                "-config", kokaZeroConfigPath,
+                "-o", outputExePath.toString(),
+                "-save-temps-with", "output"
+        ));
+
+        if (optimise) {
+            args.add("-optimise");
+        }
+
+        InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
+
+        return Subprocess.runNoStdout(
+                        Path.of(compilerExePath),
+                        args, toStdin)
+                .thenApply(
+                        (result) -> {
+                            switch (result) {
+                                case Failed<Void> error -> {
+                                    return error.castValue();
+                                }
+                                case Ok<Void> _void -> {
+                                    return OrError.ok(new LocalExeHandle(outputExePath));
+                                }
+                            }
+                        }
+                );
     }
 }

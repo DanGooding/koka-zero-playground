@@ -12,6 +12,6 @@ public class ExeRunner {
     }
 
     CompletableFuture<OrError<String>> run(LocalExeHandle exe, List<String> args, InputStream stdin) {
-        return Subprocess.run(exe, args, stdin);
+        return Subprocess.run(exe.getPath(), args, stdin);
     }
 }
