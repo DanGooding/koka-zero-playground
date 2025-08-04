@@ -1,7 +1,6 @@
 package uk.danielgooding.koka_playground;
 
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +24,7 @@ public class CompileService {
     private String workdir;
 
     @Resource(name = "${which-exe-store}")
-    private ExeStore<ExeHandle> exeStore;
+    private ExeStore exeStore;
 
     CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {
         InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));

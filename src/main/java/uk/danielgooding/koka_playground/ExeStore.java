@@ -3,11 +3,11 @@ package uk.danielgooding.koka_playground;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public interface ExeStore<Handle extends ExeHandle> {
+public interface ExeStore {
 
-    Handle putExe(Path src) throws IOException;
+    ExeHandle putExe(Path src) throws IOException;
 
-    Path getExe(Handle handle) throws IOException;
+    Path getExe(ExeHandle handle) throws IOException;
 
-    void deleteExe(Handle handle) throws IOException;
+    void deleteExe(ExeHandle handle) throws IOException;
 }

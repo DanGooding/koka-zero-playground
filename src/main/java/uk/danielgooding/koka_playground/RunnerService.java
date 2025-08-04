@@ -12,14 +12,14 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class RunnerService {
     @Resource(name = "${which-exe-store}")
-    private ExeStore<ExeHandle> exeStore;
+    private ExeStore exeStore;
 
     CompletableFuture<OrError<String>> runWithoutStdin(ExeHandle handle) {
         try {
             Path exePath = exeStore.getExe(handle);
 
             InputStream emptyStdin = InputStream.nullInputStream();
-            
+
             CompletableFuture<OrError<String>> stdout =
                     Subprocess.run(exePath.toString(), List.of(), emptyStdin);
             emptyStdin.close();

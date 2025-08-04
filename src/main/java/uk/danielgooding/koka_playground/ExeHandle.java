@@ -1,7 +1,18 @@
 package uk.danielgooding.koka_playground;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
 
-@JsonSerialize
-public interface ExeHandle {
+public class ExeHandle {
+    private final String path;
+
+    @JsonCreator
+    ExeHandle(String path) {
+        this.path = path;
+    }
+
+    @JsonGetter
+    public String getPath() {
+        return path;
+    }
 }
