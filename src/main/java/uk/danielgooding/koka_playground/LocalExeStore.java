@@ -1,6 +1,7 @@
 package uk.danielgooding.koka_playground;
 
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ class LocalExeStore implements ExeStore<LocalExeStore.Handle> {
     public static class Handle implements ExeHandle {
         private final Path path;
 
+        @JsonCreator
         Handle(Path path) {
             this.path = path;
         }

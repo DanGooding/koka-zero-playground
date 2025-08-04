@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class Subprocess {
 
-    static CompletableFuture<OrError<Void>> run(String command, List<String> args, InputStream toStdin) {
+    static CompletableFuture<OrError<String>> run(String command, List<String> args, InputStream toStdin) {
         try {
             List<String> commandAndArgs = new ArrayList<>();
             commandAndArgs.add(command);
@@ -20,12 +20,15 @@ public class Subprocess {
             ProcessBuilder processBuilder = new ProcessBuilder(commandAndArgs);
             Process process = processBuilder.start();
             OutputStream stdin = process.getOutputStream();
+
             StreamUtils.copy(toStdin, stdin);
             stdin.close();
 
+            String stdout = new String(process.getInputStream().readAllBytes());
+
             int exitCode = process.waitFor();
             if (exitCode == 0) {
-                return CompletableFuture.completedFuture(OrError.ok(null));
+                return CompletableFuture.completedFuture(OrError.ok(stdout));
             }
 
             String error = new String(process.getErrorStream().readAllBytes());
@@ -36,5 +39,13 @@ public class Subprocess {
         }
     }
 
+    static CompletableFuture<OrError<Void>> runNoStdout(String command, List<String> args, InputStream toStdin) {
+        return run(command, args, toStdin).thenApply((maybeStdout) ->
+                switch (maybeStdout) {
+                    case Ok<String> _stdout -> Ok.ok(null);
+                    case Failed<String> error -> error.castValue();
+                });
+
+    }
 
 }

@@ -29,7 +29,7 @@ public class CompileService {
 
     CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {
         InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
-        return Subprocess.run(compilerExePath, List.of("check", "/dev/stdin"), toStdin);
+        return Subprocess.runNoStdout(compilerExePath, List.of("check", "/dev/stdin"), toStdin);
     }
 
     CompletableFuture<OrError<ExeHandle>> compile(KokaSourceCode sourceCode, boolean optimise) {
@@ -55,7 +55,7 @@ public class CompileService {
 
             InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
 
-            return Subprocess.run(compilerExePath, args, toStdin).thenCompose(
+            return Subprocess.runNoStdout(compilerExePath, args, toStdin).thenCompose(
                     (result) -> {
                         switch (result) {
                             case Failed<Void> error -> {
@@ -63,7 +63,8 @@ public class CompileService {
                             }
                             case Ok<Void> _void -> {
                                 try {
-                                    return CompletableFuture.completedFuture(OrError.ok(exeStore.putExe(outputExePath)));
+                                    ExeHandle handle = exeStore.putExe(outputExePath);
+                                    return CompletableFuture.completedFuture(OrError.ok(handle));
                                 } catch (IOException e) {
                                     return CompletableFuture.failedFuture(e);
                                 }
