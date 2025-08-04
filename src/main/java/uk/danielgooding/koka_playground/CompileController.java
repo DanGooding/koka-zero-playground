@@ -16,4 +16,9 @@ public class CompileController {
     public CompletableFuture<TypeCheckResult> typecheck(@RequestBody KokaSourceCode sourceCode) {
         return compileService.typecheck(sourceCode);
     }
+
+    @PostMapping(value = "/compile")
+    public CompletableFuture<CompileResult> compile(@RequestBody KokaSourceCode sourceCode) {
+        return compileService.compile(sourceCode, true);
+    }
 }
