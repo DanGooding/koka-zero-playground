@@ -15,17 +15,17 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class CompileService {
     @Value("${compiler.exe-path}")
-    private String exe_path;
+    private String exePath;
 
     @Value("${compiler.koka-zero-config-path}")
-    private String koka_zero_config_path;
+    private String kokaZeroConfigPath;
 
     @Value("${compiler.workdir}")
     private String workdir;
 
     CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder(exe_path, "check", "/dev/stdin");
+            ProcessBuilder processBuilder = new ProcessBuilder(exePath, "check", "/dev/stdin");
             Process process = processBuilder.start();
 
             OutputStream stdin = process.getOutputStream();
@@ -58,9 +58,9 @@ public class CompileService {
 
 
             List<String> args = new ArrayList<>(List.of(
-                    exe_path, "compile",
+                    exePath, "compile",
                     "/dev/stdin",
-                    "-config", koka_zero_config_path,
+                    "-config", kokaZeroConfigPath,
                     "-o", outputExePath.toString(),
                     "-save-temps-with", "output"
                     ));
