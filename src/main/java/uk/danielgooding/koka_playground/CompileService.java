@@ -23,7 +23,7 @@ public class CompileService {
     @Value("${compiler.workdir}")
     private String workdir;
 
-    CompletableFuture<TypeCheckResult> typecheck(KokaSourceCode sourceCode) {
+    CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(exe_path, "check", "/dev/stdin");
             Process process = processBuilder.start();
@@ -35,19 +35,19 @@ public class CompileService {
             int exitCode = process.waitFor();
 
             if (exitCode == 0) {
-                return CompletableFuture.completedFuture(TypeCheckResult.valid());
+                return CompletableFuture.completedFuture(OrError.ok(null));
             }
 
             String error = new String(process.getErrorStream().readAllBytes());
 
-            return CompletableFuture.completedFuture(TypeCheckResult.invalid(error));
+            return CompletableFuture.completedFuture(OrError.error(error));
 
         }catch (IOException | InterruptedException e) {
             return CompletableFuture.failedFuture(e);
         }
     }
 
-    CompletableFuture<CompileResult> compile(KokaSourceCode sourceCode, boolean optimise) {
+    CompletableFuture<OrError<ExecutableHandle>> compile(KokaSourceCode sourceCode, boolean optimise) {
 
         try {
             Path workDir = Path.of(workdir);
@@ -80,11 +80,11 @@ public class CompileService {
 
             if (exitCode != 0) {
                 String error = new String(process.getErrorStream().readAllBytes());
-                return CompletableFuture.completedFuture(CompileResult.error(error));
+                return CompletableFuture.completedFuture(OrError.error(error));
             }
 
             ExecutableHandle executableHandle = new ExecutableHandle(outputExePath);
-            return CompletableFuture.completedFuture(CompileResult.success(executableHandle));
+            return CompletableFuture.completedFuture(OrError.ok(executableHandle));
 
         }catch (IOException | InterruptedException e) {
             return CompletableFuture.failedFuture(e);

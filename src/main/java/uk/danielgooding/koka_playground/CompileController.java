@@ -13,12 +13,12 @@ public class CompileController {
     private CompileService compileService;
 
     @PostMapping(value = "/typecheck")
-    public CompletableFuture<TypeCheckResult> typecheck(@RequestBody KokaSourceCode sourceCode) {
+    public CompletableFuture<OrError<Void>> typecheck(@RequestBody KokaSourceCode sourceCode) {
         return compileService.typecheck(sourceCode);
     }
 
     @PostMapping(value = "/compile")
-    public CompletableFuture<CompileResult> compile(@RequestBody KokaSourceCode sourceCode) {
+    public CompletableFuture<OrError<ExecutableHandle>> compile(@RequestBody KokaSourceCode sourceCode) {
         return compileService.compile(sourceCode, true);
     }
 }
