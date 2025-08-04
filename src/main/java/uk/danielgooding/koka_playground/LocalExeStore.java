@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Service("local-exe-store")
 class LocalExeStore implements ExeStore {
@@ -34,8 +35,13 @@ class LocalExeStore implements ExeStore {
     }
 
     @Override
-    public LocalExeHandle getExe(ExeHandle handle) {
-        return new LocalExeHandle(Path.of(handle.getPath()));
+    public OrError<LocalExeHandle> getExe(ExeHandle handle) {
+        Path path = Path.of(handle.getPath());
+        if (Files.exists(path)) {
+            return OrError.ok(new LocalExeHandle(path));
+        } else {
+            return OrError.error(String.format("exe not found: %s", handle.getPath()));
+        }
     }
 
 }

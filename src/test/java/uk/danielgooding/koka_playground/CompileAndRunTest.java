@@ -70,7 +70,7 @@ public class CompileAndRunTest {
         assertThat(compileResult).isEqualTo(OrError.ok(storedHandle));
 
         LocalExeHandle postGetHandle = new LocalExeHandle(Path.of("downloaded.exe"));
-        Mockito.when(exeStoreMock.getExe(storedHandle)).thenReturn(postGetHandle);
+        Mockito.when(exeStoreMock.getExe(storedHandle)).thenReturn(OrError.ok(postGetHandle));
 
         String stdout = "3";
         Mockito.when(

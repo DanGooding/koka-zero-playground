@@ -2,11 +2,13 @@ package uk.danielgooding.koka_playground;
 
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -19,7 +21,16 @@ public class RunnerService {
 
     CompletableFuture<OrError<String>> runWithoutStdin(ExeHandle handle) {
         try {
-            LocalExeHandle exe = exeStore.getExe(handle);
+            LocalExeHandle exe;
+            switch (exeStore.getExe(handle)) {
+                case Failed<?> failed -> {
+                    return CompletableFuture.completedFuture(failed.castValue());
+                }
+                case Ok<LocalExeHandle> okExe -> {
+                    exe = okExe.getValue();
+                }
+            }
+
 
             InputStream emptyStdin = InputStream.nullInputStream();
             CompletableFuture<OrError<String>> stdout =
