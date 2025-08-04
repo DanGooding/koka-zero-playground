@@ -11,10 +11,10 @@ import java.util.concurrent.CompletableFuture;
 
 public class Subprocess {
 
-    static CompletableFuture<OrError<String>> run(String command, List<String> args, InputStream toStdin) {
+    static CompletableFuture<OrError<String>> run(LocalExeHandle command, List<String> args, InputStream toStdin) {
         try {
             List<String> commandAndArgs = new ArrayList<>();
-            commandAndArgs.add(command);
+            commandAndArgs.add(command.getPath().toString());
             commandAndArgs.addAll(args);
 
             ProcessBuilder processBuilder = new ProcessBuilder(commandAndArgs);
@@ -39,7 +39,7 @@ public class Subprocess {
         }
     }
 
-    static CompletableFuture<OrError<Void>> runNoStdout(String command, List<String> args, InputStream toStdin) {
+    static CompletableFuture<OrError<Void>> runNoStdout(LocalExeHandle command, List<String> args, InputStream toStdin) {
         return run(command, args, toStdin).thenApply((maybeStdout) ->
                 switch (maybeStdout) {
                     case Ok<String> _stdout -> Ok.ok(null);

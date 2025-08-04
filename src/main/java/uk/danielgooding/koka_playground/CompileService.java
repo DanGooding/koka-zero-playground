@@ -1,80 +1,46 @@
 package uk.danielgooding.koka_playground;
 
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 @Service
 public class CompileService {
-    @Value("${compiler.exe-path}")
-    private String compilerExePath;
-
-    @Value("${compiler.koka-zero-config-path}")
-    private String kokaZeroConfigPath;
-
-    @Value("${compiler.workdir}")
-    private String workdir;
+    @Autowired
+    private CompilerTool compilerTool;
 
     @Resource(name = "${which-exe-store}")
     private ExeStore exeStore;
 
     CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {
-        InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
-        return Subprocess.runNoStdout(compilerExePath, List.of("check", "/dev/stdin"), toStdin);
+        return compilerTool.typecheck(sourceCode);
     }
 
     CompletableFuture<OrError<ExeHandle>> compile(KokaSourceCode sourceCode, boolean optimise) {
+        CompletableFuture<OrError<LocalExeHandle>> result = compilerTool.compile(sourceCode, optimise);
 
-        try {
-            Path workDir = Path.of(workdir);
-            Files.createDirectories(workDir);
-
-            Path runWorkdir = Files.createTempDirectory(Path.of(workdir), "compile");
-            Path outputExePath = runWorkdir.resolve("main.exe");
-
-            List<String> args = new ArrayList<>(List.of(
-                    "compile",
-                    "/dev/stdin",
-                    "-config", kokaZeroConfigPath,
-                    "-o", outputExePath.toString(),
-                    "-save-temps-with", "output"
-            ));
-
-            if (optimise) {
-                args.add("-optimise");
-            }
-
-            InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
-
-            return Subprocess.runNoStdout(compilerExePath, args, toStdin).thenCompose(
-                    (result) -> {
-                        switch (result) {
-                            case Failed<Void> error -> {
-                                return CompletableFuture.completedFuture(error.castValue());
-                            }
-                            case Ok<Void> _void -> {
-                                try {
-                                    ExeHandle handle = exeStore.putExe(outputExePath);
-                                    return CompletableFuture.completedFuture(OrError.ok(handle));
-                                } catch (IOException e) {
-                                    return CompletableFuture.failedFuture(e);
-                                }
-                            }
-
+        return result.thenCompose(
+                (maybeLocalExe) -> {
+                    switch (maybeLocalExe) {
+                        case Failed<?> error -> {
+                            return CompletableFuture.completedFuture(error.castValue());
                         }
-                    }
-            );
+                        case Ok<LocalExeHandle> localExe -> {
+                            try {
+                                LocalExeHandle localExeHandle = new LocalExeHandle((localExe.getValue().getPath()));
+                                ExeHandle handle = exeStore.putExe(localExeHandle);
+                                return CompletableFuture.completedFuture(OrError.ok(handle));
+                            } catch (IOException e) {
+                                return CompletableFuture.failedFuture(e);
+                            }
+                        }
 
-        } catch (IOException e) {
-            return CompletableFuture.failedFuture(e);
-        }
+                    }
+                }
+        );
+
     }
 }
