@@ -3,8 +3,7 @@ package uk.danielgooding.koka_playground;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,27 +23,8 @@ public class CompileService {
     private String workdir;
 
     CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder(exePath, "check", "/dev/stdin");
-            Process process = processBuilder.start();
-
-            OutputStream stdin = process.getOutputStream();
-            stdin.write(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
-            stdin.close();
-
-            int exitCode = process.waitFor();
-
-            if (exitCode == 0) {
-                return CompletableFuture.completedFuture(OrError.ok(null));
-            }
-
-            String error = new String(process.getErrorStream().readAllBytes());
-
-            return CompletableFuture.completedFuture(OrError.error(error));
-
-        }catch (IOException | InterruptedException e) {
-            return CompletableFuture.failedFuture(e);
-        }
+        InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
+        return Subprocess.run(exePath, List.of("check", "/dev/stdin"), toStdin);
     }
 
     CompletableFuture<OrError<ExecutableHandle>> compile(KokaSourceCode sourceCode, boolean optimise) {
@@ -58,35 +38,28 @@ public class CompileService {
 
 
             List<String> args = new ArrayList<>(List.of(
-                    exePath, "compile",
+                    "compile",
                     "/dev/stdin",
                     "-config", kokaZeroConfigPath,
                     "-o", outputExePath.toString(),
                     "-save-temps-with", "output"
-                    ));
+            ));
 
             if (optimise) {
                 args.add("-optimise");
             }
 
-            ProcessBuilder processBuilder = new ProcessBuilder(args);
-            Process process = processBuilder.start();
+            InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
 
-            OutputStream stdin = process.getOutputStream();
-            stdin.write(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
-            stdin.close();
+            return Subprocess.run(exePath, args, toStdin).thenApply(
+                    (result) ->
+                            switch (result) {
+                                case Ok<Void> _void -> OrError.ok(new ExecutableHandle(outputExePath));
+                                case Failed<Void> error -> error.castValue();
+                            }
+            );
 
-            int exitCode = process.waitFor();
-
-            if (exitCode != 0) {
-                String error = new String(process.getErrorStream().readAllBytes());
-                return CompletableFuture.completedFuture(OrError.error(error));
-            }
-
-            ExecutableHandle executableHandle = new ExecutableHandle(outputExePath);
-            return CompletableFuture.completedFuture(OrError.ok(executableHandle));
-
-        }catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
         }
     }

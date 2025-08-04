@@ -4,12 +4,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-public sealed class OrError<T> {
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT)
+public abstract sealed class OrError<T> {
 
     static <T> Ok<T> ok(T value) {
         return new Ok<>(value);
     }
+
     static <T> OrError<T> error(String message) {
         return new Failed<>(message);
     }
@@ -39,5 +40,10 @@ final class Failed<T> extends OrError<T> {
 
     public String getMessage() {
         return message;
+    }
+
+    @SuppressWarnings("unchecked")
+    <U> Failed<U> castValue() {
+        return (Failed<U>) this;
     }
 }
