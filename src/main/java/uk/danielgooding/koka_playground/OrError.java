@@ -1,5 +1,6 @@
 package uk.danielgooding.koka_playground;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -16,6 +17,7 @@ public sealed class OrError<T> {
 
 @JsonTypeName("ok")
 final class Ok<T> extends OrError<T> {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private final T value;
 
     Ok(T value) {
