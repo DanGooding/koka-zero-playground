@@ -16,12 +16,12 @@ public class RunnerService {
 
     CompletableFuture<OrError<String>> runWithoutStdin(ExeHandle handle) {
         try {
-            Path exePath = exeStore.getExe(handle);
+            LocalExeHandle exe = exeStore.getExe(handle);
 
             InputStream emptyStdin = InputStream.nullInputStream();
 
             CompletableFuture<OrError<String>> stdout =
-                    Subprocess.run(exePath.toString(), List.of(), emptyStdin);
+                    Subprocess.run(exe, List.of(), emptyStdin);
             emptyStdin.close();
 
             exeStore.deleteExe(handle);

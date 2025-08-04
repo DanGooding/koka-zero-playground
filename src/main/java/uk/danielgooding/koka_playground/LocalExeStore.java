@@ -22,9 +22,9 @@ class LocalExeStore implements ExeStore {
     }
 
     @Override
-    public ExeHandle putExe(Path src) throws IOException {
+    public ExeHandle putExe(LocalExeHandle src) throws IOException {
         ExeHandle handle = freshHandle();
-        Files.copy(src, Path.of(handle.getPath()));
+        Files.copy(src.getPath(), Path.of(handle.getPath()));
         return handle;
     }
 
@@ -34,8 +34,8 @@ class LocalExeStore implements ExeStore {
     }
 
     @Override
-    public Path getExe(ExeHandle handle) {
-        return Path.of(handle.getPath());
+    public LocalExeHandle getExe(ExeHandle handle) {
+        return new LocalExeHandle(Path.of(handle.getPath()));
     }
 
 }
