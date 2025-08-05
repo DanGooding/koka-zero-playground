@@ -1,5 +1,6 @@
 package uk.danielgooding.koka_playground;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -7,7 +8,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,8 +21,8 @@ public class CompilerTool {
     @Value("${compiler.koka-zero-config-path}")
     private String kokaZeroConfigPath;
 
-    @Value("${compiler.workdir}")
-    private String workdir;
+    @Autowired
+    private Workdir workdir;
 
     CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {
         InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
@@ -33,14 +33,10 @@ public class CompilerTool {
 
     CompletableFuture<OrError<LocalExeHandle>> compile(KokaSourceCode sourceCode, boolean optimise) {
 
-        Path outputExePath;
+
+        LocalExeHandle outputExe;
         try {
-            Path workDir = Path.of(workdir);
-            Files.createDirectories(workDir);
-
-            Path runWorkdir = Files.createTempDirectory(Path.of(workdir), "compile");
-            outputExePath = runWorkdir.resolve("main.exe");
-
+            outputExe = new LocalExeHandle(workdir.freshPath("compiled"));
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
         }
@@ -49,7 +45,7 @@ public class CompilerTool {
                 "compile",
                 "/dev/stdin",
                 "-config", kokaZeroConfigPath,
-                "-o", outputExePath.toString(),
+                "-o", outputExe.getPath().toString(),
                 "-save-temps-with", "output"
         ));
 
@@ -69,7 +65,7 @@ public class CompilerTool {
                                     return error.castValue();
                                 }
                                 case Ok<Void> _void -> {
-                                    return OrError.ok(new LocalExeHandle(outputExePath));
+                                    return OrError.ok(outputExe);
                                 }
                             }
                         }

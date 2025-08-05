@@ -6,7 +6,7 @@ public interface ExeStore {
 
     ExeHandle putExe(LocalExeHandle src) throws IOException;
 
-    OrError<LocalExeHandle> getExe(ExeHandle handle) throws IOException;
+    OrError<LocalExeHandle> getExe(ExeHandle handle, Workdir workdir) throws IOException;
 
     void deleteExe(ExeHandle handle) throws IOException;
 }

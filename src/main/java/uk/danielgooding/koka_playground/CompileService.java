@@ -30,8 +30,7 @@ public class CompileService {
                         }
                         case Ok<LocalExeHandle> localExe -> {
                             try {
-                                LocalExeHandle localExeHandle = new LocalExeHandle((localExe.getValue().getPath()));
-                                ExeHandle handle = exeStore.putExe(localExeHandle);
+                                ExeHandle handle = exeStore.putExe(localExe.getValue());
                                 return CompletableFuture.completedFuture(OrError.ok(handle));
                             } catch (IOException e) {
                                 return CompletableFuture.failedFuture(e);

@@ -1,12 +1,9 @@
 package uk.danielgooding.koka_playground;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-public class LocalExeHandle implements Closeable {
+public class LocalExeHandle {
     private final Path path;
 
     LocalExeHandle(Path path) {
@@ -15,11 +12,6 @@ public class LocalExeHandle implements Closeable {
 
     public Path getPath() {
         return path;
-    }
-
-    @Override
-    public void close() throws IOException {
-        Files.deleteIfExists(path);
     }
 
     @Override
