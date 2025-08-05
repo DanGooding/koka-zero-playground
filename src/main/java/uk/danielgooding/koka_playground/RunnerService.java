@@ -2,13 +2,11 @@ package uk.danielgooding.koka_playground;
 
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -19,10 +17,13 @@ public class RunnerService {
     @Autowired
     private ExeRunner exeRunner;
 
+    @Autowired
+    private Workdir workdir;
+
     CompletableFuture<OrError<String>> runWithoutStdin(ExeHandle handle) {
         try {
             LocalExeHandle exe;
-            switch (exeStore.getExe(handle)) {
+            switch (exeStore.getExe(handle, workdir)) {
                 case Failed<?> failed -> {
                     return CompletableFuture.completedFuture(failed.castValue());
                 }

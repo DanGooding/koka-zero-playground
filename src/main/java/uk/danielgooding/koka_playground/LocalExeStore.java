@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 
 @Service("local-exe-store")
 class LocalExeStore implements ExeStore {
@@ -34,14 +33,19 @@ class LocalExeStore implements ExeStore {
         Files.deleteIfExists(Path.of(handle.getPath()));
     }
 
-    @Override
-    public OrError<LocalExeHandle> getExe(ExeHandle handle) {
+    boolean contains(ExeHandle handle) {
         Path path = Path.of(handle.getPath());
-        if (Files.exists(path)) {
-            return OrError.ok(new LocalExeHandle(path));
-        } else {
+        return Files.exists(path);
+    }
+
+    @Override
+    public OrError<LocalExeHandle> getExe(ExeHandle handle, Workdir workdir) throws IOException {
+        if (!contains(handle)) {
             return OrError.error(String.format("exe not found: %s", handle.getPath()));
         }
+        Path destination = workdir.freshPath("downloaded");
+        Files.copy(Path.of(handle.getPath()), destination);
+        return OrError.ok(new LocalExeHandle(destination));
     }
 
 }

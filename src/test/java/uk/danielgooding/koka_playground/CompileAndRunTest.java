@@ -22,6 +22,12 @@ public class CompileAndRunTest {
     CompilerTool compilerToolMock;
 
     @MockitoBean
+    Workdir compilerWorkdirMock;
+
+    @MockitoBean
+    Workdir runnerWorkdirMock;
+
+    @MockitoBean
     ExeStore exeStoreMock;
 
     @MockitoBean
@@ -56,21 +62,26 @@ public class CompileAndRunTest {
 
     @Test
     void compileAndRun() throws ExecutionException, InterruptedException, IOException {
+        // compile (mock)
         KokaSourceCode sourceCode = new KokaSourceCode("fun main() { println-int(3); }");
 
-        LocalExeHandle preStoreHandle = new LocalExeHandle(Path.of("program.exe"));
+        Path preStorePath = Path.of("program.exe");
+        Mockito.when(compilerWorkdirMock.freshPath("compiled")).thenReturn(preStorePath);
+
         Mockito.when(compilerToolMock.compile(sourceCode, true)).thenReturn(
-                CompletableFuture.completedFuture(OrError.ok(preStoreHandle)));
+                CompletableFuture.completedFuture(OrError.ok(new LocalExeHandle(preStorePath))));
 
         ExeHandle storedHandle = new ExeHandle("stored-program.exe");
-        Mockito.when(exeStoreMock.putExe(preStoreHandle)).thenReturn(storedHandle);
+        Mockito.when(exeStoreMock.putExe(new LocalExeHandle(preStorePath))).thenReturn(storedHandle);
 
+        // compile (act)
         OrError<ExeHandle> compileResult = compileController.compile(sourceCode).get();
 
         assertThat(compileResult).isEqualTo(OrError.ok(storedHandle));
 
+        // run (mock)
         LocalExeHandle postGetHandle = new LocalExeHandle(Path.of("downloaded.exe"));
-        Mockito.when(exeStoreMock.getExe(storedHandle)).thenReturn(OrError.ok(postGetHandle));
+        Mockito.when(exeStoreMock.getExe(storedHandle, runnerWorkdirMock)).thenReturn(OrError.ok(postGetHandle));
 
         String stdout = "3";
         Mockito.when(
@@ -81,6 +92,7 @@ public class CompileAndRunTest {
                 .thenReturn(CompletableFuture.completedFuture(OrError.ok(
                         stdout)));
 
+        // run (act)
         OrError<String> runResult = runnerController.run(storedHandle).get();
 
         assertThat(runResult).isEqualTo(OrError.ok(stdout));
