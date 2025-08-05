@@ -33,12 +33,12 @@ public class CompilerTool {
                 List.of("check", "/dev/stdin"), toStdin);
     }
 
-    CompletableFuture<OrError<LocalExeHandle>> compile(KokaSourceCode sourceCode, boolean optimise) {
+    CompletableFuture<OrError<Path>> compile(KokaSourceCode sourceCode, boolean optimise) {
 
 
-        LocalExeHandle outputExe;
+        Path outputExe;
         try {
-            outputExe = new LocalExeHandle(workdir.freshPath("compiled"));
+            outputExe = workdir.freshPath("compiled");
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
         }
@@ -47,7 +47,7 @@ public class CompilerTool {
                 "compile",
                 "/dev/stdin",
                 "-config", kokaZeroConfigPath,
-                "-o", outputExe.getPath().toString(),
+                "-o", outputExe.toString(),
                 "-save-temps-with", "output"
         ));
 
