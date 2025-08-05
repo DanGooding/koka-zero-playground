@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -22,9 +23,11 @@ public class CompileAndRunTest {
     CompilerTool compilerToolMock;
 
     @MockitoBean
+    @Qualifier("compiler-workdir")
     Workdir compilerWorkdirMock;
 
     @MockitoBean
+    @Qualifier("runner-workdir")
     Workdir runnerWorkdirMock;
 
     @MockitoBean
@@ -66,7 +69,7 @@ public class CompileAndRunTest {
         KokaSourceCode sourceCode = new KokaSourceCode("fun main() { println-int(3); }");
 
         Path preStorePath = Path.of("program.exe");
-        Mockito.when(compilerWorkdirMock.freshPath("compiled")).thenReturn(preStorePath);
+        Mockito.when(compilerWorkdirMock.freshPath("compile")).thenReturn(preStorePath);
 
         Mockito.when(compilerToolMock.compile(sourceCode, true)).thenReturn(
                 CompletableFuture.completedFuture(OrError.ok(new LocalExeHandle(preStorePath))));
@@ -81,7 +84,7 @@ public class CompileAndRunTest {
 
         // run (mock)
         LocalExeHandle postGetHandle = new LocalExeHandle(Path.of("downloaded.exe"));
-        Mockito.when(exeStoreMock.getExe(storedHandle, runnerWorkdirMock)).thenReturn(OrError.ok(postGetHandle));
+        Mockito.when(exeStoreMock.getExe(storedHandle, compilerWorkdirMock)).thenReturn(OrError.ok(postGetHandle));
 
         String stdout = "3";
         Mockito.when(

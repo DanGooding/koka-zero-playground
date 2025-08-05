@@ -1,6 +1,7 @@
 package uk.danielgooding.koka_playground;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ public class CompilerTool {
     private String kokaZeroConfigPath;
 
     @Autowired
+    @Qualifier("compiler-workdir")
     private Workdir workdir;
 
     CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {

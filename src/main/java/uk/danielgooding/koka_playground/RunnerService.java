@@ -2,6 +2,7 @@ package uk.danielgooding.koka_playground;
 
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ public class RunnerService {
     private ExeRunner exeRunner;
 
     @Autowired
+    @Qualifier("runner-workdir")
     private Workdir workdir;
 
     CompletableFuture<OrError<String>> runWithoutStdin(ExeHandle handle) {
