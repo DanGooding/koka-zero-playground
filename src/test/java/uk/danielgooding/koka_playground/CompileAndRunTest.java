@@ -72,10 +72,10 @@ public class CompileAndRunTest {
         Mockito.when(compilerWorkdirMock.freshPath("compile")).thenReturn(preStorePath);
 
         Mockito.when(compilerToolMock.compile(sourceCode, true)).thenReturn(
-                CompletableFuture.completedFuture(OrError.ok(new LocalExeHandle(preStorePath))));
+                CompletableFuture.completedFuture(OrError.ok(preStorePath)));
 
         ExeHandle storedHandle = new ExeHandle("stored-program.exe");
-        Mockito.when(exeStoreMock.putExe(new LocalExeHandle(preStorePath))).thenReturn(storedHandle);
+        Mockito.when(exeStoreMock.putExe(preStorePath)).thenReturn(storedHandle);
 
         // compile (act)
         OrError<ExeHandle> compileResult = compileController.compile(sourceCode).get();
@@ -83,8 +83,8 @@ public class CompileAndRunTest {
         assertThat(compileResult).isEqualTo(OrError.ok(storedHandle));
 
         // run (mock)
-        LocalExeHandle postGetHandle = new LocalExeHandle(Path.of("downloaded.exe"));
-        Mockito.when(exeStoreMock.getExe(storedHandle, compilerWorkdirMock)).thenReturn(OrError.ok(postGetHandle));
+        Path postGetHandle = Path.of("downloaded.exe");
+        Mockito.when(exeStoreMock.getExe(storedHandle, runnerWorkdirMock)).thenReturn(OrError.ok(postGetHandle));
 
         String stdout = "3";
         Mockito.when(

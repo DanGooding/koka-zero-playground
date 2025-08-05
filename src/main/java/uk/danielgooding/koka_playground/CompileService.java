@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -20,7 +21,7 @@ public class CompileService {
     }
 
     CompletableFuture<OrError<ExeHandle>> compile(KokaSourceCode sourceCode, boolean optimise) {
-        CompletableFuture<OrError<LocalExeHandle>> result = compilerTool.compile(sourceCode, optimise);
+        CompletableFuture<OrError<Path>> result = compilerTool.compile(sourceCode, optimise);
 
         return result.thenCompose(
                 (maybeLocalExe) -> {
@@ -28,7 +29,7 @@ public class CompileService {
                         case Failed<?> error -> {
                             return CompletableFuture.completedFuture(error.castValue());
                         }
-                        case Ok<LocalExeHandle> localExe -> {
+                        case Ok<Path> localExe -> {
                             try {
                                 ExeHandle handle = exeStore.putExe(localExe.getValue());
                                 return CompletableFuture.completedFuture(OrError.ok(handle));

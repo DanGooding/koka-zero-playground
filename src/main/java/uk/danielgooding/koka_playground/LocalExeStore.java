@@ -22,9 +22,9 @@ class LocalExeStore implements ExeStore {
     }
 
     @Override
-    public ExeHandle putExe(LocalExeHandle src) throws IOException {
+    public ExeHandle putExe(Path src) throws IOException {
         ExeHandle handle = freshHandle();
-        Files.copy(src.getPath(), Path.of(handle.getPath()));
+        Files.copy(src, Path.of(handle.getPath()));
         return handle;
     }
 
@@ -39,13 +39,13 @@ class LocalExeStore implements ExeStore {
     }
 
     @Override
-    public OrError<LocalExeHandle> getExe(ExeHandle handle, Workdir workdir) throws IOException {
+    public OrError<Path> getExe(ExeHandle handle, Workdir workdir) throws IOException {
         if (!contains(handle)) {
             return OrError.error(String.format("exe not found: %s", handle.getPath()));
         }
         Path destination = workdir.freshPath("downloaded");
         Files.copy(Path.of(handle.getPath()), destination);
-        return OrError.ok(new LocalExeHandle(destination));
+        return OrError.ok(destination);
     }
 
 }

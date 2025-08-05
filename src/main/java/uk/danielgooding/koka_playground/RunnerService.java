@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -24,12 +25,12 @@ public class RunnerService {
 
     CompletableFuture<OrError<String>> runWithoutStdin(ExeHandle handle) {
         try {
-            LocalExeHandle exe;
+            Path exe;
             switch (exeStore.getExe(handle, workdir)) {
                 case Failed<?> failed -> {
                     return CompletableFuture.completedFuture(failed.castValue());
                 }
-                case Ok<LocalExeHandle> okExe -> {
+                case Ok<Path> okExe -> {
                     exe = okExe.getValue();
                 }
             }
