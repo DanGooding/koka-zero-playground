@@ -17,10 +17,10 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class CompilerTool {
     @Value("${compiler.exe-path}")
-    private String compilerExePath;
+    private Path compilerExePath;
 
     @Value("${compiler.koka-zero-config-path}")
-    private String kokaZeroConfigPath;
+    private Path kokaZeroConfigPath;
 
     @Autowired
     @Qualifier("compiler-workdir")
@@ -29,7 +29,7 @@ public class CompilerTool {
     CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {
         InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
         return Subprocess.runNoStdout(
-                Path.of(compilerExePath),
+                compilerExePath,
                 List.of("check", "/dev/stdin"), toStdin);
     }
 
@@ -46,7 +46,7 @@ public class CompilerTool {
         List<String> args = new ArrayList<>(List.of(
                 "compile",
                 "/dev/stdin",
-                "-config", kokaZeroConfigPath,
+                "-config", kokaZeroConfigPath.toString(),
                 "-o", outputExe.toString(),
                 "-save-temps-with", "output"
         ));
@@ -58,7 +58,7 @@ public class CompilerTool {
         InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
 
         return Subprocess.runNoStdout(
-                        Path.of(compilerExePath),
+                        compilerExePath,
                         args, toStdin)
                 .thenApply(
                         (result) -> {
