@@ -21,7 +21,10 @@ public class SandboxedExeRunner extends ExeRunner {
                 "--ro-bind", "/lib", "/lib",
                 "--cap-drop", "all",
                 "--unshare-all",
-                "--clearenv"
+                "--clearenv",
+                // https://github.com/containers/bubblewrap?tab=readme-ov-file#limitations
+                "--new-session",
+                "--die-with-parent"
         ));
 
         args.add("--");
