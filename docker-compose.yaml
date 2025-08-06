@@ -1,0 +1,9 @@
+services:
+  has-bubblewrap:
+    build:
+      context: .
+    image: has-bubblewrap
+    cap_add:
+      - ALL
+    security_opt:
+      - seccomp:unconfined
