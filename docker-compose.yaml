@@ -1,9 +1,11 @@
 services:
-  has-bubblewrap:
+  koka-playground:
     build:
       context: .
-    image: has-bubblewrap
+    image: app
     cap_add:
       - SYS_ADMIN
     security_opt:
       - seccomp:bwrap-seccomp-profile.json
+    ports:
+      - "8080:8080"
