@@ -1,6 +1,6 @@
 # based on https://docs.docker.com/guides/java/containerize/
 
-FROM eclipse-temurin:21-jdk-alpine as deps
+FROM eclipse-temurin:21-jdk-alpine AS deps
 WORKDIR /build
 
 COPY --chmod=0755 mvnw mvnw
@@ -13,7 +13,7 @@ RUN --mount=type=bind,source=pom.xml,target=pom.xml \
     --mount=type=cache,target=/root/.m2 \
     ./mvnw dependency:go-offline -DskipTests
 
-FROM deps as package
+FROM deps AS package
 WORKDIR /build
 
 COPY ./src src/
@@ -28,14 +28,21 @@ RUN --mount=type=bind,source=pom.xml,target=pom.xml \
 
 # TODO: extract from jar in separate step
 
-FROM eclipse-temurin:21-jre-alpine as app
+FROM run-koka-compiler:latest AS app
+# TODO: actually go via a registry, and potentially pin version
+WORKDIR /app
 
 COPY --from=package /build/target/app.war ./
 
 RUN apk update
 RUN apk add bubblewrap
 
-# TODO: add koka-compiler binary, and set properties
+# TODO: are there other java things the eclipse-temurin:21-jre-alpine image was providing?
+RUN apk add openjdk21-jre-headless
 
 EXPOSE 8080
-ENTRYPOINT [ "java", "-jar", "app.war" ]
+ENTRYPOINT [ "java", \
+    "-jar", "app.war", \
+    "--compiler.exe-path=/app/koka-zero", \
+    "--compiler.koka-zero-config-path=/app/koka-zero-config.sexp", \
+    "--runner.bubblewrap-path=/bin/bwrap" ]
