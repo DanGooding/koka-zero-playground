@@ -4,6 +4,6 @@ services:
       context: .
     image: has-bubblewrap
     cap_add:
-      - ALL
+      - SYS_ADMIN
     security_opt:
-      - seccomp:unconfined
+      - seccomp:bwrap-seccomp-profile.json
