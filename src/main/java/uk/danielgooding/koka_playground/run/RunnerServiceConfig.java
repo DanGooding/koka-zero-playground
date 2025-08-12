@@ -1,4 +1,4 @@
-package uk.danielgooding.koka_playground.compile;
+package uk.danielgooding.koka_playground.run;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -6,10 +6,15 @@ import org.springframework.context.annotation.Configuration;
 import uk.danielgooding.koka_playground.common.Workdir;
 
 @Configuration
-public class CompileConfig {
+public class RunnerServiceConfig {
     @Bean
-    @Qualifier("compiler-workdir")
-    public Workdir compilerWorkdir() {
+    @Qualifier("runner-workdir")
+    public Workdir runnerWorkdir() {
         return new Workdir();
+    }
+
+    @Bean
+    public ExeRunner exeRunner() {
+        return new SandboxedExeRunner();
     }
 }

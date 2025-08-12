@@ -10,9 +10,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.danielgooding.koka_playground.common.*;
 import uk.danielgooding.koka_playground.compile.CompileController;
+import uk.danielgooding.koka_playground.compile.CompileServiceApplication;
 import uk.danielgooding.koka_playground.compile.CompilerTool;
 import uk.danielgooding.koka_playground.run.ExeRunner;
 import uk.danielgooding.koka_playground.run.RunnerController;
+import uk.danielgooding.koka_playground.run.RunnerServiceApplication;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -22,7 +24,10 @@ import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@SpringBootTest(classes = {
+        CompileServiceApplication.class,
+        RunnerServiceApplication.class
+})
 public class CompileAndRunTest {
     @MockitoBean
     CompilerTool compilerToolMock;
