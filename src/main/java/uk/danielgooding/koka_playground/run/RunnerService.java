@@ -1,4 +1,4 @@
-package uk.danielgooding.koka_playground;
+package uk.danielgooding.koka_playground.run;
 
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;

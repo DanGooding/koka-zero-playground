@@ -1,4 +1,4 @@
-package uk.danielgooding.koka_playground;
+package uk.danielgooding.koka_playground.run;
 
 import org.springframework.stereotype.Service;
 import uk.danielgooding.koka_playground.common.OrError;
@@ -11,10 +11,8 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 public class ExeRunner {
-    ExeRunner() {
-    }
 
-    CompletableFuture<OrError<String>> run(Path exe, List<String> args, InputStream stdin) {
+    public CompletableFuture<OrError<String>> run(Path exe, List<String> args, InputStream stdin) {
         return Subprocess.run(exe, args, stdin);
     }
 }
