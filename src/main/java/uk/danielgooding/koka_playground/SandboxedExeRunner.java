@@ -19,6 +19,7 @@ public class SandboxedExeRunner extends ExeRunner {
                 "--ro-bind", exe.toString(), exe.toString(),
                 // for dynamic linking - could maybe limit to just a specific lib
                 "--ro-bind", "/lib", "/lib",
+                "--ro-bind", "/usr/local/lib", "/usr/local/lib",
                 "--cap-drop", "all",
                 "--unshare-all",
                 "--clearenv",
