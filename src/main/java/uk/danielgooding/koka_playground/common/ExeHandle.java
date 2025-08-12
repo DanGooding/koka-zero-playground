@@ -1,4 +1,4 @@
-package uk.danielgooding.koka_playground;
+package uk.danielgooding.koka_playground.common;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
@@ -7,7 +7,7 @@ public class ExeHandle {
     private final String path;
 
     @JsonCreator
-    ExeHandle(String path) {
+    public ExeHandle(String path) {
         this.path = path;
     }
 

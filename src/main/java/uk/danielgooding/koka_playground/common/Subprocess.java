@@ -1,4 +1,4 @@
-package uk.danielgooding.koka_playground;
+package uk.danielgooding.koka_playground.common;
 
 import org.springframework.util.StreamUtils;
 
@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class Subprocess {
 
-    static CompletableFuture<OrError<String>> run(Path command, List<String> args, InputStream toStdin) {
+    public static CompletableFuture<OrError<String>> run(Path command, List<String> args, InputStream toStdin) {
         try {
             List<String> commandAndArgs = new ArrayList<>();
             commandAndArgs.add(command.toString());
@@ -40,7 +40,7 @@ public class Subprocess {
         }
     }
 
-    static CompletableFuture<OrError<Void>> runNoStdout(Path command, List<String> args, InputStream toStdin) {
+    public static CompletableFuture<OrError<Void>> runNoStdout(Path command, List<String> args, InputStream toStdin) {
         return run(command, args, toStdin).thenApply((maybeStdout) ->
                 switch (maybeStdout) {
                     case Ok<String> _stdout -> Ok.ok(null);
