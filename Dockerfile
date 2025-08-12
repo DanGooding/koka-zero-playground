@@ -26,8 +26,7 @@ RUN --mount=type=bind,source=pom.xml,target=pom.xml \
       target/$(./mvnw help:evaluate -Dexpression=project.artifactId -q -DforceStdout)-$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout).war \
       target/app.war
 
-FROM run-koka-compiler:latest AS app
-# TODO: actually go via a registry, and potentially pin version
+FROM ghcr.io/dangooding/koka-zero:main AS app
 WORKDIR /app
 
 COPY --from=package /build/target/app.war ./
