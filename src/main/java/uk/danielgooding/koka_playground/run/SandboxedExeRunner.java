@@ -1,4 +1,4 @@
-package uk.danielgooding.koka_playground;
+package uk.danielgooding.koka_playground.run;
 
 import org.springframework.beans.factory.annotation.Value;
 import uk.danielgooding.koka_playground.common.OrError;
@@ -14,7 +14,7 @@ public class SandboxedExeRunner extends ExeRunner {
     String bubblewrapPath;
 
     @Override
-    CompletableFuture<OrError<String>> run(Path exe, List<String> exeArgs, InputStream stdin) {
+    public CompletableFuture<OrError<String>> run(Path exe, List<String> exeArgs, InputStream stdin) {
 
         List<String> args = new ArrayList<>(List.of(
                 "--ro-bind", exe.toString(), exe.toString(),

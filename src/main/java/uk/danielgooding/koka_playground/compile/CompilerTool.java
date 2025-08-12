@@ -1,4 +1,4 @@
-package uk.danielgooding.koka_playground;
+package uk.danielgooding.koka_playground.compile;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,14 +27,14 @@ public class CompilerTool {
     @Qualifier("compiler-workdir")
     private Workdir workdir;
 
-    CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {
+    public CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {
         InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
         return Subprocess.runNoStdout(
                 compilerExePath,
                 List.of("check", "/dev/stdin"), toStdin);
     }
 
-    CompletableFuture<OrError<Path>> compile(KokaSourceCode sourceCode, boolean optimise) {
+    public CompletableFuture<OrError<Path>> compile(KokaSourceCode sourceCode, boolean optimise) {
 
 
         Path outputExe;
