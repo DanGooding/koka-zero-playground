@@ -26,7 +26,7 @@ RUN --mount=type=bind,source=pom.xml,target=pom.xml \
       target/$(./mvnw help:evaluate -Dexpression=project.artifactId -q -DforceStdout)-$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout).war \
       target/app.war
 
-FROM ghcr.io/dangooding/koka-zero:main AS app
+FROM ghcr.io/dangooding/koka-zero:main AS koka-playground-app
 WORKDIR /app
 
 COPY --from=package /build/target/app.war ./
