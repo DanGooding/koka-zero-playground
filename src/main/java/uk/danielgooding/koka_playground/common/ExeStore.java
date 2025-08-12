@@ -1,4 +1,4 @@
-package uk.danielgooding.koka_playground;
+package uk.danielgooding.koka_playground.common;
 
 import java.io.IOException;
 import java.nio.file.Path;

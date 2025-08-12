@@ -1,6 +1,7 @@
 package uk.danielgooding.koka_playground;
 
 import org.springframework.beans.factory.annotation.Value;
+import uk.danielgooding.koka_playground.common.OrError;
 
 import java.io.InputStream;
 import java.nio.file.Path;

@@ -1,4 +1,4 @@
-package uk.danielgooding.koka_playground;
+package uk.danielgooding.koka_playground.common;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -24,7 +24,7 @@ public class Workdir {
         path = Files.createTempDirectory("workdir");
     }
 
-    Path freshPath(String prefix) throws IOException {
+    public Path freshPath(String prefix) throws IOException {
         return path.resolve(String.format("%s-%d", prefix, uniqueCounter++));
     }
 
