@@ -26,8 +26,6 @@ RUN --mount=type=bind,source=pom.xml,target=pom.xml \
       target/$(./mvnw help:evaluate -Dexpression=project.artifactId -q -DforceStdout)-$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout).war \
       target/app.war
 
-# TODO: extract from jar in separate step
-
 FROM run-koka-compiler:latest AS app
 # TODO: actually go via a registry, and potentially pin version
 WORKDIR /app
@@ -37,7 +35,6 @@ COPY --from=package /build/target/app.war ./
 RUN apk update
 RUN apk add bubblewrap
 
-# TODO: are there other java things the eclipse-temurin:21-jre-alpine image was providing?
 RUN apk add openjdk21-jre-headless
 
 EXPOSE 8080
