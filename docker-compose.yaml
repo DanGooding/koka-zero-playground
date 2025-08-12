@@ -2,10 +2,18 @@ services:
   koka-playground:
     build:
       context: .
-    image: app
+    image: koka-playground-app
     cap_add:
       - SYS_ADMIN
     security_opt:
       - seccomp:bwrap-seccomp-profile.json
     ports:
       - "8080:8080"
+    volumes:
+      - exe-store:/etc/exe-store
+    environment:
+      # binds property local-exe-store.directory
+      LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
+
+volumes:
+  exe-store:

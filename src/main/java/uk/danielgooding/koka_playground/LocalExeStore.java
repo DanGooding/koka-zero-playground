@@ -1,6 +1,7 @@
 package uk.danielgooding.koka_playground;
 
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -12,8 +13,9 @@ class LocalExeStore implements ExeStore {
     private final Path directory;
     private int nextId = 0;
 
-    LocalExeStore() throws IOException {
-        directory = Files.createTempDirectory("exe-store");
+    LocalExeStore(@Value("${local-exe-store.directory}") Path inDirectory) throws IOException {
+        Files.createDirectories(inDirectory);
+        directory = Files.createTempDirectory(inDirectory, "exe-store");
     }
 
     private ExeHandle freshHandle() {
