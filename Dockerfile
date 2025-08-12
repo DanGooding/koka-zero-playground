@@ -29,12 +29,12 @@ RUN --mount=type=bind,source=pom.xml,target=pom.xml \
 FROM ghcr.io/dangooding/koka-zero:main AS koka-playground-app
 WORKDIR /app
 
-COPY --from=package /build/target/app.war ./
-
 RUN apk update
 RUN apk add bubblewrap
 
 RUN apk add openjdk21-jre-headless
+
+COPY --from=package /build/target/app.war ./
 
 EXPOSE 8080
 ENTRYPOINT [ "java", \
