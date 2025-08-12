@@ -17,4 +17,9 @@ public class AppConfig {
     public Workdir runnerWorkdir() {
         return new Workdir();
     }
+
+    @Bean
+    public ExeRunner exeRunner() {
+        return new SandboxedExeRunner();
+    }
 }

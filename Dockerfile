@@ -45,4 +45,4 @@ ENTRYPOINT [ "java", \
     "-jar", "app.war", \
     "--compiler.exe-path=/app/koka-zero", \
     "--compiler.koka-zero-config-path=/app/koka-zero-config.sexp", \
-    "--runner.bubblewrap-path=/bin/bwrap" ]
+    "--runner.bubblewrap-path=/usr/bin/bwrap" ]
