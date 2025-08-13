@@ -23,7 +23,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-// TODO: make an integration-test package
 
 @SpringBootTest(classes = {
         CompileServiceApplication.class,
