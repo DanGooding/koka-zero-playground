@@ -18,6 +18,7 @@
         <module>common</module>
         <module>compile-service</module>
         <module>runner-service</module>
+        <module>integration</module>
     </modules>
 
     <properties>
