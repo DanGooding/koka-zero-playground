@@ -1,4 +1,4 @@
-package uk.danielgooding.koka_playground;
+package uk.danielgooding.kokaplayground;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -8,13 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import uk.danielgooding.koka_playground.common.*;
-import uk.danielgooding.koka_playground.compile.CompileController;
-import uk.danielgooding.koka_playground.compile.CompileServiceApplication;
-import uk.danielgooding.koka_playground.compile.CompilerTool;
-import uk.danielgooding.koka_playground.run.ExeRunner;
-import uk.danielgooding.koka_playground.run.RunnerController;
-import uk.danielgooding.koka_playground.run.RunnerServiceApplication;
+import uk.danielgooding.kokaplayground.common.*;
+import uk.danielgooding.kokaplayground.compile.CompileController;
+import uk.danielgooding.kokaplayground.compile.CompileServiceApplication;
+import uk.danielgooding.kokaplayground.compile.CompilerTool;
+import uk.danielgooding.kokaplayground.run.ExeRunner;
+import uk.danielgooding.kokaplayground.run.RunnerController;
+import uk.danielgooding.kokaplayground.run.RunnerServiceApplication;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -23,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+// TODO: make an integration-test package
 
 @SpringBootTest(classes = {
         CompileServiceApplication.class,
