@@ -3,23 +3,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <!-- TODO: should parent be the parent pom.xml? -->
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.4</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <groupId>uk.danielgooding.kokaplayground</groupId>
+        <artifactId>koka-playground</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <groupId>uk.danielgooding.kokaplayground</groupId>
+
     <artifactId>compile-service</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <name>koka-playground-compile-service</name>
     <description>Compilation service</description>
 
     <packaging>war</packaging>
-
-    <properties>
-        <java.version>21</java.version>
-    </properties>
 
     <dependencies>
         <dependency>
