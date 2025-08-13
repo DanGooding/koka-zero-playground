@@ -35,7 +35,6 @@
 
         <dependency>
             <groupId>uk.danielgooding.kokaplayground</groupId>
-            <!-- TODO: why isn't this uk.danielgooding.kokaplayground ? -->
             <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>
