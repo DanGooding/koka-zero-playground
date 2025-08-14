@@ -16,13 +16,9 @@
 
     <modules>
         <module>common</module>
-        <module>compile-service</module>
-        <module>runner-service</module>
         <module>integration</module>
-        <module>compile-and-run-service</module>
-        <module>compile-service-app</module>
-        <module>runner-service-app</module>
-        <module>compile-and-run-service-app</module>
+        <module>service</module>
+        <module>app</module>
     </modules>
 
     <properties>
