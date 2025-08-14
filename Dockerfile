@@ -5,12 +5,12 @@ WORKDIR /build
 COPY . .
 
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn clean install -X --projects common,compile-service,runner-service
+    mvn clean install -X --projects common,compile-service,runner-service,compile-and-run-service
 
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn package --projects compile-service,runner-service -DskipTests
+    mvn package --projects compile-service,runner-service,compile-and-run-service -DskipTests
 
-RUN for project in compile-service runner-service; do \
+RUN for project in compile-service runner-service compile-and-run-service; do \
     version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --projects "$project"); \
     mv \
       "./$project/target/$project-$version".war \
@@ -43,3 +43,14 @@ EXPOSE 8080
 ENTRYPOINT [ "java", \
     "-jar", "app.war", \
     "--runner.bubblewrap-path=/usr/bin/bwrap" ]
+
+FROM alpine:3.22 AS koka-playground-compile-and-run-service
+WORKDIR /app
+
+RUN apk add openjdk21-jre-headless
+
+COPY --from=package /build/compile-and-run-service.war app.war
+
+EXPOSE 8080
+ENTRYPOINT [ "java", \
+    "-jar", "app.war" ]

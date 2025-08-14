@@ -2,6 +2,7 @@ package uk.danielgooding.kokaplayground.common;
 
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -9,7 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Service("local-exe-store")
-class LocalExeStore implements ExeStore {
+@Lazy
+public class LocalExeStore implements ExeStore {
     private final Path directory;
     private int nextId = 0;
 
