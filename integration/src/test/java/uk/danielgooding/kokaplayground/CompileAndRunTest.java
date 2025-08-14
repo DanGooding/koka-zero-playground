@@ -1,20 +1,22 @@
 package uk.danielgooding.kokaplayground;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.junit4.SpringRunner;
 import uk.danielgooding.kokaplayground.common.*;
 import uk.danielgooding.kokaplayground.compile.CompileController;
-import uk.danielgooding.kokaplayground.compile.CompileServiceApplication;
 import uk.danielgooding.kokaplayground.compile.CompilerTool;
 import uk.danielgooding.kokaplayground.run.ExeRunner;
 import uk.danielgooding.kokaplayground.run.RunnerController;
-import uk.danielgooding.kokaplayground.run.RunnerServiceApplication;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -24,10 +26,11 @@ import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(classes = {
-        CompileServiceApplication.class,
-        RunnerServiceApplication.class
-})
+@RunWith(SpringRunner.class)
+@EnableAutoConfiguration
+@SpringBootTest(classes = {TestConfig.class, CompileController.class, RunnerController.class})
+@TestPropertySource(properties = {
+        "which-exe-store=local-exe-store"})
 public class CompileAndRunTest {
     @MockitoBean
     CompilerTool compilerToolMock;
@@ -52,7 +55,7 @@ public class CompileAndRunTest {
     RunnerController runnerController;
 
     @Test
-    void typecheckValid() throws ExecutionException, InterruptedException {
+    public void typecheckValid() throws ExecutionException, InterruptedException {
         KokaSourceCode sourceCode = new KokaSourceCode("fun main() { println-int(3 + 4); }");
 
         Mockito.when(compilerToolMock.typecheck(sourceCode)).thenReturn(
@@ -63,7 +66,7 @@ public class CompileAndRunTest {
     }
 
     @Test
-    void typecheckInvalid() throws ExecutionException, InterruptedException {
+    public void typecheckInvalid() throws ExecutionException, InterruptedException {
         KokaSourceCode sourceCode = new KokaSourceCode("fun main() { println-int(true); }");
 
         Mockito.when(compilerToolMock.typecheck(sourceCode)).thenReturn(
@@ -74,7 +77,7 @@ public class CompileAndRunTest {
     }
 
     @Test
-    void compileAndRun() throws ExecutionException, InterruptedException, IOException {
+    public void compileAndRun() throws ExecutionException, InterruptedException, IOException {
         // compile (mock)
         KokaSourceCode sourceCode = new KokaSourceCode("fun main() { println-int(3); }");
 
