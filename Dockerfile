@@ -11,9 +11,9 @@ RUN --mount=type=cache,target=/root/.m2 \
     mvn package -DskipTests
 
 RUN for project in compile-service-app runner-service-app compile-and-run-service-app; do \
-    version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --projects "$project"); \
+    version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --projects app/"$project"); \
     mv \
-      "./$project/target/$project-$version".war \
+      "./app/$project/target/$project-$version".war \
       $project.war ; \
     done
 
