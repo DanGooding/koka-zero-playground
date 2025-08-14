@@ -4,13 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>uk.danielgooding.kokaplayground</groupId>
-        <artifactId>koka-playground</artifactId>
+        <artifactId>service</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>compile-service</artifactId>
-    <name>koka-playground-compile-service</name>
-    <description>Compilation service</description>
+    <artifactId>compile-and-run-service</artifactId>
 
     <packaging>jar</packaging>
 
