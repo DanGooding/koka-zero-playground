@@ -5,12 +5,12 @@ WORKDIR /build
 COPY . .
 
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn clean install -X --projects common,compile-service,runner-service,compile-and-run-service
+    mvn clean install -X --projects common,compile-service,compile-service-app,runner-service,runner-service-app,compile-and-run-service,compile-and-run-service-app
 
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn package --projects compile-service,runner-service,compile-and-run-service -DskipTests
+    mvn package --projects common,compile-service,compile-service-app,runner-service,runner-service-app,compile-and-run-service,compile-and-run-service-app -DskipTests
 
-RUN for project in compile-service runner-service compile-and-run-service; do \
+RUN for project in compile-service-app runner-service-app compile-and-run-service-app; do \
     version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --projects "$project"); \
     mv \
       "./$project/target/$project-$version".war \
@@ -22,7 +22,7 @@ WORKDIR /app
 
 RUN apk add openjdk21-jre-headless
 
-COPY --from=package /build/compile-service.war app.war
+COPY --from=package /build/compile-service-app.war app.war
 
 EXPOSE 8080
 ENTRYPOINT [ "java", \
@@ -36,7 +36,7 @@ WORKDIR /app
 RUN apk add openjdk21-jre-headless
 RUN apk add bubblewrap
 
-COPY --from=package /build/runner-service.war app.war
+COPY --from=package /build/runner-service-app.war app.war
 COPY --from=koka-compiler-image /usr/local/lib/* /usr/local/lib/
 
 EXPOSE 8080
@@ -49,7 +49,7 @@ WORKDIR /app
 
 RUN apk add openjdk21-jre-headless
 
-COPY --from=package /build/compile-and-run-service.war app.war
+COPY --from=package /build/compile-and-run-service-app.war app.war
 
 EXPOSE 8080
 ENTRYPOINT [ "java", \
