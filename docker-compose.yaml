@@ -34,5 +34,14 @@ services:
     environment:
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
 
+  compile-and-run-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: koka-playground-compile-and-run-service
+    ports:
+      # TODO: only need to expose this service, it'll proxy the others
+      - "7070:8080"
+
 volumes:
   exe-store:

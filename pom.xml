@@ -19,6 +19,7 @@
         <module>compile-service</module>
         <module>runner-service</module>
         <module>integration</module>
+        <module>compile-and-run-service</module>
     </modules>
 
     <properties>
