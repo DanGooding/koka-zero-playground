@@ -27,4 +27,14 @@
 
     <packaging>pom</packaging>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>de.qaware.maven</groupId>
+                <artifactId>go-offline-maven-plugin</artifactId>
+                <version>1.2.8</version>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
