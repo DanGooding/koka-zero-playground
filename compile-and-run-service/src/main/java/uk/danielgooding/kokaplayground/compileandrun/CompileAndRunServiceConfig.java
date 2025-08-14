@@ -11,8 +11,16 @@ import java.net.URI;
 public class CompileAndRunServiceConfig {
 
     @Bean
-    RestClient compileServiceClient(@Value("${compile-service-hostname}") URI host) {
-        return RestClient.create(String.format("http://%s", host));
+    CompileServiceAPIClient compileServiceAPIClient(@Value("${compile-service-hostname}") URI host) {
+        return new CompileServiceAPIClient(
+                new APIClient(
+                        RestClient.create(String.format("http://%s", host))));
     }
 
+    @Bean
+    RunnerServiceAPIClient runnerServiceAPIClient(@Value("${runner-service-hostname}") URI host) {
+        return new RunnerServiceAPIClient(
+                new APIClient(
+                        RestClient.create(String.format("http://%s", host))));
+    }
 }

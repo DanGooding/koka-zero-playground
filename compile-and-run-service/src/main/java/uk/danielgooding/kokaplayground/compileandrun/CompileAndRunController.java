@@ -23,33 +23,15 @@ public class CompileAndRunController {
     CompileAndRunService compileAndRunService;
 
     @Autowired
-    RestClient compileServiceClient;
+    CompileServiceAPIClient compileServiceAPIClient;
 
     @PostMapping("/typecheck")
     public CompletableFuture<OrError<Void>> typecheck(@RequestBody KokaSourceCode sourceCode) {
-        ParameterizedTypeReference<OrError<Void>> responseTypeRef =
-                new ParameterizedTypeReference<OrError<Void>>() {
-                };
-
-        ResponseEntity<OrError<Void>> response = compileServiceClient
-                .post()
-                .uri("/typecheck")
-                .body(sourceCode)
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .toEntity(responseTypeRef);
-
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return CompletableFuture.completedFuture(response.getBody());
-        } else {
-            return CompletableFuture.failedFuture(
-                    new RuntimeException(String.format(
-                            "call to /typecheck failed: %s", response.getStatusCode())));
-        }
+        return compileServiceAPIClient.typecheck(sourceCode);
     }
 
     @PostMapping("/compile-and-run")
-    public CompletableFuture<OrError<ExeHandle>> compileAndRun(@RequestBody KokaSourceCode sourceCode) {
+    public CompletableFuture<OrError<String>> compileAndRun(@RequestBody KokaSourceCode sourceCode) {
         return compileAndRunService.compileAndRun(sourceCode);
     }
 }
