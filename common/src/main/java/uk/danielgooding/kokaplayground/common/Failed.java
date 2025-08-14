@@ -1,6 +1,8 @@
 package uk.danielgooding.kokaplayground.common;
 
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import java.util.Objects;
@@ -9,7 +11,8 @@ import java.util.Objects;
 public final class Failed<T> extends OrError<T> {
     private final String message;
 
-    Failed(String message) {
+    @JsonCreator
+    Failed(@JsonProperty("message") String message) {
         this.message = message;
     }
 
