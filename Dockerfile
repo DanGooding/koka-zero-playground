@@ -5,10 +5,10 @@ WORKDIR /build
 COPY . .
 
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn clean install -X --projects common,compile-service,compile-service-app,runner-service,runner-service-app,compile-and-run-service,compile-and-run-service-app
+    mvn clean install -X
 
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn package --projects common,compile-service,compile-service-app,runner-service,runner-service-app,compile-and-run-service,compile-and-run-service-app -DskipTests
+    mvn package -DskipTests
 
 RUN for project in compile-service-app runner-service-app compile-and-run-service-app; do \
     version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --projects "$project"); \
