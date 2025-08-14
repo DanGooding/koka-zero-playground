@@ -2,12 +2,13 @@ package uk.danielgooding.kokaplayground.common;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ExeHandle {
     private final String path;
 
     @JsonCreator
-    public ExeHandle(String path) {
+    public ExeHandle(@JsonProperty("path") String path) {
         this.path = path;
     }
 
