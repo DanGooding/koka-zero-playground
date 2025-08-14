@@ -1,6 +1,7 @@
 package uk.danielgooding.kokaplayground.common;
 
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -11,6 +12,7 @@ public final class Ok<T> extends OrError<T> {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private final T value;
 
+    @JsonCreator
     Ok(T value) {
         this.value = value;
     }

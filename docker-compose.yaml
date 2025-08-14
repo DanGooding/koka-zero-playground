@@ -8,13 +8,13 @@ services:
       additional_contexts:
         # production version is ghcr.io/dangooding/koka-zero:main
         - koka-compiler-image=docker-image://run-koka-compiler
-    ports:
-      - "8080:8080"
     volumes:
       - exe-store:/etc/exe-store
     environment:
       # binds property local-exe-store.directory
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
+    networks:
+      common-bridge:
 
   runner-service:
     build:
@@ -27,21 +27,29 @@ services:
       - SYS_ADMIN
     security_opt:
       - seccomp:bwrap-seccomp-profile.json
-    ports:
-      - "9090:8080"
     volumes:
       - exe-store:/etc/exe-store
     environment:
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
+    networks:
+      common-bridge:
 
   compile-and-run-service:
     build:
       context: .
       dockerfile: Dockerfile
       target: koka-playground-compile-and-run-service
+    environment:
+      COMPILE_SERVICE_HOSTNAME: "compile-service"
+    networks:
+      common-bridge:
     ports:
-      # TODO: only need to expose this service, it'll proxy the others
-      - "7070:8080"
+      - "80:80"
 
 volumes:
   exe-store:
+
+networks:
+  common-bridge:
+    driver: bridge
+
