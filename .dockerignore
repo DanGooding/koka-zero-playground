@@ -1,0 +1,15 @@
+.idea/
+
+.gitignore
+.git/
+.gitattributes
+
+.dockerignore
+**/*.class
+./*/target/
+
+bwrap-seccomp-profile.json
+*.sh
+*.md
+**/*Dockerfile
+**/docker-compose.yaml

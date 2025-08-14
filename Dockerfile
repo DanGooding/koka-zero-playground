@@ -1,44 +1,45 @@
-# based on https://docs.docker.com/guides/java/containerize/
-
-FROM eclipse-temurin:21-jdk-alpine AS deps
+FROM maven:3.9.11-eclipse-temurin-21-alpine AS package
 WORKDIR /build
 
-COPY --chmod=0755 mvnw mvnw
-COPY .mvn/ .mvn/
+# need to copy all modules in, since maven expects to find all pom files specified in the root pom
+COPY . .
 
-# Download dependencies as a separate step to take advantage of Docker's caching.
-# Leverage a cache mount to /root/.m2 so that subsequent builds don't have to
-# re-download packages.
-RUN --mount=type=bind,source=pom.xml,target=pom.xml \
-    --mount=type=cache,target=/root/.m2 \
-    ./mvnw dependency:go-offline -DskipTests
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn clean install -X --projects common,compile-service,runner-service
 
-FROM deps AS package
-WORKDIR /build
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn package --projects compile-service,runner-service -DskipTests
 
-COPY ./src src/
-RUN --mount=type=bind,source=pom.xml,target=pom.xml \
-    --mount=type=cache,target=/root/.m2 \
-    ./mvnw package -DskipTests
-
-RUN --mount=type=bind,source=pom.xml,target=pom.xml \
+RUN for project in compile-service runner-service; do \
+    version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --projects "$project"); \
     mv \
-      target/$(./mvnw help:evaluate -Dexpression=project.artifactId -q -DforceStdout)-$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout).war \
-      target/app.war
+      "./$project/target/$project-$version".war \
+      $project.war ; \
+    done
 
-FROM ghcr.io/dangooding/koka-zero:main AS koka-playground-app
+FROM koka-compiler-image AS koka-playground-compile-service
 WORKDIR /app
-
-RUN apk update
-RUN apk add bubblewrap
 
 RUN apk add openjdk21-jre-headless
 
-COPY --from=package /build/target/app.war ./
+COPY --from=package /build/compile-service.war app.war
 
 EXPOSE 8080
 ENTRYPOINT [ "java", \
     "-jar", "app.war", \
     "--compiler.exe-path=/app/koka-zero", \
-    "--compiler.koka-zero-config-path=/app/koka-zero-config.sexp", \
+    "--compiler.koka-zero-config-path=/app/koka-zero-config.sexp" ]
+
+FROM alpine:3.22 AS koka-playground-runner-service
+WORKDIR /app
+
+RUN apk add openjdk21-jre-headless
+RUN apk add bubblewrap
+
+COPY --from=package /build/runner-service.war app.war
+COPY --from=koka-compiler-image /usr/local/lib/* /usr/local/lib/
+
+EXPOSE 8080
+ENTRYPOINT [ "java", \
+    "-jar", "app.war", \
     "--runner.bubblewrap-path=/usr/bin/bwrap" ]

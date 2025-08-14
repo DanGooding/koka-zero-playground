@@ -1,18 +1,38 @@
+name: koka-playground
 services:
-  koka-playground:
+  compile-service:
     build:
       context: .
-    image: koka-playground-app
-    cap_add:
-      - SYS_ADMIN
-    security_opt:
-      - seccomp:bwrap-seccomp-profile.json
+      dockerfile: Dockerfile
+      target: koka-playground-compile-service
+      additional_contexts:
+        # production version is ghcr.io/dangooding/koka-zero:main
+        - koka-compiler-image=docker-image://run-koka-compiler
     ports:
       - "8080:8080"
     volumes:
       - exe-store:/etc/exe-store
     environment:
       # binds property local-exe-store.directory
+      LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
+
+  runner-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: koka-playground-runner-service
+      additional_contexts:
+        - koka-compiler-image=docker-image://run-koka-compiler
+    image: koka-playground-runner-service
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:bwrap-seccomp-profile.json
+    ports:
+      - "9090:8080"
+    volumes:
+      - exe-store:/etc/exe-store
+    environment:
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
 
 volumes:
