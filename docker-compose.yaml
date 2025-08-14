@@ -23,7 +23,6 @@ services:
       target: koka-playground-runner-service
       additional_contexts:
         - koka-compiler-image=docker-image://run-koka-compiler
-    image: koka-playground-runner-service
     cap_add:
       - SYS_ADMIN
     security_opt:
