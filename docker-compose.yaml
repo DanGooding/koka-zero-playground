@@ -13,6 +13,8 @@ services:
     environment:
       # binds property local-exe-store.directory
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
+      DEBUG: true
+      ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: DEBUG
     networks:
       common-bridge:
 
@@ -31,6 +33,8 @@ services:
       - exe-store:/etc/exe-store
     environment:
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
+      DEBUG: true
+      ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: DEBUG
     networks:
       common-bridge:
 
@@ -41,6 +45,9 @@ services:
       target: koka-playground-compile-and-run-service
     environment:
       COMPILE_SERVICE_HOSTNAME: "compile-service"
+      RUNNER_SERVICE_HOSTNAME: "runner-service"
+      DEBUG: true
+      ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: DEBUG
     networks:
       common-bridge:
     ports:
