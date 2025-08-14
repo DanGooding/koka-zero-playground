@@ -3,16 +3,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>uk.danielgooding.kokaplayground</groupId>
-    <artifactId>common</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>koka-playground-common</name>
-    <description>Common modules</description>
+    <parent>
+        <groupId>uk.danielgooding.kokaplayground</groupId>
+        <artifactId>koka-playground</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-    </properties>
+    <artifactId>common</artifactId>
 
     <packaging>jar</packaging>
 
