@@ -12,7 +12,35 @@ import java.util.concurrent.CompletableFuture;
 
 public class Subprocess {
 
-    public static CompletableFuture<OrError<String>> run(Path command, List<String> args, InputStream toStdin) {
+    public static class Output {
+        private final int exitCode;
+        private final String stdout;
+        private final String stderr;
+
+        public Output(int exitCode, String stdout, String stderr) {
+            this.exitCode = exitCode;
+            this.stdout = stdout;
+            this.stderr = stderr;
+        }
+
+        public boolean isExitSuccess() {
+            return exitCode == 0;
+        }
+
+        public int getExitCode() {
+            return exitCode;
+        }
+
+        public String getStdout() {
+            return stdout;
+        }
+
+        public String getStderr() {
+            return stderr;
+        }
+    }
+
+    public static CompletableFuture<Output> run(Path command, List<String> args, InputStream toStdin) {
         try {
             List<String> commandAndArgs = new ArrayList<>();
             commandAndArgs.add(command.toString());
@@ -26,27 +54,14 @@ public class Subprocess {
             stdin.close();
 
             String stdout = new String(process.getInputStream().readAllBytes());
+            String stderr = new String(process.getErrorStream().readAllBytes());
 
             int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                return CompletableFuture.completedFuture(OrError.ok(stdout));
-            }
-
-            String error = new String(process.getErrorStream().readAllBytes());
-            return CompletableFuture.completedFuture(OrError.error(error));
+            return CompletableFuture.completedFuture(new Output(exitCode, stdout, stderr));
 
         } catch (IOException | InterruptedException e) {
             return CompletableFuture.failedFuture(e);
         }
-    }
-
-    public static CompletableFuture<OrError<Void>> runNoStdout(Path command, List<String> args, InputStream toStdin) {
-        return run(command, args, toStdin).thenApply((maybeStdout) ->
-                switch (maybeStdout) {
-                    case Ok<String> _stdout -> Ok.ok(null);
-                    case Failed<String> error -> error.castValue();
-                });
-
     }
 
 }

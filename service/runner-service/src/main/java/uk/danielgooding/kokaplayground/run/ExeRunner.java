@@ -13,6 +13,12 @@ import java.util.concurrent.CompletableFuture;
 public class ExeRunner {
 
     public CompletableFuture<OrError<String>> run(Path exe, List<String> args, InputStream stdin) {
-        return Subprocess.run(exe, args, stdin);
+        return Subprocess.run(exe, args, stdin).thenApply(output -> {
+            if (output.isExitSuccess()) {
+                return OrError.ok(output.getStdout());
+            } else {
+                return OrError.error(output.getStderr());
+            }
+        });
     }
 }
