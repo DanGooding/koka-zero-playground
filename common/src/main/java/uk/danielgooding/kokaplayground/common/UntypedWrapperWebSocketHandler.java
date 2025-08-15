@@ -1,4 +1,4 @@
-package uk.danielgooding.kokaplayground.run;
+package uk.danielgooding.kokaplayground.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -11,9 +11,9 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.util.Hashtable;
 
 // TODO: bytes if we're just using json?
-public class UntypedWrapperWebsocketHandler<InboundMessage, OutboundMessage> extends TextWebSocketHandler {
+public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage> extends TextWebSocketHandler {
 
-    private final Hashtable<String, TypedWebsocketSession<OutboundMessage>> runnerSessions;
+    private final Hashtable<String, TypedWebSocketSession<OutboundMessage>> runnerSessions;
     private final ObjectMapper objectMapper;
 
     private final TypedWebSocketHandler<InboundMessage, OutboundMessage> typedWebSocketHandler;
@@ -22,7 +22,7 @@ public class UntypedWrapperWebsocketHandler<InboundMessage, OutboundMessage> ext
 
     private final ConcurrentWebSocketWriteLimits writeLimits;
 
-    public UntypedWrapperWebsocketHandler(
+    public UntypedWrapperWebSocketHandler(
             TypedWebSocketHandler<InboundMessage, OutboundMessage> typedWebSocketHandler,
             Class<InboundMessage> inboundMessageClass,
             Jackson2ObjectMapperBuilder objectMapperBuilder,
@@ -37,7 +37,7 @@ public class UntypedWrapperWebsocketHandler<InboundMessage, OutboundMessage> ext
 
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
-        TypedWebsocketSession<OutboundMessage> runnerSession = new TypedWebsocketSession<>(
+        TypedWebSocketSession<OutboundMessage> runnerSession = new TypedWebSocketSession<>(
                 session, objectMapper, writeLimits);
         runnerSessions.put(session.getId(), runnerSession);
         typedWebSocketHandler.handleConnectionEstablished(runnerSession);
@@ -45,7 +45,7 @@ public class UntypedWrapperWebsocketHandler<InboundMessage, OutboundMessage> ext
 
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage textMessage) throws Exception {
-        TypedWebsocketSession<OutboundMessage> runnerSession = runnerSessions.get(session.getId());
+        TypedWebSocketSession<OutboundMessage> runnerSession = runnerSessions.get(session.getId());
         InboundMessage message =
                 objectMapper.readValue(textMessage.asBytes(), this.inboundMessageClass);
         typedWebSocketHandler.handleMessage(runnerSession, message);
@@ -53,13 +53,13 @@ public class UntypedWrapperWebsocketHandler<InboundMessage, OutboundMessage> ext
 
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) throws Exception {
-        TypedWebsocketSession<OutboundMessage> runnerSession = runnerSessions.remove(session.getId());
+        TypedWebSocketSession<OutboundMessage> runnerSession = runnerSessions.remove(session.getId());
         typedWebSocketHandler.afterConnectionClosed(runnerSession, status);
     }
 
     @Override
     public void handleTransportError(@NonNull WebSocketSession session, @NonNull Throwable exception) throws Exception {
-        TypedWebsocketSession<OutboundMessage> runnerSession = runnerSessions.get(session.getId());
+        TypedWebSocketSession<OutboundMessage> runnerSession = runnerSessions.get(session.getId());
         typedWebSocketHandler.handleTransportError(runnerSession, exception);
     }
 }

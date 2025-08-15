@@ -1,4 +1,4 @@
-package uk.danielgooding.kokaplayground.run;
+package uk.danielgooding.kokaplayground.common;
 
 import org.springframework.beans.factory.annotation.Value;
 
