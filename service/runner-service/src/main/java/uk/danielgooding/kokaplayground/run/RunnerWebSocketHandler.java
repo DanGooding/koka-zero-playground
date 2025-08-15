@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.HashSet;
 
 @Controller
-public class RunnerWebSocketHandler {
+public class RunnerWebSocketHandler implements TypedWebSocketHandler<RunStreamInbound.Message, RunStreamOutbound.Message> {
     private final HashSet<SessionId> runningForIds;
 
     @Autowired
@@ -23,10 +23,10 @@ public class RunnerWebSocketHandler {
         runningForIds = new HashSet<>();
     }
 
-    public void handleConnectionEstablished(RunnerSession session) {
+    public void handleConnectionEstablished(TypedWebsocketSession<RunStreamOutbound.Message> session) {
     }
 
-    public void handleMessage(RunnerSession session, @NonNull RunStreamInbound.Message inbound) throws Exception {
+    public void handleMessage(TypedWebsocketSession<RunStreamOutbound.Message> session, @NonNull RunStreamInbound.Message inbound) throws Exception {
         switch (inbound) {
             case RunStreamInbound.Run run -> {
                 if (runningForIds.contains(session.getId())) {
@@ -70,12 +70,12 @@ public class RunnerWebSocketHandler {
         }
     }
 
-    public void afterConnectionClosed(RunnerSession session, CloseStatus status) {
+    public void afterConnectionClosed(TypedWebsocketSession<RunStreamOutbound.Message> session, CloseStatus status) {
         runningForIds.remove(session.getId());
         // TODO: cleanup - e.g. cancel the run
     }
 
-    public void handleTransportError(RunnerSession session, Throwable exception) {
+    public void handleTransportError(TypedWebsocketSession<RunStreamOutbound.Message> session, Throwable exception) {
         // TODO: handle transport error
     }
 }
