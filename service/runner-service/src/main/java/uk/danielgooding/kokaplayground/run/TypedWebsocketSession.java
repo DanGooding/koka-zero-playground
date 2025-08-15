@@ -8,20 +8,18 @@ import uk.danielgooding.kokaplayground.common.SessionId;
 
 import java.io.IOException;
 
-public class RunnerSession {
+public class TypedWebsocketSession<OutboundMessage> {
     private final SessionId id;
     private final ConcurrentWebSocketSessionDecorator session;
     private final ObjectMapper objectMapper;
 
-
-    public RunnerSession(
+    public TypedWebsocketSession(
             WebSocketSession session,
             ObjectMapper objectMapper,
-            int sendTimeLimitMs,
-            int bufferSizeLimitBytes) {
+            ConcurrentWebSocketWriteLimits writeLimits) {
         this.session =
                 new ConcurrentWebSocketSessionDecorator(
-                        session, sendTimeLimitMs, bufferSizeLimitBytes);
+                        session, writeLimits.sendTimeLimitMs(), writeLimits.bufferSizeLimitBytes());
         this.id = new SessionId(session.getId());
         this.objectMapper = objectMapper;
     }
@@ -30,7 +28,7 @@ public class RunnerSession {
         return this.id;
     }
 
-    public void sendMessage(RunStreamOutbound.Message messageObject) throws IOException {
+    public void sendMessage(OutboundMessage messageObject) throws IOException {
         TextMessage reply = new TextMessage(objectMapper.writeValueAsBytes(messageObject));
         session.sendMessage(reply);
     }

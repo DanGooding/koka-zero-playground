@@ -2,6 +2,7 @@ package uk.danielgooding.kokaplayground.run;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
@@ -15,10 +16,23 @@ import org.springframework.web.socket.server.support.HttpSessionHandshakeInterce
 public class RunnerWebsocketConfig implements WebSocketConfigurer {
 
     @Autowired
-    UntypedRunnerWebsocketHandler untypedRunnerWebsocketHandler;
+    Jackson2ObjectMapperBuilder objectMapperBuilder;
+
+    @Autowired
+    RunnerWebSocketHandler runnerWebSocketHandler;
+
+    @Autowired
+    ConcurrentWebSocketWriteLimits concurrentWebSocketWriteLimits;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        UntypedWrapperWebsocketHandler<RunStreamInbound.Message, RunStreamOutbound.Message> untypedRunnerWebsocketHandler =
+                new UntypedWrapperWebsocketHandler<>(
+                        runnerWebSocketHandler,
+                        RunStreamInbound.Message.class,
+                        objectMapperBuilder,
+                        concurrentWebSocketWriteLimits);
+
         WebSocketHandler handler = new LoggingWebSocketHandlerDecorator(
                 new ExceptionWebSocketHandlerDecorator(untypedRunnerWebsocketHandler));
 
