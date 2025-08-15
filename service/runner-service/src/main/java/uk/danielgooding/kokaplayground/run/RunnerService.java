@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.*;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -18,7 +17,7 @@ public class RunnerService {
     private ExeStore exeStore;
 
     @Autowired
-    private ExeRunner exeRunner;
+    private SandboxedExeRunner exeRunner;
 
     @Autowired
     @Qualifier("runner-workdir")
@@ -36,15 +35,40 @@ public class RunnerService {
                 }
             }
 
-
-            InputStream emptyStdin = InputStream.nullInputStream();
             CompletableFuture<OrError<String>> stdout =
-                    exeRunner.run(exe, List.of(), emptyStdin);
-            emptyStdin.close();
+                    exeRunner.runThenGetStdout(exe, List.of(), "");
 
             exeStore.deleteExe(handle);
 
             return stdout;
+
+        } catch (IOException e) {
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    CompletableFuture<OrError<Void>> runWithoutStdinStreamingStdout(
+            ExeHandle handle, Callback<Void> onStart, Callback<String> onStdout) {
+        try {
+            Path exe;
+            switch (exeStore.getExe(handle, workdir)) {
+                case Failed<?> failed -> {
+                    return CompletableFuture.completedFuture(failed.castValue());
+                }
+                case Ok<Path> okExe -> {
+                    exe = okExe.getValue();
+                }
+            }
+
+            return exeRunner
+                    .runStreamingStdout(exe, List.of(), "", onStart, onStdout)
+                    .whenComplete((ignored, exn) -> {
+                        try {
+                            exeStore.deleteExe(handle);
+                        } catch (IOException e) {
+                            // best effort deletion - we can have some pruning
+                        }
+                    });
 
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);

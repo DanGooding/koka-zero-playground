@@ -27,21 +27,20 @@ public class CompilerTool {
     @Qualifier("compiler-workdir")
     private Workdir workdir;
 
-    public CompletableFuture<OrError<Void>> runCompiler(List<String> args, InputStream toStdin) {
-        return Subprocess.run(compilerExePath, args, toStdin).thenCompose(output ->
-                switch (output.getExitCode()) {
+    public CompletableFuture<OrError<Void>> runCompiler(List<String> args, String toStdin) {
+        return Subprocess.runThenGetStdout(compilerExePath, args, toStdin).thenCompose(output ->
+                switch (output.exitCode()) {
                     // success
                     case 0 -> CompletableFuture.completedFuture(OrError.ok(null));
                     // error in user's code
-                    case 1 -> CompletableFuture.completedFuture(OrError.error(output.getStderr()));
+                    case 1 -> CompletableFuture.completedFuture(OrError.error(output.stderr()));
                     // error in compiler usage
-                    default -> CompletableFuture.failedFuture(new RuntimeException(output.getStderr()));
+                    default -> CompletableFuture.failedFuture(new RuntimeException(output.stderr()));
                 });
     }
 
     public CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {
-        InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
-        return runCompiler(List.of("check", "/dev/stdin"), toStdin);
+        return runCompiler(List.of("check", "/dev/stdin"), sourceCode.getCode());
     }
 
     public CompletableFuture<OrError<Path>> compile(KokaSourceCode sourceCode, boolean optimise) {
@@ -65,10 +64,8 @@ public class CompilerTool {
         if (optimise) {
             args.add("-optimise");
         }
-
-        InputStream toStdin = new ByteArrayInputStream(sourceCode.getCode().getBytes(StandardCharsets.UTF_8));
-
-        return runCompiler(args, toStdin)
+        
+        return runCompiler(args, sourceCode.getCode())
                 .thenApply(
                         (result) -> {
                             switch (result) {
