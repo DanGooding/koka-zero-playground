@@ -17,6 +17,7 @@ import uk.danielgooding.kokaplayground.compile.CompileController;
 import uk.danielgooding.kokaplayground.compile.CompilerTool;
 import uk.danielgooding.kokaplayground.run.ExeRunner;
 import uk.danielgooding.kokaplayground.run.RunnerController;
+import uk.danielgooding.kokaplayground.run.SandboxedExeRunner;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -47,7 +48,7 @@ public class CompileAndRunTest {
     ExeStore exeStoreMock;
 
     @MockitoBean
-    ExeRunner exeRunnerMock;
+    SandboxedExeRunner exeRunnerMock;
 
     @Autowired
     CompileController compileController;
@@ -101,7 +102,7 @@ public class CompileAndRunTest {
 
         String stdout = "3";
         Mockito.when(
-                        exeRunnerMock.run(
+                        exeRunnerMock.runThenGetStdout(
                                 ArgumentMatchers.eq(postGetHandle),
                                 ArgumentMatchers.eq(List.of()),
                                 ArgumentMatchers.any()))
