@@ -1,19 +1,18 @@
-package uk.danielgooding.kokaplayground.run;
+package uk.danielgooding.kokaplayground.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
-import uk.danielgooding.kokaplayground.common.SessionId;
 
 import java.io.IOException;
 
-public class TypedWebsocketSession<OutboundMessage> {
+public class TypedWebSocketSession<OutboundMessage> {
     private final SessionId id;
     private final ConcurrentWebSocketSessionDecorator session;
     private final ObjectMapper objectMapper;
 
-    public TypedWebsocketSession(
+    public TypedWebSocketSession(
             WebSocketSession session,
             ObjectMapper objectMapper,
             ConcurrentWebSocketWriteLimits writeLimits) {

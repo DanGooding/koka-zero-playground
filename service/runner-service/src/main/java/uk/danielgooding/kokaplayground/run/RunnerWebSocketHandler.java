@@ -4,10 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.CloseStatus;
-import uk.danielgooding.kokaplayground.common.Callback;
-import uk.danielgooding.kokaplayground.common.Failed;
-import uk.danielgooding.kokaplayground.common.Ok;
-import uk.danielgooding.kokaplayground.common.SessionId;
+import uk.danielgooding.kokaplayground.common.*;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -23,10 +20,10 @@ public class RunnerWebSocketHandler implements TypedWebSocketHandler<RunStreamIn
         runningForIds = new HashSet<>();
     }
 
-    public void handleConnectionEstablished(TypedWebsocketSession<RunStreamOutbound.Message> session) {
+    public void handleConnectionEstablished(TypedWebSocketSession<RunStreamOutbound.Message> session) {
     }
 
-    public void handleMessage(TypedWebsocketSession<RunStreamOutbound.Message> session, @NonNull RunStreamInbound.Message inbound) throws Exception {
+    public void handleMessage(TypedWebSocketSession<RunStreamOutbound.Message> session, @NonNull RunStreamInbound.Message inbound) throws Exception {
         switch (inbound) {
             case RunStreamInbound.Run run -> {
                 if (runningForIds.contains(session.getId())) {
@@ -70,12 +67,12 @@ public class RunnerWebSocketHandler implements TypedWebSocketHandler<RunStreamIn
         }
     }
 
-    public void afterConnectionClosed(TypedWebsocketSession<RunStreamOutbound.Message> session, CloseStatus status) {
+    public void afterConnectionClosed(TypedWebSocketSession<RunStreamOutbound.Message> session, CloseStatus status) {
         runningForIds.remove(session.getId());
         // TODO: cleanup - e.g. cancel the run
     }
 
-    public void handleTransportError(TypedWebsocketSession<RunStreamOutbound.Message> session, Throwable exception) {
+    public void handleTransportError(TypedWebSocketSession<RunStreamOutbound.Message> session, Throwable exception) {
         // TODO: handle transport error
     }
 }
