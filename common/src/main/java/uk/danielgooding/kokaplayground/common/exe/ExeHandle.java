@@ -1,4 +1,4 @@
-package uk.danielgooding.kokaplayground.common;
+package uk.danielgooding.kokaplayground.common.exe;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;

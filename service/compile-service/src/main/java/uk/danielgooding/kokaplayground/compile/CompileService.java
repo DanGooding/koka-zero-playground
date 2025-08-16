@@ -4,6 +4,8 @@ import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.*;
+import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
+import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 
 import java.io.IOException;
 import java.nio.file.Path;

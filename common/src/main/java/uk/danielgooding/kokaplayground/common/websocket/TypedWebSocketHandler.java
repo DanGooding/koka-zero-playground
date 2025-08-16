@@ -1,4 +1,4 @@
-package uk.danielgooding.kokaplayground.common;
+package uk.danielgooding.kokaplayground.common.websocket;
 
 import org.springframework.lang.NonNull;
 import org.springframework.web.socket.CloseStatus;

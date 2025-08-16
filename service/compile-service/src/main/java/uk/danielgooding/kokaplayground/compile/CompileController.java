@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import uk.danielgooding.kokaplayground.common.ExeHandle;
+import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 import uk.danielgooding.kokaplayground.common.KokaSourceCode;
 import uk.danielgooding.kokaplayground.common.OrError;
 

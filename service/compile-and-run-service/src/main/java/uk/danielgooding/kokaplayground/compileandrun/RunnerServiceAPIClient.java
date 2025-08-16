@@ -1,7 +1,7 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
 import org.springframework.core.ParameterizedTypeReference;
-import uk.danielgooding.kokaplayground.common.ExeHandle;
+import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 import uk.danielgooding.kokaplayground.common.OrError;
 
 import java.util.concurrent.CompletableFuture;

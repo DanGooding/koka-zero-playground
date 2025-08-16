@@ -1,4 +1,4 @@
-package uk.danielgooding.kokaplayground.common;
+package uk.danielgooding.kokaplayground.common.websocket;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
