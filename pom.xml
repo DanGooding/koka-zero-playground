@@ -19,6 +19,7 @@
         <module>integration</module>
         <module>service</module>
         <module>app</module>
+        <module>protocol</module>
     </modules>
 
     <properties>

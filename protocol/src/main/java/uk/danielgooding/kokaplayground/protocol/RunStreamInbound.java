@@ -1,4 +1,4 @@
-package uk.danielgooding.kokaplayground.run;
+package uk.danielgooding.kokaplayground.protocol;
 
 import com.fasterxml.jackson.annotation.*;
 import uk.danielgooding.kokaplayground.common.ExeHandle;
