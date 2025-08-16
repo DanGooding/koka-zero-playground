@@ -52,7 +52,7 @@ public class RunnerClientWebSocketHandler
     public void afterConnectionClosed(
             TypedWebSocketSession<RunStreamInbound.Message> session,
             StringBuilder stdout,
-            CloseStatus status) {
+            CloseStatus status) throws Exception {
 
     }
 
@@ -60,7 +60,7 @@ public class RunnerClientWebSocketHandler
     public void handleTransportError(
             TypedWebSocketSession<RunStreamInbound.Message> session,
             StringBuilder stdout,
-            Throwable exception) {
+            Throwable exception) throws Exception {
 
     }
 }
