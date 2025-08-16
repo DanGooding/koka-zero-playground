@@ -1,7 +1,7 @@
 package uk.danielgooding.kokaplayground.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 
@@ -28,7 +28,7 @@ public class TypedWebSocketSession<OutboundMessage> {
     }
 
     public void sendMessage(OutboundMessage messageObject) throws IOException {
-        TextMessage reply = new TextMessage(objectMapper.writeValueAsBytes(messageObject));
+        BinaryMessage reply = new BinaryMessage(objectMapper.writeValueAsBytes(messageObject));
         session.sendMessage(reply);
     }
 

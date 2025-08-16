@@ -9,26 +9,14 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>service</artifactId>
+    <artifactId>protocol</artifactId>
 
-    <packaging>pom</packaging>
-
-    <modules>
-        <module>compile-service</module>
-        <module>runner-service</module>
-        <module>compile-and-run-service</module>
-    </modules>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>uk.danielgooding.kokaplayground</groupId>
             <artifactId>common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>uk.danielgooding.kokaplayground</groupId>
-            <artifactId>protocol</artifactId>
             <version>${project.version}</version>
         </dependency>
 

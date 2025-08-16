@@ -1,4 +1,4 @@
-package uk.danielgooding.kokaplayground.run;
+package uk.danielgooding.kokaplayground.protocol;
 
 import com.fasterxml.jackson.annotation.*;
 
@@ -13,6 +13,8 @@ public class RunStreamOutbound {
             @JsonSubTypes.Type(value = Interrupted.class, name = "interrupted"),
     })
     public static abstract sealed class Message {
+        @Override
+        public abstract String toString();
     }
 
     @JsonTypeName("another-request-in-progress")
@@ -20,12 +22,22 @@ public class RunStreamOutbound {
         @JsonCreator
         public AnotherRequestInProgress() {
         }
+
+        @Override
+        public String toString() {
+            return "AnotherRequestInProgress";
+        }
     }
 
     @JsonTypeName("starting")
     public static final class Starting extends Message {
         @JsonCreator
         public Starting() {
+        }
+
+        @Override
+        public String toString() {
+            return "Starting";
         }
     }
 
@@ -42,11 +54,20 @@ public class RunStreamOutbound {
         public String getContent() {
             return content;
         }
+
+        @Override
+        public String toString() {
+            String escapedContent = content.replaceAll(System.lineSeparator(), "\\n");
+            return "Stdout{" +
+                    "content='" + escapedContent + '\'' +
+                    '}';
+        }
     }
 
     /// Error, Done, Interrupted all imply the request is complete
 
-    // TODO: consider distinguishing server/client errors
+    /// Error is specifically a 'client error' e.g. the program segfaulted / OOMed
+    /// Server errors are communicated by CloseReason at the websocket layer
     @JsonTypeName("error")
     public static final class Error extends Message {
         private final String message;
@@ -60,12 +81,24 @@ public class RunStreamOutbound {
         public String getMessage() {
             return message;
         }
+
+        @Override
+        public String toString() {
+            return "Error{" +
+                    "message='" + message + '\'' +
+                    '}';
+        }
     }
 
     @JsonTypeName("done")
     public static final class Done extends Message {
         @JsonCreator
         public Done() {
+        }
+
+        @Override
+        public String toString() {
+            return "Done";
         }
     }
 
@@ -81,6 +114,13 @@ public class RunStreamOutbound {
         @JsonGetter
         public String getMessage() {
             return message;
+        }
+
+        @Override
+        public String toString() {
+            return "Interrupted{" +
+                    "message='" + message + '\'' +
+                    '}';
         }
     }
 }
