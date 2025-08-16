@@ -7,10 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class Subprocess {
 
@@ -57,7 +54,6 @@ public class Subprocess {
     public static CompletableFuture<Output> runStreamingStdout(
             Path command,
             List<String> args,
-            // TODO: stream stdin too
             String toStdin,
             Callback<Void> onStart,
             Callback<String> onStdout) {
@@ -92,10 +88,10 @@ public class Subprocess {
 
                 InputStream stdout = process.getInputStream();
 
-                byte[] buf = new byte[256];
+                byte[] buf = new byte[1024];
                 int numRead;
                 while ((numRead = stdout.read(buf)) > 0) {
-                    onStdout.call(new String(buf, StandardCharsets.UTF_8));
+                    onStdout.call(new String(buf, 0, numRead, StandardCharsets.UTF_8));
                 }
 
                 int exitCode = process.waitFor();
