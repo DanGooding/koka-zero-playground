@@ -13,9 +13,10 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import uk.danielgooding.kokaplayground.common.*;
+import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
+import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import uk.danielgooding.kokaplayground.compile.CompileController;
 import uk.danielgooding.kokaplayground.compile.CompilerTool;
-import uk.danielgooding.kokaplayground.run.ExeRunner;
 import uk.danielgooding.kokaplayground.run.RunnerController;
 import uk.danielgooding.kokaplayground.run.SandboxedExeRunner;
 

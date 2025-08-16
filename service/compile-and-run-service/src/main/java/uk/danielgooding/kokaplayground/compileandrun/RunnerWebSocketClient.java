@@ -5,9 +5,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.client.WebSocketClient;
-import uk.danielgooding.kokaplayground.common.ConcurrentWebSocketWriteLimits;
-import uk.danielgooding.kokaplayground.common.TypedWebSocketClient;
-import uk.danielgooding.kokaplayground.common.TypedWebSocketSessionAndState;
+import uk.danielgooding.kokaplayground.common.websocket.ConcurrentWebSocketWriteLimits;
+import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketClient;
+import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
 import uk.danielgooding.kokaplayground.protocol.RunStreamInbound;
 import uk.danielgooding.kokaplayground.protocol.RunStreamOutbound;
 

@@ -1,6 +1,4 @@
-package uk.danielgooding.kokaplayground.common;
-
-import org.springframework.web.socket.CloseStatus;
+package uk.danielgooding.kokaplayground.common.websocket;
 
 import java.util.concurrent.CompletableFuture;
 

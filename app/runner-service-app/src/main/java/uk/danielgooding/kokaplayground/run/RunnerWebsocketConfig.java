@@ -10,8 +10,8 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 import org.springframework.web.socket.handler.ExceptionWebSocketHandlerDecorator;
 import org.springframework.web.socket.handler.LoggingWebSocketHandlerDecorator;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
-import uk.danielgooding.kokaplayground.common.ConcurrentWebSocketWriteLimits;
-import uk.danielgooding.kokaplayground.common.UntypedWrapperWebSocketHandler;
+import uk.danielgooding.kokaplayground.common.websocket.ConcurrentWebSocketWriteLimits;
+import uk.danielgooding.kokaplayground.common.websocket.UntypedWrapperWebSocketHandler;
 import uk.danielgooding.kokaplayground.protocol.RunStreamInbound;
 import uk.danielgooding.kokaplayground.protocol.RunStreamOutbound;
 

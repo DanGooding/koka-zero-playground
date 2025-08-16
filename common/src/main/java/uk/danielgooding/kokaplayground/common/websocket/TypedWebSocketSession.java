@@ -1,4 +1,4 @@
-package uk.danielgooding.kokaplayground.common;
+package uk.danielgooding.kokaplayground.common.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.socket.BinaryMessage;

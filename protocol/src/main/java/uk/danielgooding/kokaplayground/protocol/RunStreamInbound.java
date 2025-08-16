@@ -1,7 +1,7 @@
 package uk.danielgooding.kokaplayground.protocol;
 
 import com.fasterxml.jackson.annotation.*;
-import uk.danielgooding.kokaplayground.common.ExeHandle;
+import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 
 public class RunStreamInbound {
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT)
