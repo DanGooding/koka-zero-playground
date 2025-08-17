@@ -1,5 +1,7 @@
 package uk.danielgooding.kokaplayground.common.websocket;
 
+import org.springframework.web.socket.CloseStatus;
+
 import java.util.concurrent.CompletableFuture;
 
 public class TypedWebSocketSessionAndState<OutboundMessage, State, Outcome> {
@@ -25,7 +27,12 @@ public class TypedWebSocketSessionAndState<OutboundMessage, State, Outcome> {
         return outcomeFuture;
     }
 
-    void setClosed(Outcome outcome) {
+    void setClosedOk(Outcome outcome) {
         outcomeFuture.complete(outcome);
+    }
+
+    void setClosedError(CloseStatus closeStatus) {
+        outcomeFuture.completeExceptionally(new RuntimeException(String.format(
+                "WebSocket closed with error: %s", closeStatus)));
     }
 }

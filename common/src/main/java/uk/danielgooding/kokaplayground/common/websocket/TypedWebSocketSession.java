@@ -2,6 +2,7 @@ package uk.danielgooding.kokaplayground.common.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.socket.BinaryMessage;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 
@@ -32,7 +33,11 @@ public class TypedWebSocketSession<OutboundMessage> {
         session.sendMessage(reply);
     }
 
-    public void close() throws IOException {
+    public void closeOk() throws IOException {
         session.close();
+    }
+
+    public void close(CloseStatus closeStatus) throws IOException {
+        session.close(closeStatus);
     }
 }

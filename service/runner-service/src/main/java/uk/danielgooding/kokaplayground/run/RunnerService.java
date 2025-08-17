@@ -49,6 +49,7 @@ public class RunnerService {
         }
     }
 
+    // TODO: it seems like failures here are presented as client errors
     CompletableFuture<OrError<Void>> runWithoutStdinStreamingStdout(
             ExeHandle handle, Callback<Void> onStart, Callback<String> onStdout) {
         try {
