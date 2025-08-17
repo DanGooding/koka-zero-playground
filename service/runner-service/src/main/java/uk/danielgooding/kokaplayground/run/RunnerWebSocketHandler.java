@@ -5,8 +5,8 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.CloseStatus;
 import uk.danielgooding.kokaplayground.common.*;
+import uk.danielgooding.kokaplayground.common.websocket.ITypedWebSocketSession;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.protocol.RunStreamInbound;
 import uk.danielgooding.kokaplayground.protocol.RunStreamOutbound;
 
@@ -20,15 +20,15 @@ public class RunnerWebSocketHandler
     RunnerService runnerService;
 
     @Override
-    public RunnerSessionState handleConnectionEstablished(TypedWebSocketSession<RunStreamOutbound.Message> session) {
+    public RunnerSessionState handleConnectionEstablished(ITypedWebSocketSession<RunStreamOutbound.Message> session) {
         return new RunnerSessionState();
     }
 
     @Override
     public void handleMessage(
-            TypedWebSocketSession<RunStreamOutbound.Message> session,
+            ITypedWebSocketSession<RunStreamOutbound.Message> session,
             RunnerSessionState sessionState,
-            @NonNull RunStreamInbound.Message inbound) throws Exception {
+            @NonNull RunStreamInbound.Message inbound) throws IOException {
         switch (inbound) {
             case RunStreamInbound.Run run -> {
                 if (sessionState.isRunning()) {
@@ -85,7 +85,7 @@ public class RunnerWebSocketHandler
 
     @Override
     public Void afterConnectionClosed(
-            TypedWebSocketSession<RunStreamOutbound.Message> session,
+            ITypedWebSocketSession<RunStreamOutbound.Message> session,
             RunnerSessionState sessionState,
             CloseStatus status) {
         sessionState.setRunning(false);
@@ -94,7 +94,7 @@ public class RunnerWebSocketHandler
 
     @Override
     public void handleTransportError(
-            TypedWebSocketSession<RunStreamOutbound.Message> session,
+            ITypedWebSocketSession<RunStreamOutbound.Message> session,
             RunnerSessionState sessionState, Throwable exception) {
         // not required to do anything (the client will find out about the close)
         // however we could abort the run if it isn't already

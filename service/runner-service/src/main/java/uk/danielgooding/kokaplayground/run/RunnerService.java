@@ -25,7 +25,7 @@ public class RunnerService {
     @Qualifier("runner-workdir")
     private Workdir workdir;
 
-    CompletableFuture<OrError<String>> runWithoutStdin(ExeHandle handle) {
+    public CompletableFuture<OrError<String>> runWithoutStdin(ExeHandle handle) {
         try {
             Path exe;
             switch (exeStore.getExe(handle, workdir)) {
@@ -49,8 +49,7 @@ public class RunnerService {
         }
     }
 
-    // TODO: it seems like failures here are presented as client errors
-    CompletableFuture<OrError<Void>> runWithoutStdinStreamingStdout(
+    public CompletableFuture<OrError<Void>> runWithoutStdinStreamingStdout(
             ExeHandle handle, Callback<Void> onStart, Callback<String> onStdout) {
         try {
             Path exe;

@@ -36,9 +36,8 @@ public class CompileAndRunService {
                                         sessionAndState
                                                 .getSession()
                                                 .sendMessage(new RunStreamInbound.Run(handle));
-                                    } catch (IOException e) {
-                                        // TODO: do i need to do anything to ensure the connection is closed?
-                                        throw new UncheckedIOException(e);
+                                    } catch (Exception e) {
+                                        throw new RuntimeException(e);
                                     }
 
                                     return sessionAndState.getOutcomeFuture();
