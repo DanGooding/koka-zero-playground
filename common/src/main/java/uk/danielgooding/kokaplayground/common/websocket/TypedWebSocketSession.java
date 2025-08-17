@@ -8,7 +8,7 @@ import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorato
 
 import java.io.IOException;
 
-public class TypedWebSocketSession<OutboundMessage> {
+public class TypedWebSocketSession<OutboundMessage> implements ITypedWebSocketSession<OutboundMessage> {
     private final SessionId id;
     private final ConcurrentWebSocketSessionDecorator session;
     private final ObjectMapper objectMapper;
