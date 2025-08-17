@@ -30,7 +30,7 @@ public class RunnerWebsocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        UntypedWrapperWebSocketHandler<RunStreamInbound.Message, RunStreamOutbound.Message, RunnerSessionState> untypedRunnerWebsocketHandler =
+        UntypedWrapperWebSocketHandler<RunStreamInbound.Message, RunStreamOutbound.Message, RunnerSessionState, Void> untypedRunnerWebsocketHandler =
                 new UntypedWrapperWebSocketHandler<>(
                         runnerWebSocketHandler,
                         RunStreamInbound.Message.class,

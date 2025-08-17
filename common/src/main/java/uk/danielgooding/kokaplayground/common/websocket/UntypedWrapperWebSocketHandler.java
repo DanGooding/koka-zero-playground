@@ -10,19 +10,19 @@ import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
 import java.util.Hashtable;
 
-public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState> extends BinaryWebSocketHandler {
+public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> extends BinaryWebSocketHandler {
 
-    private final Hashtable<String, TypedWebSocketSessionAndState<OutboundMessage, SessionState>> typedSessions;
+    private final Hashtable<String, TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome>> typedSessions;
     private final ObjectMapper objectMapper;
 
-    private final TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState> typedWebSocketHandler;
+    private final TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> typedWebSocketHandler;
 
     private final Class<InboundMessage> inboundMessageClass;
 
     private final ConcurrentWebSocketWriteLimits writeLimits;
 
     public UntypedWrapperWebSocketHandler(
-            TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState> typedWebSocketHandler,
+            TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> typedWebSocketHandler,
             Class<InboundMessage> inboundMessageClass,
             Jackson2ObjectMapperBuilder objectMapperBuilder,
             ConcurrentWebSocketWriteLimits writeLimits
@@ -34,7 +34,7 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
         this.writeLimits = writeLimits;
     }
 
-    TypedWebSocketSessionAndState<OutboundMessage, SessionState> getSessionAndState(WebSocketSession session) {
+    TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> getSessionAndState(WebSocketSession session) {
         return this.typedSessions.get(session.getId());
     }
 
@@ -43,14 +43,14 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
         TypedWebSocketSession<OutboundMessage> runnerSession = new TypedWebSocketSession<>(
                 session, objectMapper, writeLimits);
         SessionState state = typedWebSocketHandler.handleConnectionEstablished(runnerSession);
-        TypedWebSocketSessionAndState<OutboundMessage, SessionState> sessionAndState =
+        TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState =
                 new TypedWebSocketSessionAndState<>(runnerSession, state);
         typedSessions.put(session.getId(), sessionAndState);
     }
 
     @Override
     protected void handleBinaryMessage(@NonNull WebSocketSession session, @NonNull BinaryMessage binaryMessage) throws Exception {
-        TypedWebSocketSessionAndState<OutboundMessage, SessionState> sessionAndState = typedSessions.get(session.getId());
+        TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.get(session.getId());
         InboundMessage message =
                 objectMapper.readValue(binaryMessage.getPayload().array(), this.inboundMessageClass);
         typedWebSocketHandler.handleMessage(sessionAndState.getSession(), sessionAndState.getState(), message);
@@ -58,14 +58,14 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
 
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) throws Exception {
-        TypedWebSocketSessionAndState<OutboundMessage, SessionState> sessionAndState = typedSessions.remove(session.getId());
-        typedWebSocketHandler.afterConnectionClosed(sessionAndState.getSession(), sessionAndState.getState(), status);
-        sessionAndState.setClosed();
+        TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.remove(session.getId());
+        Outcome outcome = typedWebSocketHandler.afterConnectionClosed(sessionAndState.getSession(), sessionAndState.getState(), status);
+        sessionAndState.setClosed(outcome);
     }
 
     @Override
     public void handleTransportError(@NonNull WebSocketSession session, @NonNull Throwable exception) throws Exception {
-        TypedWebSocketSessionAndState<OutboundMessage, SessionState> sessionAndState = typedSessions.get(session.getId());
+        TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.get(session.getId());
         typedWebSocketHandler.handleTransportError(sessionAndState.getSession(), sessionAndState.getState(), exception);
     }
 }

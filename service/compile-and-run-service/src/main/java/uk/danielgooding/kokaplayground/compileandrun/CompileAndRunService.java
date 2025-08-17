@@ -41,7 +41,7 @@ public class CompileAndRunService {
                                     }
 
                                     return sessionAndState
-                                            .getClosed()
+                                            .getOutcomeFuture()
                                             .thenApply(ignored ->
                                                     // TODO: if it sends us Error, we should propagate that here
                                                     OrError.ok(sessionAndState.getState().toString()));

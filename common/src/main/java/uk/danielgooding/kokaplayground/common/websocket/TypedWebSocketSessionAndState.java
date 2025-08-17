@@ -2,15 +2,15 @@ package uk.danielgooding.kokaplayground.common.websocket;
 
 import java.util.concurrent.CompletableFuture;
 
-public class TypedWebSocketSessionAndState<OutboundMessage, State> {
+public class TypedWebSocketSessionAndState<OutboundMessage, State, Outcome> {
     private final TypedWebSocketSession<OutboundMessage> session;
     private final State state;
-    private final CompletableFuture<Void> closed;
+    private final CompletableFuture<Outcome> outcomeFuture;
 
     public TypedWebSocketSessionAndState(TypedWebSocketSession<OutboundMessage> session, State state) {
         this.session = session;
         this.state = state;
-        this.closed = new CompletableFuture<>();
+        this.outcomeFuture = new CompletableFuture<>();
     }
 
     public TypedWebSocketSession<OutboundMessage> getSession() {
@@ -21,11 +21,11 @@ public class TypedWebSocketSessionAndState<OutboundMessage, State> {
         return state;
     }
 
-    public CompletableFuture<Void> getClosed() {
-        return closed;
+    public CompletableFuture<Outcome> getOutcomeFuture() {
+        return outcomeFuture;
     }
 
-    void setClosed() {
-        closed.complete(null);
+    void setClosed(Outcome outcome) {
+        outcomeFuture.complete(outcome);
     }
 }
