@@ -67,7 +67,11 @@ public class RunnerWebSocketHandler
                             }
                         }).whenComplete((error, exn) -> {
                             try {
-                                session.close();
+                                if (exn != null) {
+                                    session.close(CloseStatus.SERVER_ERROR);
+                                } else {
+                                    session.closeOk();
+                                }
                             } catch (IOException e) {
                                 // okay to swallow - already failing due to original exn.
                             }
