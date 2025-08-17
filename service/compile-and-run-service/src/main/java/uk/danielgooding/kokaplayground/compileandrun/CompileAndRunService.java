@@ -37,14 +37,11 @@ public class CompileAndRunService {
                                                 .getSession()
                                                 .sendMessage(new RunStreamInbound.Run(handle));
                                     } catch (IOException e) {
+                                        // TODO: do i need to do anything to ensure the connection is closed?
                                         throw new UncheckedIOException(e);
                                     }
 
-                                    return sessionAndState
-                                            .getOutcomeFuture()
-                                            .thenApply(ignored ->
-                                                    // TODO: if it sends us Error, we should propagate that here
-                                                    OrError.ok(sessionAndState.getState().toString()));
+                                    return sessionAndState.getOutcomeFuture();
                                 })
 
         );
