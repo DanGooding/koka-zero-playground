@@ -18,7 +18,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class RunnerWebSocketClient {
     private final String uri;
-    private final TypedWebSocketClient<RunStreamOutbound.Message, RunStreamInbound.Message, StringBuilder> client;
+    private final TypedWebSocketClient<RunStreamOutbound.Message, RunStreamInbound.Message, StringBuilder, Void> client;
 
     public RunnerWebSocketClient(
             @Autowired WebSocketClient webSocketClient,
@@ -31,7 +31,7 @@ public class RunnerWebSocketClient {
         this.uri = String.format("ws://%s/ws/run", host);
     }
 
-    public CompletableFuture<TypedWebSocketSessionAndState<RunStreamInbound.Message, StringBuilder>> execute() {
+    public CompletableFuture<TypedWebSocketSessionAndState<RunStreamInbound.Message, StringBuilder, Void>> execute() {
         return client.execute(uri);
     }
 }

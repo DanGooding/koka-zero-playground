@@ -14,7 +14,7 @@ import java.io.IOException;
 
 @Controller
 public class RunnerWebSocketHandler
-        implements TypedWebSocketHandler<RunStreamInbound.Message, RunStreamOutbound.Message, RunnerSessionState> {
+        implements TypedWebSocketHandler<RunStreamInbound.Message, RunStreamOutbound.Message, RunnerSessionState, Void> {
 
     @Autowired
     RunnerService runnerService;
@@ -80,11 +80,12 @@ public class RunnerWebSocketHandler
     }
 
     @Override
-    public void afterConnectionClosed(
+    public Void afterConnectionClosed(
             TypedWebSocketSession<RunStreamOutbound.Message> session,
             RunnerSessionState sessionState,
             CloseStatus status) {
         sessionState.setRunning(false);
+        return null;
     }
 
     @Override

@@ -11,7 +11,7 @@ import uk.danielgooding.kokaplayground.protocol.RunStreamInbound;
 
 @Service
 public class RunnerClientWebSocketHandler
-        implements TypedWebSocketHandler<RunStreamOutbound.Message, RunStreamInbound.Message, StringBuilder> {
+        implements TypedWebSocketHandler<RunStreamOutbound.Message, RunStreamInbound.Message, StringBuilder, Void> {
 
     @Override
     public StringBuilder handleConnectionEstablished(TypedWebSocketSession<RunStreamInbound.Message> session) {
@@ -25,8 +25,6 @@ public class RunnerClientWebSocketHandler
             StringBuilder stdoutBuilder,
             @NonNull RunStreamOutbound.Message outbound
     ) {
-        // TODO: wrap handler in decorators? - not the exception one, perhaps the logging one?
-
         switch (outbound) {
             case RunStreamOutbound.AnotherRequestInProgress anotherRequestInProgress -> {
                 // TODO: client error - propagate
@@ -48,19 +46,20 @@ public class RunnerClientWebSocketHandler
         }
     }
 
+    // TODO: actually put result in outcome
     @Override
-    public void afterConnectionClosed(
+    public Void afterConnectionClosed(
             TypedWebSocketSession<RunStreamInbound.Message> session,
             StringBuilder stdout,
-            CloseStatus status) throws Exception {
-
+            CloseStatus status) {
+        return null;
     }
 
     @Override
     public void handleTransportError(
             TypedWebSocketSession<RunStreamInbound.Message> session,
             StringBuilder stdout,
-            Throwable exception) throws Exception {
+            Throwable exception) {
 
     }
 }

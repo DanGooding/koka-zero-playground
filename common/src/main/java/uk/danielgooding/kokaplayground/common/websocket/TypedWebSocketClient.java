@@ -7,14 +7,14 @@ import org.springframework.web.socket.handler.LoggingWebSocketHandlerDecorator;
 
 import java.util.concurrent.CompletableFuture;
 
-public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState> {
+public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState, Outcome> {
     private final WebSocketClient webSocketClient;
-    private final UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState> handler;
+    private final UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> handler;
     private final WebSocketHandler decoratedHandler;
 
     public TypedWebSocketClient(
             WebSocketClient webSocketClient,
-            TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState> handler,
+            TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> handler,
             Class<InboundMessage> inboundMessageClass,
             Jackson2ObjectMapperBuilder objectMapperBuilder,
             ConcurrentWebSocketWriteLimits writeLimits
@@ -24,7 +24,7 @@ public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState>
         this.decoratedHandler = new LoggingWebSocketHandlerDecorator(this.handler);
     }
 
-    public CompletableFuture<TypedWebSocketSessionAndState<OutboundMessage, SessionState>> execute(String uri) {
+    public CompletableFuture<TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome>> execute(String uri) {
         return webSocketClient.execute(decoratedHandler, uri)
                 .thenApply(handler::getSessionAndState);
     }
