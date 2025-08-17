@@ -3,6 +3,7 @@ package uk.danielgooding.kokaplayground.compileandrun;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
+import uk.danielgooding.kokaplayground.common.OrError;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.protocol.RunStreamOutbound;
@@ -11,54 +12,53 @@ import uk.danielgooding.kokaplayground.protocol.RunStreamInbound;
 
 @Service
 public class RunnerClientWebSocketHandler
-        implements TypedWebSocketHandler<RunStreamOutbound.Message, RunStreamInbound.Message, StringBuilder, Void> {
+        implements TypedWebSocketHandler<RunStreamOutbound.Message, RunStreamInbound.Message, RunnerClientWebSocketState, OrError<String>> {
 
     @Override
-    public StringBuilder handleConnectionEstablished(TypedWebSocketSession<RunStreamInbound.Message> session) {
+    public RunnerClientWebSocketState handleConnectionEstablished(TypedWebSocketSession<RunStreamInbound.Message> session) {
         // nothing
-        return new StringBuilder();
+        return new RunnerClientWebSocketState();
     }
 
     @Override
     public void handleMessage(
             TypedWebSocketSession<RunStreamInbound.Message> session,
-            StringBuilder stdoutBuilder,
+            RunnerClientWebSocketState state,
             @NonNull RunStreamOutbound.Message outbound
     ) {
         switch (outbound) {
             case RunStreamOutbound.AnotherRequestInProgress anotherRequestInProgress -> {
-                // TODO: client error - propagate
+                state.setResult(OrError.error("not running: another run is in progress"));
             }
             case RunStreamOutbound.Starting starting -> {
             }
             case RunStreamOutbound.Stdout stdout -> {
-                stdoutBuilder.append(stdout.getContent());
+                state.appendStdout(stdout.getContent());
             }
             case RunStreamOutbound.Done done -> {
-                // TODO: propagate outcome as request result
+                state.setResult(OrError.ok(null));
             }
             case RunStreamOutbound.Error error -> {
-                // TODO: user error - propagate
+                state.setResult(OrError.error(String.format("error running: %s", error.getMessage())));
             }
             case RunStreamOutbound.Interrupted interrupted -> {
-                // TODO: outcome
+                state.setResult(OrError.error(String.format("run interrupted: %s", interrupted.getMessage())));
             }
         }
     }
 
-    // TODO: actually put result in outcome
     @Override
-    public Void afterConnectionClosed(
+    public OrError<String> afterConnectionClosed(
             TypedWebSocketSession<RunStreamInbound.Message> session,
-            StringBuilder stdout,
+            RunnerClientWebSocketState state,
             CloseStatus status) {
-        return null;
+        return state.getOutcome();
     }
 
     @Override
     public void handleTransportError(
             TypedWebSocketSession<RunStreamInbound.Message> session,
-            StringBuilder stdout,
+            RunnerClientWebSocketState state,
             Throwable exception) {
 
     }
