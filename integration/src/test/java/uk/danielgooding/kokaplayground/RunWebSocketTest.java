@@ -1,31 +1,24 @@
 package uk.danielgooding.kokaplayground;
 
 import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.socket.CloseStatus;
 import uk.danielgooding.kokaplayground.common.Callback;
 import uk.danielgooding.kokaplayground.common.KokaSourceCode;
 import uk.danielgooding.kokaplayground.common.OrError;
-import uk.danielgooding.kokaplayground.common.Workdir;
 import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 import uk.danielgooding.kokaplayground.common.exe.ExeStore;
-import uk.danielgooding.kokaplayground.common.websocket.ITypedWebSocketSession;
 import uk.danielgooding.kokaplayground.common.websocket.SessionId;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
 import uk.danielgooding.kokaplayground.compileandrun.*;
-import uk.danielgooding.kokaplayground.protocol.RunStreamInbound;
-import uk.danielgooding.kokaplayground.protocol.RunStreamOutbound;
 import uk.danielgooding.kokaplayground.run.RunnerService;
-import uk.danielgooding.kokaplayground.run.RunnerSessionState;
 import uk.danielgooding.kokaplayground.run.RunnerWebSocketHandler;
 
 import java.io.IOException;
@@ -41,41 +34,33 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest(classes = {TestConfig.class, RunnerService.class, CompileAndRunService.class})
 @TestPropertySource(properties = {
         "which-exe-store=local-exe-store",
-        // TODO: shouldn't need these
         "local-exe-store.directory=UNUSED",
         "compiler.exe-path=UNUSED",
         "compiler.koka-zero-config-path=UNUSED",
         "runner.bubblewrap-path=UNUSED"})
 public class RunWebSocketTest {
 
+    // mocked services
     @MockitoBean
     RunnerService runnerServiceMock;
 
     @MockitoBean
     CompileServiceAPIClient compileServiceAPIClientMock;
 
+    // mocked to attach the test websocket
     @MockitoBean
     RunnerWebSocketClient runnerWebSocketClientMock;
 
     @MockitoBean
     ExeStore exeStoreMock;
 
-    @MockitoBean
-    @Qualifier("runner-workdir")
-    Workdir runnerWorkdirMock;
-
-    // TODO: shouldn't be creating CompileService at all :(
-    @MockitoBean
-    @Qualifier("compiler-workdir")
-    Workdir compilerWorkdirMock;
-
+    // test subjects:
     @Autowired
     RunnerClientWebSocketHandler runnerClientWebSocketHandler;
 
     @Autowired
     RunnerWebSocketHandler runnerWebSocketHandler;
 
-    // test subject:
     @Autowired
     CompileAndRunService compileAndRunService;
 
@@ -130,6 +115,18 @@ public class RunWebSocketTest {
 
         // assert
         assertThat(runResult).isEqualTo(OrError.ok("hello world :)"));
+    }
+
+    // TODO: test breaking the connection
+    // TODO: test of exn in runnerService
+    // TODO: test of 'user' error in runnerService
+
+    @AfterEach
+    public void resetMocks() {
+        Mockito.reset(
+                runnerServiceMock,
+                compileServiceAPIClientMock,
+                exeStoreMock);
     }
 
 }
