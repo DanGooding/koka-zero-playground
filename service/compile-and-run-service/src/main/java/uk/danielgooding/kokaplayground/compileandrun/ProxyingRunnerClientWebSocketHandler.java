@@ -51,7 +51,6 @@ public class ProxyingRunnerClientWebSocketHandler
                         .sendMessage(new CompileAndRunStream.Outbound.Stdout(stdout.getContent()));
             }
             case RunStream.Outbound.Done done -> {
-                // TODO: there's other things to do here: delete the exe etc.
                 downstreamSessionAndState.getSession()
                         .sendMessage(new CompileAndRunStream.Outbound.Done());
             }
@@ -91,8 +90,6 @@ public class ProxyingRunnerClientWebSocketHandler
             Void ignored,
             Throwable exception) {
 
-        // TODO: is there a better thing to do here? e.g. listening to the client's lifecycle in the handler
         log.error("ProxyingRunnerClient: transport error", exception);
-        downstreamSessionAndState.setClosedError(CloseStatus.SERVER_ERROR);
     }
 }

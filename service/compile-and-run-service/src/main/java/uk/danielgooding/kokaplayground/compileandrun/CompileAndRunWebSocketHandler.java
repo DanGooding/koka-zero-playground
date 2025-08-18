@@ -43,19 +43,18 @@ public class CompileAndRunWebSocketHandler
             case CompileAndRunStream.Inbound.CompileAndRun compileAndRun -> {
                 OrError.thenComposeFuture(compileServiceAPIClient.compile(compileAndRun.getSourceCode()),
                         exeHandle -> {
-
                             ProxyingRunnerClientState context =
                                     new ProxyingRunnerClientState(session, state);
-                            proxyingRunnerWebSocketClient.execute(context).thenCompose(upstreamSessionAndState -> {
-                                // TODO: failed to deliver buffered to upstream - what to do?
-                                state.onUpstreamConnectionEstablished(upstreamSessionAndState);
-                                state.sendUpstream(new RunStream.Inbound.Run(exeHandle));
+                            return proxyingRunnerWebSocketClient.execute(context).thenCompose(upstreamSessionAndState -> {
+                                try {
+                                    state.onUpstreamConnectionEstablished(upstreamSessionAndState);
+                                    state.sendUpstream(new RunStream.Inbound.Run(exeHandle));
 
-
-                                // TODO: on messages, propagate downstream
-                                // don't really care about outcome
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                                return null;
                             });
-
                         });
             }
             case CompileAndRunStream.Inbound.Stdin stdin ->
@@ -64,18 +63,24 @@ public class CompileAndRunWebSocketHandler
     }
 
     @Override
-    public Void afterConnectionClosedOk(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session, CompileAndRunSessionState compileAndRunSessionState) throws Exception {
-        // TODO: propagate the close ?
+    public Void afterConnectionClosedOk(
+            ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session,
+            CompileAndRunSessionState compileAndRunSessionState) {
+
+        compileAndRunSessionState.closeUpstream(CloseStatus.GOING_AWAY);
         return null;
     }
 
     @Override
-    public void afterConnectionClosedErroneously(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session, CompileAndRunSessionState compileAndRunSessionState, CloseStatus status) throws Exception {
-        // TODO: propagate the close ?
+    public void afterConnectionClosedErroneously(
+            ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session,
+            CompileAndRunSessionState compileAndRunSessionState,
+            CloseStatus status) {
+
+        compileAndRunSessionState.closeUpstream(status);
     }
 
     @Override
-    public void handleTransportError(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session, CompileAndRunSessionState compileAndRunSessionState, Throwable exception) throws Exception {
-
+    public void handleTransportError(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session, CompileAndRunSessionState compileAndRunSessionState, Throwable exception) {
     }
 }
