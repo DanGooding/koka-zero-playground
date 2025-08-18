@@ -6,25 +6,39 @@ import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.handler.LoggingWebSocketHandlerDecorator;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
-public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState, Outcome> {
+public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState, Context, Outcome> {
     private final WebSocketClient webSocketClient;
-    private final UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> handler;
-    private final WebSocketHandler decoratedHandler;
+    private final Function<
+            Context,
+            UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome>> handlerFactory;
 
     public TypedWebSocketClient(
             WebSocketClient webSocketClient,
-            TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> handler,
+            Function<Context, TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome>> handlerFactory,
             Class<InboundMessage> inboundMessageClass,
             Jackson2ObjectMapperBuilder objectMapperBuilder,
             ConcurrentWebSocketWriteLimits writeLimits
     ) {
         this.webSocketClient = webSocketClient;
-        this.handler = new UntypedWrapperWebSocketHandler<>(handler, inboundMessageClass, objectMapperBuilder, writeLimits);
-        this.decoratedHandler = new LoggingWebSocketHandlerDecorator(this.handler);
+
+        this.handlerFactory = (context) ->
+                new UntypedWrapperWebSocketHandler<>(
+                        handlerFactory.apply(context),
+                        inboundMessageClass,
+                        objectMapperBuilder,
+                        writeLimits);
     }
 
-    public CompletableFuture<TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome>> execute(String uri) {
+    private WebSocketHandler decorateHandler(WebSocketHandler handler) {
+        return new LoggingWebSocketHandlerDecorator(handler);
+    }
+
+    public CompletableFuture<TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome>> execute(String uri, Context context) {
+        UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome>
+                handler = handlerFactory.apply(context);
+        WebSocketHandler decoratedHandler = decorateHandler(handler);
         return webSocketClient.execute(decoratedHandler, uri)
                 .thenApply(handler::getSessionAndState);
     }

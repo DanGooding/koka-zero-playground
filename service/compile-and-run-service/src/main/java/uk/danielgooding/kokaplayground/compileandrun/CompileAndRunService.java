@@ -5,20 +5,18 @@ import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.*;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.concurrent.CompletableFuture;
 
 @Service
 public class CompileAndRunService {
 
     private final CompileServiceAPIClient compileServiceAPIClient;
-    private final RunnerWebSocketClient runnerWebSocketClient;
+    private final CollectingRunnerWebSocketClient runnerWebSocketClient;
 
 
     public CompileAndRunService(
             @Autowired CompileServiceAPIClient compileServiceAPIClient,
-            @Autowired RunnerWebSocketClient runnerWebSocketClient) {
+            @Autowired CollectingRunnerWebSocketClient runnerWebSocketClient) {
         this.compileServiceAPIClient = compileServiceAPIClient;
         this.runnerWebSocketClient = runnerWebSocketClient;
 

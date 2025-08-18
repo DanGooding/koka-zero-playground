@@ -4,11 +4,11 @@ import uk.danielgooding.kokaplayground.common.Failed;
 import uk.danielgooding.kokaplayground.common.Ok;
 import uk.danielgooding.kokaplayground.common.OrError;
 
-public class RunnerClientWebSocketState {
+public class CollectingRunnerClientWebSocketState {
     private final StringBuilder stdoutBuilder;
     private OrError<Void> result;
 
-    public RunnerClientWebSocketState() {
+    public CollectingRunnerClientWebSocketState() {
         this.stdoutBuilder = new StringBuilder();
         this.result = null;
     }

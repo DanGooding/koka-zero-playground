@@ -5,7 +5,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.mockito.internal.matchers.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,11 +20,9 @@ import uk.danielgooding.kokaplayground.run.RunnerService;
 import uk.danielgooding.kokaplayground.run.RunnerWebSocketHandler;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertThrows;
@@ -50,14 +47,14 @@ public class RunWebSocketTest {
 
     // mocked to attach the test websocket
     @MockitoBean
-    RunnerWebSocketClient runnerWebSocketClientMock;
+    CollectingRunnerWebSocketClient runnerWebSocketClientMock;
 
     @MockitoBean
     ExeStore exeStoreMock;
 
     // test subjects:
     @Autowired
-    RunnerClientWebSocketHandler runnerClientWebSocketHandler;
+    CollectingRunnerClientWebSocketHandler runnerClientWebSocketHandler;
 
     @Autowired
     RunnerWebSocketHandler runnerWebSocketHandler;
