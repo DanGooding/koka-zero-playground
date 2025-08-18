@@ -35,4 +35,8 @@ public class TypedWebSocketSessionAndState<OutboundMessage, State, Outcome> {
         outcomeFuture.completeExceptionally(new RuntimeException(String.format(
                 "WebSocket closed with error: %s", closeStatus)));
     }
+
+    public void setClosedUserExn(Throwable exn) {
+        outcomeFuture.completeExceptionally(new RuntimeException("User code raised into WebSocketHandler", exn));
+    }
 }
