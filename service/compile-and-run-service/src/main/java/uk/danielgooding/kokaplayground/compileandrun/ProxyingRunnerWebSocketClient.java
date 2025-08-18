@@ -1,5 +1,7 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
@@ -18,8 +20,9 @@ import java.util.function.Function;
 
 
 @Service
-@Scope("websocket")
+@Scope("prototype")
 public class ProxyingRunnerWebSocketClient {
+    private static final Log log = LogFactory.getLog(ProxyingRunnerWebSocketClient.class);
     private final String uri;
     private final TypedWebSocketClient<
             RunStream.Outbound.Message,
@@ -50,12 +53,12 @@ public class ProxyingRunnerWebSocketClient {
 
         this.client = new TypedWebSocketClient<>(
                 webSocketClient, handlerBuilder, RunStream.Outbound.Message.class, objectMapperBuilder, writeLimits);
-        // TODO: probably share this part with the other client
         this.uri = String.format("ws://%s/ws/run", host);
     }
 
     public CompletableFuture<TypedWebSocketSessionAndState<RunStream.Inbound.Message, Void, Void>>
     execute(ProxyingRunnerClientState downstreamSessionAndState) {
+        log.info(String.format("connecting to Runner service %s from downstream %s", uri, downstreamSessionAndState.getSession()));
         return client.execute(uri, downstreamSessionAndState);
     }
 }
