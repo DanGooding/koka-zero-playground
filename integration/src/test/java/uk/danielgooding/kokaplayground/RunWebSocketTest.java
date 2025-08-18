@@ -5,15 +5,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.mockito.internal.matchers.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit4.SpringRunner;
-import uk.danielgooding.kokaplayground.common.Callback;
-import uk.danielgooding.kokaplayground.common.KokaSourceCode;
-import uk.danielgooding.kokaplayground.common.OrError;
+import uk.danielgooding.kokaplayground.common.*;
 import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import uk.danielgooding.kokaplayground.common.websocket.SessionId;
@@ -26,8 +25,10 @@ import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.Assert.assertThrows;
 
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
@@ -118,7 +119,7 @@ public class RunWebSocketTest {
     }
 
     @Test
-    public void breakConnectionWhileRunning() throws ExecutionException, InterruptedException, IOException {
+    public void breakConnectionWhileRunning() throws IOException {
         // setup mocks
 
         TestWebSocketConnection connection =
@@ -172,9 +173,133 @@ public class RunWebSocketTest {
         assertThat(runResult).isCompletedExceptionally();
     }
 
-    // TODO: test of exn in runnerService (including in the future it returns, and just mockito.throw)
-    // TODO: test of 'user' error in runnerService
-    // TODO: test of runtime exn in RunnerClientWebSocketState
+    @Test
+    public void raiseDuringRunnerService() throws IOException {
+        // setup mocks
+
+        TestWebSocketConnection connection =
+                new TestWebSocketConnection(
+                        runnerWebSocketHandler,
+                        runnerClientWebSocketHandler,
+                        new SessionId("123"));
+
+        Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
+            connection.establishConnection();
+            return CompletableFuture.completedFuture(connection.getClientSessionAndState());
+        });
+
+        KokaSourceCode sourceCode = new KokaSourceCode("fun main() { ... }");
+        ExeHandle exeHandle = new ExeHandle("the exe");
+        Mockito.when(compileServiceAPIClientMock.compile(sourceCode))
+                .thenReturn(CompletableFuture.completedFuture(OrError.ok(exeHandle)));
+
+        Mockito.when(exeStoreMock.getExe(ArgumentMatchers.eq(exeHandle), ArgumentMatchers.any()))
+                .thenReturn(OrError.ok(Path.of("/path/to/exe")));
+
+        Mockito.when(runnerServiceMock.runWithoutStdinStreamingStdout(
+                        ArgumentMatchers.eq(exeHandle),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any()))
+                .thenAnswer(invocation -> CompletableFuture.supplyAsync(() -> {
+                    throw new RuntimeException("failure in runner service");
+                }));
+
+        // act
+        CompletableFuture<OrError<String>> runResult = compileAndRunService.compileAndRun(sourceCode);
+
+        // assert
+        assertThrows(ExecutionException.class, runResult::get);
+    }
+
+
+    @Test
+    public void clientErrorInRunnerService() throws IOException, ExecutionException, InterruptedException {
+        // setup mocks
+
+        TestWebSocketConnection connection =
+                new TestWebSocketConnection(
+                        runnerWebSocketHandler,
+                        runnerClientWebSocketHandler,
+                        new SessionId("123"));
+
+        Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
+            connection.establishConnection();
+            return CompletableFuture.completedFuture(connection.getClientSessionAndState());
+        });
+
+        KokaSourceCode sourceCode = new KokaSourceCode("fun main() { ... }");
+        ExeHandle exeHandle = new ExeHandle("the exe");
+        Mockito.when(compileServiceAPIClientMock.compile(sourceCode))
+                .thenReturn(CompletableFuture.completedFuture(OrError.ok(exeHandle)));
+
+        Mockito.when(exeStoreMock.getExe(ArgumentMatchers.eq(exeHandle), ArgumentMatchers.any()))
+                .thenReturn(OrError.ok(Path.of("/path/to/exe")));
+
+        Mockito.when(runnerServiceMock.runWithoutStdinStreamingStdout(
+                        ArgumentMatchers.eq(exeHandle),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any()))
+                .thenAnswer(invocation -> {
+                    Callback<Void> onStart = invocation.getArgument(1);
+                    Callback<String> onStdout = invocation.getArgument(2);
+
+                    return CompletableFuture.supplyAsync(() -> {
+                        try {
+                            onStart.call(null);
+
+                            onStdout.call("hello...");
+
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+
+                        return OrError.error("your code was bad");
+                    });
+                });
+
+        // act
+        OrError<String> runResult = compileAndRunService.compileAndRun(sourceCode).get();
+
+        // assert
+        assertThat(runResult).isInstanceOf(Failed.class);
+    }
+
+    @Test
+    public void runnerStateRaises() throws IOException {
+        // setup mocks
+
+        TestWebSocketConnection connection =
+                new TestWebSocketConnection(
+                        runnerWebSocketHandler,
+                        runnerClientWebSocketHandler,
+                        new SessionId("123"));
+
+        Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
+            connection.establishConnection();
+            return CompletableFuture.completedFuture(connection.getClientSessionAndState());
+        });
+
+        KokaSourceCode sourceCode = new KokaSourceCode("fun main() { ... }");
+        ExeHandle exeHandle = new ExeHandle("the exe");
+        Mockito.when(compileServiceAPIClientMock.compile(sourceCode))
+                .thenReturn(CompletableFuture.completedFuture(OrError.ok(exeHandle)));
+
+        Mockito.when(exeStoreMock.getExe(ArgumentMatchers.eq(exeHandle), ArgumentMatchers.any()))
+                .thenReturn(OrError.ok(Path.of("/path/to/exe")));
+
+        Mockito.when(runnerServiceMock.runWithoutStdinStreamingStdout(
+                        ArgumentMatchers.eq(exeHandle),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any()))
+                .thenThrow(new RuntimeException("error in runner service"));
+
+        // act
+        CompletableFuture<OrError<String>> runResult = compileAndRunService.compileAndRun(sourceCode);
+
+        // assert
+        assertThat(runResult).isCompletedExceptionally();
+    }
+
 
     @AfterEach
     public void resetMocks() {

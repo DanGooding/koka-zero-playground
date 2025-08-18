@@ -9,6 +9,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
 import java.util.Hashtable;
+import java.util.concurrent.Callable;
 
 public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> extends BinaryWebSocketHandler {
 
@@ -48,24 +49,49 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
         typedSessions.put(session.getId(), sessionAndState);
     }
 
+    /// give the user's exception back to them by setting the sessionAndState outcome future.
+    /// this avoids the user code hanging forever
+    /// and means the outcome future will have a more meaningful error
+    /// (instead of just having the websocket exit code)
+    <T> T runUserCode(
+            TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState,
+            Callable<T> userCode
+    ) throws Exception {
+        try {
+            return userCode.call();
+        } catch (Throwable e) {
+            sessionAndState.setClosedUserExn(e);
+            throw e;
+        }
+    }
+
     @Override
     protected void handleBinaryMessage(@NonNull WebSocketSession session, @NonNull BinaryMessage binaryMessage) throws Exception {
         TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.get(session.getId());
         InboundMessage message =
                 objectMapper.readValue(binaryMessage.getPayload().array(), this.inboundMessageClass);
-        typedWebSocketHandler.handleMessage(sessionAndState.getSession(), sessionAndState.getState(), message);
+
+        runUserCode(sessionAndState, () -> {
+            typedWebSocketHandler.handleMessage(sessionAndState.getSession(), sessionAndState.getState(), message);
+            return null;
+        });
     }
 
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) throws Exception {
         TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.remove(session.getId());
         if (status.equalsCode(CloseStatus.NORMAL)) {
-            Outcome outcome = typedWebSocketHandler.afterConnectionClosedOk(
-                    sessionAndState.getSession(), sessionAndState.getState());
+            Outcome outcome = runUserCode(sessionAndState, () ->
+                    typedWebSocketHandler.afterConnectionClosedOk(
+                            sessionAndState.getSession(), sessionAndState.getState()));
             sessionAndState.setClosedOk(outcome);
         } else {
-            typedWebSocketHandler.afterConnectionClosedErroneously(
-                    sessionAndState.getSession(), sessionAndState.getState(), status);
+
+            runUserCode(sessionAndState, () -> {
+                typedWebSocketHandler.afterConnectionClosedErroneously(
+                        sessionAndState.getSession(), sessionAndState.getState(), status);
+                return null;
+            });
             sessionAndState.setClosedError(status);
         }
     }
@@ -73,6 +99,11 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
     @Override
     public void handleTransportError(@NonNull WebSocketSession session, @NonNull Throwable exception) throws Exception {
         TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.get(session.getId());
-        typedWebSocketHandler.handleTransportError(sessionAndState.getSession(), sessionAndState.getState(), exception);
+
+        runUserCode(sessionAndState, () -> {
+            typedWebSocketHandler.handleTransportError(
+                    sessionAndState.getSession(), sessionAndState.getState(), exception);
+            return null;
+        });
     }
 }
