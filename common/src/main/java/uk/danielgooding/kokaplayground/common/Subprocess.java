@@ -99,7 +99,7 @@ public class Subprocess {
 
                 return new Output(exitCode, null, stderr);
 
-            } catch (IOException | InterruptedException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });

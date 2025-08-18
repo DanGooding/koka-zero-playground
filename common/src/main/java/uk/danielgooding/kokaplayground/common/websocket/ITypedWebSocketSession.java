@@ -9,9 +9,9 @@ public interface ITypedWebSocketSession<OutboundMessage> {
 
     SessionId getId();
 
-    void sendMessage(OutboundMessage messageObject) throws IOException;
+    void sendMessage(OutboundMessage messageObject) throws Exception;
 
-    void closeOk() throws IOException;
+    void closeOk() throws Exception;
 
-    void close(CloseStatus closeStatus) throws IOException;
+    void close(CloseStatus closeStatus) throws Exception;
 }

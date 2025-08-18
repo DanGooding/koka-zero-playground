@@ -51,7 +51,6 @@ public class RunnerClientWebSocketHandler
     public OrError<String> afterConnectionClosedOk(
             ITypedWebSocketSession<RunStreamInbound.Message> session,
             RunnerClientWebSocketState state) {
-        // TODO: if closed erroneously, don't want to use outcome
         return state.getOutcome();
     }
 
@@ -60,7 +59,6 @@ public class RunnerClientWebSocketHandler
             ITypedWebSocketSession<RunStreamInbound.Message> session,
             RunnerClientWebSocketState state,
             CloseStatus closeStatus) {
-        // TODO: anything?
     }
 
     @Override
