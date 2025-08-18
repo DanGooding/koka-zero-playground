@@ -117,9 +117,64 @@ public class RunWebSocketTest {
         assertThat(runResult).isEqualTo(OrError.ok("hello world :)"));
     }
 
-    // TODO: test breaking the connection
-    // TODO: test of exn in runnerService
+    @Test
+    public void breakConnectionWhileRunning() throws ExecutionException, InterruptedException, IOException {
+        // setup mocks
+
+        TestWebSocketConnection connection =
+                new TestWebSocketConnection(
+                        runnerWebSocketHandler,
+                        runnerClientWebSocketHandler,
+                        new SessionId("123"));
+
+        Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
+            connection.establishConnection();
+            return CompletableFuture.completedFuture(connection.getClientSessionAndState());
+        });
+
+        KokaSourceCode sourceCode = new KokaSourceCode("fun main() { ... }");
+        ExeHandle exeHandle = new ExeHandle("the exe");
+        Mockito.when(compileServiceAPIClientMock.compile(sourceCode))
+                .thenReturn(CompletableFuture.completedFuture(OrError.ok(exeHandle)));
+
+        Mockito.when(exeStoreMock.getExe(ArgumentMatchers.eq(exeHandle), ArgumentMatchers.any()))
+                .thenReturn(OrError.ok(Path.of("/path/to/exe")));
+
+        Mockito.when(runnerServiceMock.runWithoutStdinStreamingStdout(
+                        ArgumentMatchers.eq(exeHandle),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any()))
+                .thenAnswer(invocation -> {
+                    Callback<Void> onStart = invocation.getArgument(1);
+                    Callback<String> onStdout = invocation.getArgument(2);
+
+                    return CompletableFuture.supplyAsync(() -> {
+                        try {
+                            onStart.call(null);
+
+                            onStdout.call("hello...");
+                            // break the connection before we complete this stage
+                            connection.breakConnection();
+                            onStdout.call("...world");
+
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+
+                        return OrError.ok(null);
+                    });
+                });
+
+        // act
+        CompletableFuture<OrError<String>> runResult = compileAndRunService.compileAndRun(sourceCode);
+
+        // assert
+        assertThat(runResult).isCompletedExceptionally();
+    }
+
+    // TODO: test of exn in runnerService (including in the future it returns, and just mockito.throw)
     // TODO: test of 'user' error in runnerService
+    // TODO: test of runtime exn in RunnerClientWebSocketState
 
     @AfterEach
     public void resetMocks() {
