@@ -3,7 +3,7 @@ package uk.danielgooding.kokaplayground.compileandrun;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.*;
-import uk.danielgooding.kokaplayground.protocol.RunStreamInbound;
+import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -35,7 +35,7 @@ public class CompileAndRunService {
                                     try {
                                         sessionAndState
                                                 .getSession()
-                                                .sendMessage(new RunStreamInbound.Run(handle));
+                                                .sendMessage(new RunStream.Inbound.Run(handle));
                                     } catch (Exception e) {
                                         throw new RuntimeException(e);
                                     }

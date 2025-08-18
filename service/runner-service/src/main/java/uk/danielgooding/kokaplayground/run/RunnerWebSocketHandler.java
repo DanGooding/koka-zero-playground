@@ -7,41 +7,40 @@ import org.springframework.web.socket.CloseStatus;
 import uk.danielgooding.kokaplayground.common.*;
 import uk.danielgooding.kokaplayground.common.websocket.ITypedWebSocketSession;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
-import uk.danielgooding.kokaplayground.protocol.RunStreamInbound;
-import uk.danielgooding.kokaplayground.protocol.RunStreamOutbound;
+import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 @Controller
 public class RunnerWebSocketHandler
-        implements TypedWebSocketHandler<RunStreamInbound.Message, RunStreamOutbound.Message, RunnerSessionState, Void> {
+        implements TypedWebSocketHandler<RunStream.Inbound.Message, RunStream.Outbound.Message, RunnerSessionState, Void> {
 
     @Autowired
     RunnerService runnerService;
 
     @Override
-    public RunnerSessionState handleConnectionEstablished(ITypedWebSocketSession<RunStreamOutbound.Message> session) {
+    public RunnerSessionState handleConnectionEstablished(ITypedWebSocketSession<RunStream.Outbound.Message> session) {
         return new RunnerSessionState();
     }
 
     @Override
     public void handleMessage(
-            ITypedWebSocketSession<RunStreamOutbound.Message> session,
+            ITypedWebSocketSession<RunStream.Outbound.Message> session,
             RunnerSessionState sessionState,
-            @NonNull RunStreamInbound.Message inbound) throws Exception {
+            @NonNull RunStream.Inbound.Message inbound) throws Exception {
         switch (inbound) {
-            case RunStreamInbound.Run run -> {
+            case RunStream.Inbound.Run run -> {
                 if (sessionState.isRunning()) {
-                    session.sendMessage(new RunStreamOutbound.AnotherRequestInProgress());
+                    session.sendMessage(new RunStream.Outbound.AnotherRequestInProgress());
                     return;
                 }
 
                 sessionState.setRunning(true);
 
                 Callback<Void> onStart = (ignored) -> {
-                    session.sendMessage(new RunStreamOutbound.Starting());
+                    session.sendMessage(new RunStream.Outbound.Starting());
                 };
 
                 Callback<String> onStdout = (chunk) -> {
-                    session.sendMessage(new RunStreamOutbound.Stdout(chunk));
+                    session.sendMessage(new RunStream.Outbound.Stdout(chunk));
                 };
 
                 runnerService.runWithoutStdinStreamingStdout(
@@ -55,9 +54,9 @@ public class RunnerWebSocketHandler
                                 try {
                                     session.sendMessage(
                                             switch (error) {
-                                                case Ok<Void> ok -> new RunStreamOutbound.Done();
+                                                case Ok<Void> ok -> new RunStream.Outbound.Done();
                                                 case Failed<?> failed ->
-                                                        new RunStreamOutbound.Error(failed.getMessage());
+                                                        new RunStream.Outbound.Error(failed.getMessage());
                                             });
                                 } catch (Exception e) {
                                     // okay to swallow - already failing due to original exn.
@@ -75,7 +74,7 @@ public class RunnerWebSocketHandler
                             }
                         });
             }
-            case RunStreamInbound.Stdin stdin -> {
+            case RunStream.Inbound.Stdin stdin -> {
                 throw new UnsupportedOperationException("Stdin not yet supported");
             }
         }
@@ -83,14 +82,14 @@ public class RunnerWebSocketHandler
 
     @Override
     public Void afterConnectionClosedOk(
-            ITypedWebSocketSession<RunStreamOutbound.Message> session,
+            ITypedWebSocketSession<RunStream.Outbound.Message> session,
             RunnerSessionState sessionState) {
         return null;
     }
 
     @Override
     public void afterConnectionClosedErroneously(
-            ITypedWebSocketSession<RunStreamOutbound.Message> session,
+            ITypedWebSocketSession<RunStream.Outbound.Message> session,
             RunnerSessionState sessionState,
             CloseStatus status) {
         // nothing to cleanup
@@ -98,7 +97,7 @@ public class RunnerWebSocketHandler
 
     @Override
     public void handleTransportError(
-            ITypedWebSocketSession<RunStreamOutbound.Message> session,
+            ITypedWebSocketSession<RunStream.Outbound.Message> session,
             RunnerSessionState sessionState, Throwable exception) {
         // not required to do anything (the client will find out about the close)
         // however we could abort the run if it isn't already
