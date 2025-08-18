@@ -50,8 +50,14 @@ services:
       ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: DEBUG
     networks:
       common-bridge:
+    command:
+      # enable JVM remote debugging on port 5005
+      - "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+      - "-jar"
+      - "app.war"
     ports:
       - "80:80"
+      - "5005:5005"
 
 volumes:
   exe-store:
