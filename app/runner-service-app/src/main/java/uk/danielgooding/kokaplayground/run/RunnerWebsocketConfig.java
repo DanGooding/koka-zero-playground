@@ -12,8 +12,7 @@ import org.springframework.web.socket.handler.LoggingWebSocketHandlerDecorator;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 import uk.danielgooding.kokaplayground.common.websocket.ConcurrentWebSocketWriteLimits;
 import uk.danielgooding.kokaplayground.common.websocket.UntypedWrapperWebSocketHandler;
-import uk.danielgooding.kokaplayground.protocol.RunStreamInbound;
-import uk.danielgooding.kokaplayground.protocol.RunStreamOutbound;
+import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 @Configuration
 @EnableWebSocket
@@ -30,10 +29,10 @@ public class RunnerWebsocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        UntypedWrapperWebSocketHandler<RunStreamInbound.Message, RunStreamOutbound.Message, RunnerSessionState, Void> untypedRunnerWebsocketHandler =
+        UntypedWrapperWebSocketHandler<RunStream.Inbound.Message, RunStream.Outbound.Message, RunnerSessionState, Void> untypedRunnerWebsocketHandler =
                 new UntypedWrapperWebSocketHandler<>(
                         runnerWebSocketHandler,
-                        RunStreamInbound.Message.class,
+                        RunStream.Inbound.Message.class,
                         objectMapperBuilder,
                         concurrentWebSocketWriteLimits);
 

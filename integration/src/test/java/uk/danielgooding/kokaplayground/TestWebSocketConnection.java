@@ -9,8 +9,9 @@ import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
 import uk.danielgooding.kokaplayground.compileandrun.RunnerClientWebSocketHandler;
 import uk.danielgooding.kokaplayground.compileandrun.RunnerClientWebSocketState;
-import uk.danielgooding.kokaplayground.protocol.RunStreamInbound;
-import uk.danielgooding.kokaplayground.protocol.RunStreamOutbound;
+import uk.danielgooding.kokaplayground.protocol.RunStream;
+import uk.danielgooding.kokaplayground.protocol.RunStream.Inbound;
+import uk.danielgooding.kokaplayground.protocol.RunStream.Outbound;
 import uk.danielgooding.kokaplayground.run.RunnerSessionState;
 import uk.danielgooding.kokaplayground.run.RunnerWebSocketHandler;
 
@@ -84,8 +85,8 @@ class TestWebSocketConnection {
     private final RunnerClientWebSocketHandler clientHandler;
     private final SessionId sessionId;
 
-    private TypedWebSocketSessionAndState<RunStreamOutbound.Message, RunnerSessionState, Void> serverSessionAndState;
-    private TypedWebSocketSessionAndState<RunStreamInbound.Message, RunnerClientWebSocketState, OrError<String>> clientSessionAndState;
+    private TypedWebSocketSessionAndState<RunStream.Outbound.Message, RunnerSessionState, Void> serverSessionAndState;
+    private TypedWebSocketSessionAndState<RunStream.Inbound.Message, RunnerClientWebSocketState, OrError<String>> clientSessionAndState;
 
     TestWebSocketConnection(RunnerWebSocketHandler serverHandler, RunnerClientWebSocketHandler clientHandler, SessionId sessionId) {
         this.serverHandler = serverHandler;
@@ -94,11 +95,11 @@ class TestWebSocketConnection {
     }
 
     public void establishConnection() {
-        TestSession<RunStreamInbound.Message, RunStreamOutbound.Message,
+        TestSession<RunStream.Inbound.Message, RunStream.Outbound.Message,
                 RunnerSessionState, Void> serverSession =
                 new TestSession<>(sessionId);
 
-        TestSession<RunStreamOutbound.Message, RunStreamInbound.Message,
+        TestSession<RunStream.Outbound.Message, RunStream.Inbound.Message,
                 RunnerClientWebSocketState, OrError<String>> clientSession =
                 new TestSession<>(sessionId);
 
@@ -121,7 +122,7 @@ class TestWebSocketConnection {
                 serverSession::close);
     }
 
-    public TypedWebSocketSessionAndState<RunStreamInbound.Message, RunnerClientWebSocketState, OrError<String>> getClientSessionAndState() {
+    public TypedWebSocketSessionAndState<RunStream.Inbound.Message, RunnerClientWebSocketState, OrError<String>> getClientSessionAndState() {
         return clientSessionAndState;
     }
 
