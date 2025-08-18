@@ -10,8 +10,6 @@ import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.protocol.RunStreamInbound;
 import uk.danielgooding.kokaplayground.protocol.RunStreamOutbound;
 
-import java.io.IOException;
-
 @Controller
 public class RunnerWebSocketHandler
         implements TypedWebSocketHandler<RunStreamInbound.Message, RunStreamOutbound.Message, RunnerSessionState, Void> {
@@ -28,7 +26,7 @@ public class RunnerWebSocketHandler
     public void handleMessage(
             ITypedWebSocketSession<RunStreamOutbound.Message> session,
             RunnerSessionState sessionState,
-            @NonNull RunStreamInbound.Message inbound) throws IOException {
+            @NonNull RunStreamInbound.Message inbound) throws Exception {
         switch (inbound) {
             case RunStreamInbound.Run run -> {
                 if (sessionState.isRunning()) {
@@ -61,7 +59,7 @@ public class RunnerWebSocketHandler
                                                 case Failed<?> failed ->
                                                         new RunStreamOutbound.Error(failed.getMessage());
                                             });
-                                } catch (IOException e) {
+                                } catch (Exception e) {
                                     // okay to swallow - already failing due to original exn.
                                 }
                             }
@@ -72,7 +70,7 @@ public class RunnerWebSocketHandler
                                 } else {
                                     session.closeOk();
                                 }
-                            } catch (IOException e) {
+                            } catch (Exception e) {
                                 // okay to swallow - already failing due to original exn.
                             }
                         });

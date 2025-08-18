@@ -103,8 +103,8 @@ public class RunWebSocketTest {
                             onStdout.call("hello ");
                             onStdout.call("world ");
                             onStdout.call(":)");
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
                         }
 
                         return OrError.ok(null);
@@ -158,8 +158,8 @@ public class RunWebSocketTest {
                             connection.breakConnection();
                             onStdout.call("...world");
 
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
                         }
 
                         return OrError.ok(null);
@@ -249,8 +249,8 @@ public class RunWebSocketTest {
 
                             onStdout.call("hello...");
 
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
                         }
 
                         return OrError.error("your code was bad");
