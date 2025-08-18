@@ -9,7 +9,9 @@ public interface TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionS
 
     void handleMessage(ITypedWebSocketSession<OutboundMessage> session, SessionState sessionState, @NonNull InboundMessage inbound) throws Exception;
 
-    Outcome afterConnectionClosed(ITypedWebSocketSession<OutboundMessage> session, SessionState sessionState, CloseStatus status) throws Exception;
+    Outcome afterConnectionClosedOk(ITypedWebSocketSession<OutboundMessage> session, SessionState sessionState) throws Exception;
+
+    void afterConnectionClosedErroneously(ITypedWebSocketSession<OutboundMessage> session, SessionState sessionState, CloseStatus status) throws Exception;
 
     void handleTransportError(ITypedWebSocketSession<OutboundMessage> session, SessionState sessionState, Throwable exception) throws Exception;
 }

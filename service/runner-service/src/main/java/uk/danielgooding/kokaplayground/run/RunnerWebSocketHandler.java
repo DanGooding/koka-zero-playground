@@ -84,12 +84,18 @@ public class RunnerWebSocketHandler
     }
 
     @Override
-    public Void afterConnectionClosed(
+    public Void afterConnectionClosedOk(
+            ITypedWebSocketSession<RunStreamOutbound.Message> session,
+            RunnerSessionState sessionState) {
+        return null;
+    }
+
+    @Override
+    public void afterConnectionClosedErroneously(
             ITypedWebSocketSession<RunStreamOutbound.Message> session,
             RunnerSessionState sessionState,
             CloseStatus status) {
-        sessionState.setRunning(false);
-        return null;
+        // nothing to cleanup
     }
 
     @Override

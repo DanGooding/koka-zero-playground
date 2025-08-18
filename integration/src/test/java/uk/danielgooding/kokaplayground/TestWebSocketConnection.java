@@ -41,7 +41,8 @@ class TestWebSocketConnection {
         @Override
         public void sendMessage(RunStreamOutbound.Message messageObject) throws IOException {
             if (isClosed) {
-                throw new IOException("ClientSession is closed - cannot sendMessage");
+                System.out.println("tried to send on closed Server");
+                throw new IOException("ServerSession is closed - cannot sendMessage");
             }
             TestWebSocketConnection.this.clientHandler.handleMessage(
                     clientSessionAndState.getSession(),
@@ -58,14 +59,16 @@ class TestWebSocketConnection {
         public void close(CloseStatus closeStatus) throws IOException {
             if (isClosed) return;
             isClosed = true;
-            Void outcome = TestWebSocketConnection.this.serverHandler.afterConnectionClosed(
-                    serverSessionAndState.getSession(),
-                    serverSessionAndState.getState(),
-                    closeStatus);
             if (closeStatus.equalsCode(CloseStatus.NORMAL)) {
-                serverSessionAndState.setClosedOk(outcome);
+                Void outcome = TestWebSocketConnection.this.serverHandler.afterConnectionClosedOk(
+                        serverSessionAndState.getSession(),
+                        serverSessionAndState.getState()
+                );
+                TestWebSocketConnection.this.serverSessionAndState.setClosedOk(outcome);
             } else {
-                serverSessionAndState.setClosedError(closeStatus);
+                TestWebSocketConnection.this.serverHandler.afterConnectionClosedErroneously(
+                        serverSessionAndState.getSession(), serverSessionAndState.getState(), closeStatus);
+                TestWebSocketConnection.this.serverSessionAndState.setClosedError(closeStatus);
             }
             TestWebSocketConnection.this.clientSessionAndState.getSession().close(closeStatus);
         }
@@ -83,6 +86,7 @@ class TestWebSocketConnection {
         @Override
         public void sendMessage(RunStreamInbound.Message messageObject) throws IOException {
             if (isClosed) {
+                System.out.println("tried to send on closed Client");
                 throw new IOException("ClientSession is closed - cannot sendMessage");
             }
             TestWebSocketConnection.this.serverHandler.handleMessage(
@@ -101,16 +105,19 @@ class TestWebSocketConnection {
             if (isClosed) return;
             isClosed = true;
 
-            OrError<String> outcome = TestWebSocketConnection.this.clientHandler.afterConnectionClosed(
-                    clientSessionAndState.getSession(),
-                    clientSessionAndState.getState(),
-                    closeStatus);
             // TODO: or more properly, we should be running the untyped handlers
             if (closeStatus.equalsCode(CloseStatus.NORMAL)) {
+                OrError<String> outcome = TestWebSocketConnection.this.clientHandler.afterConnectionClosedOk(
+                        clientSessionAndState.getSession(),
+                        clientSessionAndState.getState()
+                );
                 TestWebSocketConnection.this.clientSessionAndState.setClosedOk(outcome);
             } else {
+                TestWebSocketConnection.this.clientHandler.afterConnectionClosedErroneously(
+                        clientSessionAndState.getSession(), clientSessionAndState.getState(), closeStatus);
                 TestWebSocketConnection.this.clientSessionAndState.setClosedError(closeStatus);
             }
+
             TestWebSocketConnection.this.serverSessionAndState.getSession().close(closeStatus);
         }
     }

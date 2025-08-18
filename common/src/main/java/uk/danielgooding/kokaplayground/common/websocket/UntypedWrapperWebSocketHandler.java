@@ -59,10 +59,13 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) throws Exception {
         TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.remove(session.getId());
-        Outcome outcome = typedWebSocketHandler.afterConnectionClosed(sessionAndState.getSession(), sessionAndState.getState(), status);
         if (status.equalsCode(CloseStatus.NORMAL)) {
+            Outcome outcome = typedWebSocketHandler.afterConnectionClosedOk(
+                    sessionAndState.getSession(), sessionAndState.getState());
             sessionAndState.setClosedOk(outcome);
         } else {
+            typedWebSocketHandler.afterConnectionClosedErroneously(
+                    sessionAndState.getSession(), sessionAndState.getState(), status);
             sessionAndState.setClosedError(status);
         }
     }
