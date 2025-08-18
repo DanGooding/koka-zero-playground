@@ -1,5 +1,7 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
@@ -7,7 +9,6 @@ import org.springframework.web.socket.CloseStatus;
 import uk.danielgooding.kokaplayground.common.OrError;
 import uk.danielgooding.kokaplayground.common.websocket.ITypedWebSocketSession;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
@@ -19,42 +20,53 @@ public class CompileAndRunWebSocketHandler
         CompileAndRunSessionState,
         Void> {
 
+    private static final Log log = LogFactory.getLog(CompileAndRunWebSocketHandler.class);
     @Autowired
     CompileServiceAPIClient compileServiceAPIClient;
 
-    // TODO: will the websocket scope actually give us a per session instance?
     @Autowired
     ProxyingRunnerWebSocketClient proxyingRunnerWebSocketClient;
 
     @Override
     public CompileAndRunSessionState handleConnectionEstablished(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session) throws Exception {
-
-        CompileAndRunSessionState state = new CompileAndRunSessionState();
-
-        // TODO: perhaps we need to immediately await these futures?
-        // otherwise we can't raise their exceptions in the right contexts?
-
-        return state;
+        return new CompileAndRunSessionState();
     }
 
     @Override
     public void handleMessage(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session, CompileAndRunSessionState state, @NonNull CompileAndRunStream.Inbound.Message inbound) throws Exception {
         switch (inbound) {
             case CompileAndRunStream.Inbound.CompileAndRun compileAndRun -> {
+                // TODO: check if AnotherRequestInProgress and return if so
+                session.sendMessage(new CompileAndRunStream.Outbound.StartingCompilation());
+
+                log.info(String.format("compiling: %s", session.getId()));
                 OrError.thenComposeFuture(compileServiceAPIClient.compile(compileAndRun.getSourceCode()),
                         exeHandle -> {
+                            log.info(String.format("compiled: %s", session.getId()));
+                            try {
+                                session.sendMessage(new CompileAndRunStream.Outbound.Running());
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
                             ProxyingRunnerClientState context =
                                     new ProxyingRunnerClientState(session, state);
-                            return proxyingRunnerWebSocketClient.execute(context).thenCompose(upstreamSessionAndState -> {
-                                try {
-                                    state.onUpstreamConnectionEstablished(upstreamSessionAndState);
-                                    state.sendUpstream(new RunStream.Inbound.Run(exeHandle));
+                            log.info(String.format("will request run: %s", session.getId()));
+                            try {
+                                return proxyingRunnerWebSocketClient.execute(context).thenCompose(upstreamSessionAndState -> {
+                                    log.info(String.format("began running: %s", session.getId()));
+                                    try {
+                                        state.onUpstreamConnectionEstablished(upstreamSessionAndState);
+                                        state.sendUpstream(new RunStream.Inbound.Run(exeHandle));
+                                        return null;
 
-                                } catch (Exception e) {
-                                    throw new RuntimeException(e);
-                                }
-                                return null;
-                            });
+                                    } catch (Exception e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+                            } catch (Throwable e) {
+                                log.info("execute/latter failed", e);
+                                throw e;
+                            }
                         });
             }
             case CompileAndRunStream.Inbound.Stdin stdin ->
