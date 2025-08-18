@@ -16,8 +16,12 @@ import uk.danielgooding.kokaplayground.common.*;
 import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import uk.danielgooding.kokaplayground.compile.CompileController;
+import uk.danielgooding.kokaplayground.compile.CompileService;
 import uk.danielgooding.kokaplayground.compile.CompilerTool;
+import uk.danielgooding.kokaplayground.compileandrun.CompileServiceAPIClient;
+import uk.danielgooding.kokaplayground.compileandrun.RunnerWebSocketClient;
 import uk.danielgooding.kokaplayground.run.RunnerController;
+import uk.danielgooding.kokaplayground.run.RunnerService;
 import uk.danielgooding.kokaplayground.run.SandboxedExeRunner;
 
 import java.io.IOException;
@@ -30,10 +34,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
-@SpringBootTest(classes = {TestConfig.class, CompileController.class, RunnerController.class})
+@SpringBootTest(classes = {TestConfig.class, CompileService.class, RunnerService.class})
 @TestPropertySource(properties = {
         "which-exe-store=local-exe-store"})
 public class CompileAndRunTest {
+    // mocked services:
     @MockitoBean
     CompilerTool compilerToolMock;
 
@@ -51,6 +56,13 @@ public class CompileAndRunTest {
     @MockitoBean
     SandboxedExeRunner exeRunnerMock;
 
+    // unused - mocked to avoid creating a real instance:
+    @MockitoBean
+    CompileServiceAPIClient compileServiceAPIClientMock;
+    @MockitoBean
+    RunnerWebSocketClient runnerWebSocketClientMock;
+
+    // test subjects:
     @Autowired
     CompileController compileController;
     @Autowired
@@ -118,6 +130,11 @@ public class CompileAndRunTest {
 
     @AfterEach
     public void resetMocks() {
-        Mockito.reset(compilerToolMock, exeStoreMock, exeRunnerMock);
+        Mockito.reset(
+                compilerToolMock,
+                exeStoreMock,
+                exeRunnerMock,
+                compilerWorkdirMock,
+                runnerWorkdirMock);
     }
 }
