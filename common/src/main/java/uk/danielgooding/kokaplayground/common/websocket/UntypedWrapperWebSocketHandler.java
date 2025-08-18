@@ -3,15 +3,15 @@ package uk.danielgooding.kokaplayground.common.websocket;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.lang.NonNull;
-import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.handler.BinaryWebSocketHandler;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.Hashtable;
 import java.util.concurrent.Callable;
 
-public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> extends BinaryWebSocketHandler {
+public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> extends TextWebSocketHandler {
 
     private final Hashtable<String, TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome>> typedSessions;
     private final ObjectMapper objectMapper;
@@ -67,10 +67,10 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
     }
 
     @Override
-    protected void handleBinaryMessage(@NonNull WebSocketSession session, @NonNull BinaryMessage binaryMessage) throws Exception {
+    protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage textMessage) throws Exception {
         TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.get(session.getId());
         InboundMessage message =
-                objectMapper.readValue(binaryMessage.getPayload().array(), this.inboundMessageClass);
+                objectMapper.readValue(textMessage.getPayload(), this.inboundMessageClass);
 
         runUserCode(sessionAndState, () -> {
             typedWebSocketHandler.handleMessage(sessionAndState.getSession(), sessionAndState.getState(), message);

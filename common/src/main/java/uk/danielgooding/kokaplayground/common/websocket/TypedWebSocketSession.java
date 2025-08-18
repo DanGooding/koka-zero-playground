@@ -1,8 +1,8 @@
 package uk.danielgooding.kokaplayground.common.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 
@@ -29,7 +29,7 @@ public class TypedWebSocketSession<OutboundMessage> implements ITypedWebSocketSe
     }
 
     public void sendMessage(OutboundMessage messageObject) throws IOException {
-        BinaryMessage reply = new BinaryMessage(objectMapper.writeValueAsBytes(messageObject));
+        TextMessage reply = new TextMessage(objectMapper.writeValueAsBytes(messageObject));
         session.sendMessage(reply);
     }
 
