@@ -10,19 +10,19 @@ import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 
 @Service
-public class RunnerClientWebSocketHandler
-        implements TypedWebSocketHandler<RunStream.Outbound.Message, RunStream.Inbound.Message, RunnerClientWebSocketState, OrError<String>> {
+public class CollectingRunnerClientWebSocketHandler
+        implements TypedWebSocketHandler<RunStream.Outbound.Message, RunStream.Inbound.Message, CollectingRunnerClientWebSocketState, OrError<String>> {
 
     @Override
-    public RunnerClientWebSocketState handleConnectionEstablished(ITypedWebSocketSession<RunStream.Inbound.Message> session) {
+    public CollectingRunnerClientWebSocketState handleConnectionEstablished(ITypedWebSocketSession<RunStream.Inbound.Message> session) {
         // nothing
-        return new RunnerClientWebSocketState();
+        return new CollectingRunnerClientWebSocketState();
     }
 
     @Override
     public void handleMessage(
             ITypedWebSocketSession<RunStream.Inbound.Message> session,
-            RunnerClientWebSocketState state,
+            CollectingRunnerClientWebSocketState state,
             @NonNull RunStream.Outbound.Message outbound
     ) {
         switch (outbound) {
@@ -49,21 +49,21 @@ public class RunnerClientWebSocketHandler
     @Override
     public OrError<String> afterConnectionClosedOk(
             ITypedWebSocketSession<RunStream.Inbound.Message> session,
-            RunnerClientWebSocketState state) {
+            CollectingRunnerClientWebSocketState state) {
         return state.getOutcome();
     }
 
     @Override
     public void afterConnectionClosedErroneously(
             ITypedWebSocketSession<RunStream.Inbound.Message> session,
-            RunnerClientWebSocketState state,
+            CollectingRunnerClientWebSocketState state,
             CloseStatus closeStatus) {
     }
 
     @Override
     public void handleTransportError(
             ITypedWebSocketSession<RunStream.Inbound.Message> session,
-            RunnerClientWebSocketState state,
+            CollectingRunnerClientWebSocketState state,
             Throwable exception) {
 
     }

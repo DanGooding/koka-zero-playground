@@ -43,6 +43,7 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         TypedWebSocketSession<OutboundMessage> runnerSession = new TypedWebSocketSession<>(
                 session, objectMapper, writeLimits);
+
         SessionState state = typedWebSocketHandler.handleConnectionEstablished(runnerSession);
         TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState =
                 new TypedWebSocketSessionAndState<>(runnerSession, state);

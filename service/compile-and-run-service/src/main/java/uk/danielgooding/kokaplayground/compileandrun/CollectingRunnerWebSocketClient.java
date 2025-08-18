@@ -8,30 +8,44 @@ import org.springframework.web.socket.client.WebSocketClient;
 import uk.danielgooding.kokaplayground.common.OrError;
 import uk.danielgooding.kokaplayground.common.websocket.ConcurrentWebSocketWriteLimits;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketClient;
+import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 
 @Service
-public class RunnerWebSocketClient {
+public class CollectingRunnerWebSocketClient {
     private final String uri;
-    private final TypedWebSocketClient<RunStream.Outbound.Message, RunStream.Inbound.Message, RunnerClientWebSocketState, OrError<String>> client;
+    private final TypedWebSocketClient<
+            RunStream.Outbound.Message,
+            RunStream.Inbound.Message,
+            CollectingRunnerClientWebSocketState,
+            Void,
+            OrError<String>> client;
 
-    public RunnerWebSocketClient(
+    public CollectingRunnerWebSocketClient(
             @Autowired WebSocketClient webSocketClient,
             @Value("${runner-service-hostname}") URI host,
-            @Autowired RunnerClientWebSocketHandler handler,
+            @Autowired CollectingRunnerClientWebSocketHandler handler,
             @Autowired Jackson2ObjectMapperBuilder objectMapperBuilder,
             @Autowired ConcurrentWebSocketWriteLimits writeLimits) {
+
+        Function<Void,
+                TypedWebSocketHandler<RunStream.Outbound.Message,
+                        RunStream.Inbound.Message,
+                        CollectingRunnerClientWebSocketState,
+                        OrError<String>>>
+                handlerFactory = (ignored) -> handler;
         this.client = new TypedWebSocketClient<>(
-                webSocketClient, handler, RunStream.Outbound.Message.class, objectMapperBuilder, writeLimits);
+                webSocketClient, handlerFactory, RunStream.Outbound.Message.class, objectMapperBuilder, writeLimits);
         this.uri = String.format("ws://%s/ws/run", host);
     }
 
-    public CompletableFuture<TypedWebSocketSessionAndState<RunStream.Inbound.Message, RunnerClientWebSocketState, OrError<String>>> execute() {
-        return client.execute(uri);
+    public CompletableFuture<TypedWebSocketSessionAndState<RunStream.Inbound.Message, CollectingRunnerClientWebSocketState, OrError<String>>> execute() {
+        return client.execute(uri, null);
     }
 }

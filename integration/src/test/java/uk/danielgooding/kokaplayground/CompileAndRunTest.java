@@ -19,7 +19,7 @@ import uk.danielgooding.kokaplayground.compile.CompileController;
 import uk.danielgooding.kokaplayground.compile.CompileService;
 import uk.danielgooding.kokaplayground.compile.CompilerTool;
 import uk.danielgooding.kokaplayground.compileandrun.CompileServiceAPIClient;
-import uk.danielgooding.kokaplayground.compileandrun.RunnerWebSocketClient;
+import uk.danielgooding.kokaplayground.compileandrun.CollectingRunnerWebSocketClient;
 import uk.danielgooding.kokaplayground.run.RunnerController;
 import uk.danielgooding.kokaplayground.run.RunnerService;
 import uk.danielgooding.kokaplayground.run.SandboxedExeRunner;
@@ -60,7 +60,7 @@ public class CompileAndRunTest {
     @MockitoBean
     CompileServiceAPIClient compileServiceAPIClientMock;
     @MockitoBean
-    RunnerWebSocketClient runnerWebSocketClientMock;
+    CollectingRunnerWebSocketClient runnerWebSocketClientMock;
 
     // test subjects:
     @Autowired
