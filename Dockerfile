@@ -25,8 +25,8 @@ RUN apk add openjdk21-jre-headless
 COPY --from=package /build/compile-service-app.war app.war
 
 EXPOSE 8080
-ENTRYPOINT [ "java", \
-    "-jar", "app.war", \
+ENTRYPOINT [ "java" ]
+CMD [ "-jar", "app.war", \
     "--compiler.exe-path=/app/koka-zero", \
     "--compiler.koka-zero-config-path=/app/koka-zero-config.sexp" ]
 
@@ -40,8 +40,8 @@ COPY --from=package /build/runner-service-app.war app.war
 COPY --from=koka-compiler-image /usr/local/lib/* /usr/local/lib/
 
 EXPOSE 8080
-ENTRYPOINT [ "java", \
-    "-jar", "app.war", \
+ENTRYPOINT [ "java" ]
+CMD [ "-jar", "app.war", \
     "--runner.bubblewrap-path=/usr/bin/bwrap" ]
 
 FROM alpine:3.22 AS koka-playground-compile-and-run-service
@@ -52,5 +52,5 @@ RUN apk add openjdk21-jre-headless
 COPY --from=package /build/compile-and-run-service-app.war app.war
 
 EXPOSE 8080
-ENTRYPOINT [ "java", \
-    "-jar", "app.war" ]
+ENTRYPOINT [ "java" ]
+CMD [ "-jar", "app.war" ]
