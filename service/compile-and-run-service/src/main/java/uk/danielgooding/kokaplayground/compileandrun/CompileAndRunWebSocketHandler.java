@@ -36,7 +36,14 @@ public class CompileAndRunWebSocketHandler
     public void handleMessage(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session, CompileAndRunSessionState state, @NonNull CompileAndRunStream.Inbound.Message inbound) throws Exception {
         switch (inbound) {
             case CompileAndRunStream.Inbound.CompileAndRun compileAndRun -> {
-                // TODO: check if AnotherRequestInProgress and return if so
+
+                if (!state.isFirstRequest()) {
+                    session.sendMessage(new CompileAndRunStream.Outbound.AnotherRequestInProgress());
+                    session.close(CloseStatus.POLICY_VIOLATION);
+                    return;
+                }
+                state.setReceivedRequest();
+
                 session.sendMessage(new CompileAndRunStream.Outbound.StartingCompilation());
 
                 log.info(String.format("compiling: %s", session.getId()));
@@ -51,22 +58,17 @@ public class CompileAndRunWebSocketHandler
                             ProxyingRunnerClientState context =
                                     new ProxyingRunnerClientState(session, state);
                             log.info(String.format("will request run: %s", session.getId()));
-                            try {
-                                return proxyingRunnerWebSocketClient.execute(context).thenCompose(upstreamSessionAndState -> {
-                                    log.info(String.format("began running: %s", session.getId()));
-                                    try {
-                                        state.onUpstreamConnectionEstablished(upstreamSessionAndState);
-                                        state.sendUpstream(new RunStream.Inbound.Run(exeHandle));
-                                        return null;
+                            return proxyingRunnerWebSocketClient.execute(context).thenCompose(upstreamSessionAndState -> {
+                                log.info(String.format("began running: %s", session.getId()));
+                                try {
+                                    state.onUpstreamConnectionEstablished(upstreamSessionAndState);
+                                    state.sendUpstream(new RunStream.Inbound.Run(exeHandle));
+                                    return null;
 
-                                    } catch (Exception e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                });
-                            } catch (Throwable e) {
-                                log.info("execute/latter failed", e);
-                                throw e;
-                            }
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
                         });
             }
             case CompileAndRunStream.Inbound.Stdin stdin ->
@@ -77,19 +79,19 @@ public class CompileAndRunWebSocketHandler
     @Override
     public Void afterConnectionClosedOk(
             ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session,
-            CompileAndRunSessionState compileAndRunSessionState) {
+            CompileAndRunSessionState state) {
 
-        compileAndRunSessionState.closeUpstream(CloseStatus.GOING_AWAY);
+        state.closeUpstream(CloseStatus.GOING_AWAY);
         return null;
     }
 
     @Override
     public void afterConnectionClosedErroneously(
             ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session,
-            CompileAndRunSessionState compileAndRunSessionState,
+            CompileAndRunSessionState state,
             CloseStatus status) {
 
-        compileAndRunSessionState.closeUpstream(status);
+        state.closeUpstream(status);
     }
 
     @Override

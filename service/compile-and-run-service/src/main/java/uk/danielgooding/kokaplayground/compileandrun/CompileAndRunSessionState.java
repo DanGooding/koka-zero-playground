@@ -18,6 +18,8 @@ public class CompileAndRunSessionState {
     private @Nullable CloseStatus upstreamCloseStatus = null;
     private final List<RunStream.Inbound.Message> bufferedInbound;
 
+    private boolean receivedRequest = false;
+
     public CompileAndRunSessionState() {
         this.bufferedInbound = new ArrayList<>();
     }
@@ -66,5 +68,13 @@ public class CompileAndRunSessionState {
             // close unless not yet opened
             closeUpstreamInternal(upstreamSessionAndState, status);
         }
+    }
+
+    public boolean isFirstRequest() {
+        return !receivedRequest;
+    }
+
+    public void setReceivedRequest() {
+        receivedRequest = true;
     }
 }
