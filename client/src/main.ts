@@ -1,27 +1,29 @@
 import './style.css'
-import type {State} from "./state.ts";
+import {manageState} from "./state.ts";
 import {runButton, sourceCode, updateViewForState} from "./view.ts";
 
-let state: State = {
-    runStatus: "idle",
-    output: "",
-    error: null
-}
-updateViewForState(state)
+const {setState, modifyState, getRunStatus} = manageState(
+    {
+        runStatus: "idle",
+        output: "",
+        error: null
+    },
+    updateViewForState
+)
 
 function runCode() {
-    if (state.runStatus !== "idle") {
+    if (getRunStatus() !== "idle") {
         return
     }
 
-    state.runStatus = "requestedRun"
-    state.output = ""
-    state.error = null
-    updateViewForState(state)
+    setState({
+        runStatus: "requestedRun",
+        output: "",
+        error: null,
+    })
 
     const websocket = new WebSocket(import.meta.env.VITE_WS_URL_COMPILE_AND_RUN)
-    state.runStatus = "connecting"
-    updateViewForState(state)
+    setState({runStatus: "connecting"})
 
     websocket.onopen = (event) => {
         console.log("Connection opened", event)
@@ -34,48 +36,56 @@ function runCode() {
             }
         }))
 
-        state.runStatus = "requestedRun"
-        updateViewForState(state)
+        setState({runStatus: "requestedRun"})
     }
 
     websocket.onmessage = (e: MessageEvent) => {
         const message = JSON.parse(e.data)
         if (message.hasOwnProperty("another-request-in-progress")) {
-            state.runStatus = "idle"
-            state.error = "run failed - another run in progress"
+            setState({
+                runStatus: "idle",
+                error: "cannot run - another run in progress",
+            })
 
         } else if (message.hasOwnProperty("starting-compilation")) {
-            state.runStatus = "compiling"
+            setState({runStatus: "compiling"})
 
         } else if (message.hasOwnProperty("running")) {
-            state.runStatus = "running"
+            setState({runStatus: "running"})
 
         } else if (message.hasOwnProperty("stdout")) {
-            state.output += message.stdout.content
+            modifyState((state) => {
+                state.output += message.stdout.content
+            })
 
         } else if (message.hasOwnProperty("error")) {
-            state.error = message.error.message
-            state.runStatus = "idle"
+            setState({
+                runStatus: "idle",
+                error: message.error.message
+            })
 
         } else if (message.hasOwnProperty("done")) {
-            state.runStatus = "idle"
+            setState({runStatus: "idle"})
 
         } else if (message.hasOwnProperty("interrupted")) {
-            state.runStatus = "idle"
-            state.error = `interrupted: ${message.interrupted.message}`
+            setState({
+                runStatus: "idle",
+                error: `interrupted: ${message.interrupted.message}`
+            })
         }
-
-        updateViewForState(state)
     }
     websocket.onerror = () => {
-        state.runStatus = "idle"
-        state.error = `websocket error`
-        updateViewForState(state)
+        setState({
+            runStatus: "idle",
+            error: `websocket error`
+        })
     }
     websocket.onclose = (e: CloseEvent) => {
         if (!e.wasClean) {
-            state.error = `websocket closed with error`
-            updateViewForState(state)
+            setState({
+                runStatus: "idle",
+                error: `websocket closed with error`
+            })
         }
     }
 
