@@ -20,7 +20,7 @@ function runCode() {
     updateViewForState(state)
 
     // TODO: get url from env
-    const websocket = new WebSocket("ws://localhost:80/ws/compile-and-run")
+    const websocket = new WebSocket("ws://localhost:5173/ws/compile-and-run")
     state.runStatus = "connecting"
     updateViewForState(state)
 
