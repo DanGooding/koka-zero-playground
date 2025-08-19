@@ -19,8 +19,7 @@ function runCode() {
     state.error = null
     updateViewForState(state)
 
-    // TODO: get url from env
-    const websocket = new WebSocket("ws://localhost:5173/ws/compile-and-run")
+    const websocket = new WebSocket(import.meta.env.VITE_WS_URL_COMPILE_AND_RUN)
     state.runStatus = "connecting"
     updateViewForState(state)
 
