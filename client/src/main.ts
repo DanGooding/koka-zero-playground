@@ -1,5 +1,6 @@
 import './style.css'
 import fibonacciGeneratorCode from './fibonacci-generator.kk?raw'
+import type {State} from "./state.ts";
 
 const sourceCode = document.querySelector<HTMLTextAreaElement>('#source-code')!
 sourceCode.textContent = fibonacciGeneratorCode
@@ -10,17 +11,9 @@ const runStatusDiv = document.querySelector<HTMLDivElement>('#run-status')!
 const errorDiv = document.querySelector<HTMLDivElement>('#error')!
 const outputDiv = document.querySelector<HTMLDivElement>('#output')!
 
-type RunStatus = "idle" | "requestedRun" | "compiling" | "running"
-
-type State = {
-    runStatus: RunStatus,
-    output: string | null,
-    error: string | null,
-}
-
 
 function updateViewForRunStatus(state: State) {
-    var content: string;
+    let content: string;
     switch (state.runStatus) {
         case "idle":
             if (state.error != null) {
@@ -48,7 +41,7 @@ function updateViewForState(state: State) {
     errorDiv.textContent = state.error || ""
 }
 
-var state: State = {
+let state: State = {
     runStatus: "idle",
     output: "",
     error: ""
