@@ -1,8 +1,8 @@
-export type RunStatus = "idle" | "requestedRun" | "compiling" | "running"
+export type RunStatus = "idle" | "connecting" | "requestedRun" | "compiling" | "running"
 
 export type State = {
     runStatus: RunStatus,
-    output: string | null,
+    output: string,
     error: string | null,
 }
 

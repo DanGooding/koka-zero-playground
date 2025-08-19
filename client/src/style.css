@@ -64,12 +64,12 @@ button {
     transition: border-color 0.25s;
 }
 
-button:hover {
+button:hover:enabled {
     border-color: #646cff;
 }
 
-button:focus,
-button:focus-visible {
+button:focus:enabled,
+button:focus-visible:enabled {
     outline: 4px auto -webkit-focus-ring-color;
 }
 
