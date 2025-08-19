@@ -8,7 +8,7 @@ const outputDiv = document.querySelector<HTMLDivElement>('#output')!
 export const runButton = document.querySelector<HTMLButtonElement>('#run-code')!
 export const sourceCode = document.querySelector<HTMLTextAreaElement>('#source-code')!
 
-sourceCode.textContent = fibonacciGeneratorCode
+sourceCode.value = fibonacciGeneratorCode
 
 function updateViewForRunStatus(state: State) {
     let content: string;
@@ -20,6 +20,9 @@ function updateViewForRunStatus(state: State) {
                 content = ""
             }
             break;
+        case "connecting":
+            content = "connecting..."
+            break
         case "requestedRun":
             content = "awaiting run..."
             break
@@ -31,6 +34,8 @@ function updateViewForRunStatus(state: State) {
             break
     }
     runStatusDiv.textContent = content
+
+    runButton.disabled = state.runStatus !== "idle"
 }
 
 export function updateViewForState(state: State) {
