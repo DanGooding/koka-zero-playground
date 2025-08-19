@@ -6,17 +6,11 @@ sourceCode.textContent = fibonacciGeneratorCode
 
 const runButton = document.querySelector<HTMLButtonElement>('#run-code')!
 
-// TODO: these are essentially reactive
 const runStatusDiv = document.querySelector<HTMLDivElement>('#run-status')!
 const errorDiv = document.querySelector<HTMLDivElement>('#error')!
 const outputDiv = document.querySelector<HTMLDivElement>('#output')!
 
-enum RunStatus {
-    Idle,
-    RequestedRun,
-    Compiling,
-    Running,
-}
+type RunStatus = "idle" | "requestedRun" | "compiling" | "running"
 
 type State = {
     runStatus: RunStatus,
@@ -25,19 +19,23 @@ type State = {
 }
 
 
-function updateViewForRunStatus(status: RunStatus) {
+function updateViewForRunStatus(state: State) {
     var content: string;
-    switch (status) {
-        case RunStatus.Idle:
-            content = ""
+    switch (state.runStatus) {
+        case "idle":
+            if (state.error != null) {
+                content = "failed"
+            } else {
+                content = ""
+            }
             break;
-        case RunStatus.RequestedRun:
+        case "requestedRun":
             content = "awaiting run..."
             break
-        case RunStatus.Compiling:
+        case "compiling":
             content = "compiling..."
             break
-        case RunStatus.Running:
+        case "running":
             content = "running..."
             break
     }
@@ -45,33 +43,33 @@ function updateViewForRunStatus(status: RunStatus) {
 }
 
 function updateViewForState(state: State) {
-    updateViewForRunStatus(state.runStatus)
+    updateViewForRunStatus(state)
     outputDiv.textContent = state.output || ""
     errorDiv.textContent = state.error || ""
 }
 
 var state: State = {
-    runStatus: RunStatus.Idle,
+    runStatus: "idle",
     output: "",
     error: ""
 }
 
 function runCode() {
-    state.runStatus = RunStatus.RequestedRun
+    state.runStatus = "requestedRun"
     state.output = null
     state.error = null
     updateViewForState(state)
 
     setTimeout(() => {
-        state.runStatus = RunStatus.Compiling
+        state.runStatus = "compiling"
         updateViewForState(state)
         setTimeout(() => {
-            state.runStatus = RunStatus.Running
+            state.runStatus = "running"
             updateViewForState(state)
             setTimeout(() => {
                 state.error = "segfault :("
                 state.output = "hello\nworld\n:)"
-                state.runStatus = RunStatus.Idle
+                state.runStatus = "idle"
                 updateViewForState(state)
             }, 300)
         }, 300)
