@@ -23,9 +23,9 @@ function runCode() {
     state.runStatus = "connecting"
     updateViewForState(state)
 
-    // TODO: on error (e.g. 403 bad origin) - actually detect this
+    websocket.onopen = (event) => {
+        console.log("Connection opened", event)
 
-    websocket.onopen = () => {
         websocket.send(JSON.stringify({
             "compile-and-run": {
                 sourceCode: {
@@ -67,13 +67,15 @@ function runCode() {
 
         updateViewForState(state)
     }
-    websocket.onerror = (e: Event) => {
+    websocket.onerror = () => {
         state.runStatus = "idle"
-        state.error = `websocket error: ${e}`
+        state.error = `websocket error`
+        updateViewForState(state)
     }
     websocket.onclose = (e: CloseEvent) => {
         if (!e.wasClean) {
-            state.error = `websocket closed with error: ${e}`
+            state.error = `websocket closed with error`
+            updateViewForState(state)
         }
     }
 
