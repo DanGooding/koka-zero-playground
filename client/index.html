@@ -6,28 +6,29 @@
     <title>Koka Zero Playground</title>
 </head>
 <body>
-<h1><i>Koka Zero</i> Playground</h1>
-<p><a href="https://koka-lang.github.io/koka/doc/index.html"><i>Koka</i></a>
-    is a research programming language with
-    algebraic effects and handlers, built by Leijen et al.</p>
+<div id="readme" class="section">
+    <h1><i>Koka Zero</i> Playground</h1>
+    <p><a href="https://koka-lang.github.io/koka/doc/index.html"><i>Koka</i></a>
+        is a research programming language with
+        algebraic effects and handlers, built by Leijen et al.</p>
 
-<p><a href="https://github.com/DanGooding/koka-zero"><i>Koka Zero</i></a>
-    is my implementation of a subset of <i>Koka</i>. It compiles to <i>LLVM-IR</i>, and it's type system
-    is based on algebraic subtyping, which provides precise subexpression effect information to
-    the optimiser.
-</p>
+    <p><a href="https://github.com/DanGooding/koka-zero"><i>Koka Zero</i></a>
+        is my implementation of a subset of <i>Koka</i>. It compiles to <i>LLVM-IR</i>, and it's type system
+        is based on algebraic subtyping, which provides precise subexpression effect information to
+        the optimiser.
+    </p>
 
-<p>Use the language playground to explore algebraic effects by writing and running <i>Koka Zero</i> programs.</p>
+    <p>Use the language playground to explore algebraic effects by writing and running <i>Koka Zero</i> programs.</p>
+</div>
 
-<div id="app">
+<div id="app" class="section">
     <button id="run-code">Run Code</button>
-    <div id="status"></div>
+    <div id="run-status"></div>
 
-    <textarea id="source-code" rows="30" cols="80" spellcheck="false"></textarea>
+    <textarea id="source-code" class="mono" rows="30" cols="80" spellcheck="false"></textarea>
 
-
-    <div id="error"></div>
-    <div id="output"></div>
+    <div id="error" class="error mono"></div>
+    <pre id="output" class="mono"></pre>
 </div>
 <script type="module" src="/src/main.ts"></script>
 </body>

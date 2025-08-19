@@ -25,6 +25,15 @@ a:hover {
 
 body {
     margin: 2em;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-content: flex-start;
+}
+
+.section {
+    flex-basis: 45%;
 }
 
 h1 {
@@ -39,7 +48,7 @@ h1 {
     text-align: center;
 }
 
-textarea#source-code {
+.mono {
     font-family: Monaco, "Courier New", monospace;
 }
 
@@ -77,4 +86,10 @@ button:focus-visible {
     button {
         background-color: #f9f9f9;
     }
+}
+
+.error {
+    color: #6a0136;
+    text-decoration: underline;
+    text-decoration-style: dashed;
 }
