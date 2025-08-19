@@ -1,45 +1,6 @@
 import './style.css'
-import fibonacciGeneratorCode from './fibonacci-generator.kk?raw'
 import type {State} from "./state.ts";
-
-const sourceCode = document.querySelector<HTMLTextAreaElement>('#source-code')!
-sourceCode.textContent = fibonacciGeneratorCode
-
-const runButton = document.querySelector<HTMLButtonElement>('#run-code')!
-
-const runStatusDiv = document.querySelector<HTMLDivElement>('#run-status')!
-const errorDiv = document.querySelector<HTMLDivElement>('#error')!
-const outputDiv = document.querySelector<HTMLDivElement>('#output')!
-
-
-function updateViewForRunStatus(state: State) {
-    let content: string;
-    switch (state.runStatus) {
-        case "idle":
-            if (state.error != null) {
-                content = "failed"
-            } else {
-                content = ""
-            }
-            break;
-        case "requestedRun":
-            content = "awaiting run..."
-            break
-        case "compiling":
-            content = "compiling..."
-            break
-        case "running":
-            content = "running..."
-            break
-    }
-    runStatusDiv.textContent = content
-}
-
-function updateViewForState(state: State) {
-    updateViewForRunStatus(state)
-    outputDiv.textContent = state.output || ""
-    errorDiv.textContent = state.error || ""
-}
+import {runButton, updateViewForState} from "./view.ts";
 
 let state: State = {
     runStatus: "idle",
