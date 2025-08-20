@@ -4,7 +4,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Scope;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.client.WebSocketClient;
@@ -17,7 +16,6 @@ import java.util.function.Function;
 
 
 @Service
-@Scope("prototype")
 public class ProxyingRunnerWebSocketClient {
     private static final Log log = LogFactory.getLog(ProxyingRunnerWebSocketClient.class);
     private final String uri;
