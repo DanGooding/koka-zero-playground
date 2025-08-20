@@ -6,6 +6,7 @@ const errorDiv = document.querySelector<HTMLDivElement>('#error')!
 const outputDiv = document.querySelector<HTMLDivElement>('#output')!
 
 export const runButton = document.querySelector<HTMLButtonElement>('#run-code')!
+export const stdinInput = document.querySelector<HTMLInputElement>("#stdin")!
 export const sourceCode = document.querySelector<HTMLTextAreaElement>('#source-code')!
 
 sourceCode.value = fibonacciGeneratorCode

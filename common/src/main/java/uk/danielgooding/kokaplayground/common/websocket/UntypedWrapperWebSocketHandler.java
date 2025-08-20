@@ -1,8 +1,8 @@
 package uk.danielgooding.kokaplayground.common.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.lang.NonNull;
 import org.springframework.web.socket.CloseStatus;
@@ -21,7 +21,7 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
 
     private final Class<InboundMessage> inboundMessageClass;
 
-    private static final Log log = LogFactory.getLog(UntypedWrapperWebSocketHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(UntypedWrapperWebSocketHandler.class);
 
     public UntypedWrapperWebSocketHandler(
             TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> typedWebSocketHandler,
@@ -62,6 +62,8 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
         InboundMessage message =
                 objectMapper.readValue(textMessage.getPayload(), this.inboundMessageClass);
 
+        logger.debug("{} received {} (session {})", typedWebSocketHandler.getClass(), message, session.getId());
+
         try {
             typedWebSocketHandler.handleMessage(sessionAndState.getSession(), sessionAndState.getState(), message);
         } catch (IOException e) {
@@ -73,7 +75,7 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
         TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.remove(session.getId());
 
         sessionAndState.getSession().getOutcomeFuture().whenComplete((ignored, exn) -> {
-            log.error(String.format("websocket connection %s closed with error", typedWebSocketHandler.getClass()), exn);
+            logger.error("{} websocket closed with error", typedWebSocketHandler.getClass(), exn);
         });
 
         if (status.equalsCode(CloseStatus.NORMAL)) {

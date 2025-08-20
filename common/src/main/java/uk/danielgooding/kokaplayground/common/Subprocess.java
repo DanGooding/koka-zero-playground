@@ -1,6 +1,7 @@
 package uk.danielgooding.kokaplayground.common;
 
-import org.springframework.lang.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,13 +10,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Subprocess {
+
+    private static final Logger logger = LoggerFactory.getLogger(Subprocess.class);
 
     public record Output(int exitCode, String stdout, String stderr) {
 

@@ -1,6 +1,8 @@
 package uk.danielgooding.kokaplayground.common.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 
@@ -16,6 +18,8 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
     private final ObjectMapper objectMapper;
     private final CompletableFuture<Outcome> outcomeFuture;
 
+    private static final Logger logger = LoggerFactory.getLogger(TypedWebSocketSession.class);
+
     public TypedWebSocketSession(
             IWebSocketSession session,
             ObjectMapper objectMapper) {
@@ -30,6 +34,7 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
     }
 
     public void sendMessage(OutboundMessage messageObject) throws IOException {
+        logger.debug("sending {} (session {}", messageObject, session.getId());
         TextMessage reply = new TextMessage(objectMapper.writeValueAsBytes(messageObject));
         session.sendMessage(reply);
     }

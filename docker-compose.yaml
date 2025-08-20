@@ -15,6 +15,7 @@ services:
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
       DEBUG: true
       ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: DEBUG
+      LOGGING_LEVEL_ROOT: debug
     networks:
       common-bridge:
 
@@ -35,6 +36,7 @@ services:
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
       DEBUG: true
       ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: DEBUG
+      LOGGING_LEVEL_ROOT: debug
     networks:
       common-bridge:
 
@@ -48,6 +50,7 @@ services:
       RUNNER_SERVICE_HOSTNAME: "runner-service"
       DEBUG: true
       ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: DEBUG
+      LOGGING_LEVEL_ROOT: debug
     networks:
       common-bridge:
     command:

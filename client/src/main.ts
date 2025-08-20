@@ -1,12 +1,13 @@
 import './style.css'
 import {manageState} from "./state.ts";
-import {runButton, sourceCode, updateViewForState} from "./view.ts";
+import {runButton, sourceCode, stdinInput, updateViewForState} from "./view.ts";
 
-const {setState, modifyState, getRunStatus} = manageState(
+const {setState, modifyState, getRunStatus, getWebSocket} = manageState(
     {
         runStatus: "idle",
         output: "",
-        error: null
+        error: null,
+        websocket: null,
     },
     updateViewForState
 )
@@ -20,10 +21,11 @@ function runCode() {
         runStatus: "requestedRun",
         output: "",
         error: null,
+        websocket: null
     })
 
     const websocket = new WebSocket(import.meta.env.VITE_WS_URL_COMPILE_AND_RUN)
-    setState({runStatus: "connecting"})
+    setState({runStatus: "connecting", websocket})
 
     websocket.onopen = (event) => {
         console.log("Connection opened", event)
@@ -61,35 +63,61 @@ function runCode() {
         } else if (message.hasOwnProperty("error")) {
             setState({
                 runStatus: "idle",
-                error: message.error.message
+                error: message.error.message,
+                websocket: null
             })
 
         } else if (message.hasOwnProperty("done")) {
-            setState({runStatus: "idle"})
+            setState({runStatus: "idle", websocket: null})
 
         } else if (message.hasOwnProperty("interrupted")) {
             setState({
                 runStatus: "idle",
-                error: `interrupted: ${message.interrupted.message}`
+                error: `interrupted: ${message.interrupted.message}`,
+                websocket: null
             })
         }
     }
     websocket.onerror = () => {
         setState({
             runStatus: "idle",
-            error: `websocket error`
+            error: `websocket error`,
+            websocket: null
         })
     }
     websocket.onclose = (e: CloseEvent) => {
         if (!e.wasClean) {
             setState({
                 runStatus: "idle",
-                error: `websocket closed with error`
+                error: `websocket closed with error`,
+                websocket: null
             })
         }
     }
 
 }
 
-runButton.addEventListener('click', runCode)
+function sendStdin() {
+    if (getRunStatus() === "idle") return
+    const websocket = getWebSocket()
+    if (!websocket) return
 
+    const content = stdinInput.value
+    if (!content) return
+
+    websocket.send(JSON.stringify({
+        stdin: {
+            content
+        }
+    }))
+    modifyState(state => {
+        // TODO: distinguish input from output
+        state.output += content + '\n'
+    })
+    stdinInput.value = ""
+}
+
+runButton.addEventListener('click', runCode)
+stdinInput.addEventListener('keyup', (event) => {
+    if (event.key === 'Enter') sendStdin()
+})
