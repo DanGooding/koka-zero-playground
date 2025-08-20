@@ -69,7 +69,7 @@ public class RunnerWebSocketHandler
                 .whenComplete((error, exn) -> {
                     try {
                         if (exn != null) {
-                            session.closeError(CloseStatus.SERVER_ERROR);
+                            session.closeExn("failure in Runner service", exn);
                         } else {
                             session.closeOk(null);
                         }

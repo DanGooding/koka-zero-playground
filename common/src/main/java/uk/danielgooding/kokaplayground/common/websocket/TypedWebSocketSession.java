@@ -3,8 +3,6 @@ package uk.danielgooding.kokaplayground.common.websocket;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -41,15 +39,20 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
         outcomeFuture.complete(outcome);
     }
 
-    public void closeError(CloseStatus closeStatus) throws IOException {
-        session.close(closeStatus);
-        outcomeFuture.completeExceptionally(new RuntimeException(
-                String.format("websocket connection closed with error: %s", closeStatus)));
+    public void closeGoingAway(Outcome outcome) throws IOException {
+        session.close(CloseStatus.GOING_AWAY);
+        outcomeFuture.complete(outcome);
     }
 
-    public void closeUserExn(Throwable exn) throws IOException {
-        outcomeFuture.completeExceptionally(new RuntimeException("user code raised into WebSocket handler", exn));
+    public void closeExn(String message, Throwable exn) throws IOException {
+        outcomeFuture.completeExceptionally(exn);
         session.close(CloseStatus.SERVER_ERROR);
+    }
+
+    public void closeErrorStatus(String message, CloseStatus closeStatus) throws IOException {
+        outcomeFuture.completeExceptionally(new RuntimeException(
+                String.format("websocket closing '%s': code %s", message, closeStatus)));
+        session.close(closeStatus);
     }
 
     public CompletableFuture<Outcome> getOutcomeFuture() {

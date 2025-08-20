@@ -83,7 +83,8 @@ public class ProxyingRunnerClientWebSocketHandler
             Void ignored,
             CloseStatus closeStatus) throws IOException {
 
-        downstreamSessionAndState.getSession().closeError(closeStatus);
+        downstreamSessionAndState.getSession().closeErrorStatus(
+                String.format("websocket connection closed with error %s", this.getClass()), closeStatus);
     }
 
     @Override
