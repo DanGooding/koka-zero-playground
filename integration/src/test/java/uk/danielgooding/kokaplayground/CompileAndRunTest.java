@@ -37,7 +37,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EnableAutoConfiguration
 @SpringBootTest(classes = {TestConfig.class, CompileService.class, RunnerService.class})
 @TestPropertySource(properties = {
-        "runner-service-hostname=UNUSED"})
+        "runner-service-hostname=UNUSED",
+        "runner.max-buffered-stdin-items=10"})
 public class CompileAndRunTest {
     // mocked services:
     @MockitoBean

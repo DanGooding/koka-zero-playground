@@ -110,6 +110,10 @@ class TestWebSocketConnection<Inbound, Outbound, ClientState, ServerState, Clien
         return clientHandler.getSessionAndState(sessionId);
     }
 
+    public TypedWebSocketSessionAndState<Outbound, ServerState, Void> getServerSessionAndState() {
+        return serverHandler.getSessionAndState(sessionId);
+    }
+
     public void breakConnection() throws Exception {
         clientHandler.getSessionAndState(sessionId).getSession().closeError(CloseStatus.NO_CLOSE_FRAME);
         serverHandler.getSessionAndState(sessionId).getSession().closeError(CloseStatus.NO_CLOSE_FRAME);
