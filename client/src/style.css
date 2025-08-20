@@ -93,3 +93,7 @@ button:focus-visible:enabled {
     text-decoration: underline;
     text-decoration-style: dashed;
 }
+
+.terminal-input {
+    text-decoration: underline;
+}

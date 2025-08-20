@@ -1,9 +1,10 @@
 import type {State} from "./state.ts";
 import fibonacciGeneratorCode from './fibonacci-generator.kk?raw'
+import escape from 'escape-html'
 
 const runStatusDiv = document.querySelector<HTMLDivElement>('#run-status')!
 const errorDiv = document.querySelector<HTMLDivElement>('#error')!
-const outputDiv = document.querySelector<HTMLDivElement>('#output')!
+const inputOutputPre = document.querySelector<HTMLPreElement>('#input-output')!
 
 export const runButton = document.querySelector<HTMLButtonElement>('#run-code')!
 export const stdinInput = document.querySelector<HTMLInputElement>("#stdin")!
@@ -37,10 +38,19 @@ function updateViewForRunStatus(state: State) {
     runStatusDiv.textContent = content
 
     runButton.disabled = state.runStatus !== "idle"
+    stdinInput.disabled = state.runStatus === "idle"
+}
+
+function updateTerminalForState(state: State) {
+    errorDiv.textContent = state.error || ""
+
+    inputOutputPre.innerHTML =
+        state.output.map(([kind, content]) =>
+            `<span class="terminal-${kind}">${escape(content)}</span>`
+        ).join('')
 }
 
 export function updateViewForState(state: State) {
     updateViewForRunStatus(state)
-    outputDiv.textContent = state.output || ""
-    errorDiv.textContent = state.error || ""
+    updateTerminalForState(state)
 }

@@ -3,7 +3,7 @@ export type RunStatus = "idle" | "connecting" | "requestedRun" | "compiling" | "
 export type State = {
     runStatus: RunStatus,
     websocket: WebSocket | null,
-    output: string,
+    output: ['input' | 'output', string][],
     error: string | null,
 }
 

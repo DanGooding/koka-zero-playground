@@ -5,7 +5,7 @@ import {runButton, sourceCode, stdinInput, updateViewForState} from "./view.ts";
 const {setState, modifyState, getRunStatus, getWebSocket} = manageState(
     {
         runStatus: "idle",
-        output: "",
+        output: [],
         error: null,
         websocket: null,
     },
@@ -19,7 +19,7 @@ function runCode() {
 
     setState({
         runStatus: "requestedRun",
-        output: "",
+        output: [],
         error: null,
         websocket: null
     })
@@ -57,7 +57,7 @@ function runCode() {
 
         } else if (message.hasOwnProperty("stdout")) {
             modifyState((state) => {
-                state.output += message.stdout.content
+                state.output.push(['output', message.stdout.content])
             })
 
         } else if (message.hasOwnProperty("error")) {
@@ -102,7 +102,7 @@ function sendStdin() {
     const websocket = getWebSocket()
     if (!websocket) return
 
-    const content = stdinInput.value
+    const content = stdinInput.value + '\n'
     if (!content) return
 
     websocket.send(JSON.stringify({
@@ -112,7 +112,7 @@ function sendStdin() {
     }))
     modifyState(state => {
         // TODO: distinguish input from output
-        state.output += content + '\n'
+        state.output.push(['input', content])
     })
     stdinInput.value = ""
 }
