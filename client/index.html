@@ -21,16 +21,18 @@
     <p>Use the language playground to explore algebraic effects by writing and running <i>Koka Zero</i> programs.</p>
 </div>
 
-<div id="app" class="section">
+<div id="editor" class="section">
+    <textarea id="source-code" class="mono" rows="30" cols="80" spellcheck="false"></textarea>
+</div>
+<div id="terminal" class="section">
     <button id="run-code">Run Code</button>
     <div id="run-status"></div>
 
-    <textarea id="source-code" class="mono" rows="30" cols="80" spellcheck="false"></textarea>
-
     <div id="error" class="error mono"></div>
-    <pre id="output" class="mono"></pre>
+    <pre id="input-output" class="mono"></pre>
     <input id="stdin" class="mono" placeholder="input">
 </div>
+
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

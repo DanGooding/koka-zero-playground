@@ -20,7 +20,8 @@ export default defineConfig((configEnv: ConfigEnv): UserConfig => {
                         rewriteWsOrigin: true,
                     }
                 }
-            }
+            },
+            optimizeDeps: {exclude: ["fsevents"]},
         }
     }
 })
