@@ -1,7 +1,7 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
@@ -25,7 +25,7 @@ public class CompileAndRunWebSocketHandler
         CompileAndRunSessionState,
         Void> {
 
-    private static final Log log = LogFactory.getLog(CompileAndRunWebSocketHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(CompileAndRunWebSocketHandler.class);
 
     @Autowired
     CompileServiceAPIClient compileServiceAPIClient;
@@ -52,14 +52,14 @@ public class CompileAndRunWebSocketHandler
 
         session.sendMessage(new CompileAndRunStream.Outbound.StartingCompilation());
 
-        log.info(String.format("compiling: %s", session.getId()));
+        logger.info("compiling: {}", session.getId());
 
         CompletableFuture<OrError<Void>> requestOutcomeFuture =
                 OrError.thenComposeFuture(
                         // failed is a server error, OrError.error is a client error
                         compileServiceAPIClient.compile(compileAndRun.getSourceCode()),
                         exeHandle -> {
-                            log.info(String.format("compiled: %s", session.getId()));
+                            logger.info("compiled: {}", session.getId());
                             try {
                                 session.sendMessage(new CompileAndRunStream.Outbound.Running());
                             } catch (Exception e) {
@@ -67,9 +67,9 @@ public class CompileAndRunWebSocketHandler
                             }
                             ProxyingRunnerClientState context =
                                     new ProxyingRunnerClientState(session, state);
-                            log.info(String.format("will request run: %s", session.getId()));
+                            logger.info("will request run: {}", session.getId());
                             return proxyingRunnerWebSocketClient.execute(context).thenCompose(upstreamSession -> {
-                                log.info(String.format("began running: %s", session.getId()));
+                                logger.info("began running: {}", session.getId());
                                 try {
                                     state.onUpstreamConnectionEstablished(upstreamSession);
                                     state.sendUpstream(new RunStream.Inbound.Run(exeHandle));
@@ -92,7 +92,7 @@ public class CompileAndRunWebSocketHandler
                     session.closeExn("failure in CompileAndRun handler", exn);
                 } catch (Exception e) {
                     // okay to swallow - already closed
-                    log.error("failed to close downstream after upstream error", e);
+                    logger.error("failed to close downstream after upstream error", e);
                 }
             } else {
                 switch (result) {
@@ -103,7 +103,7 @@ public class CompileAndRunWebSocketHandler
                             session.sendMessage(new CompileAndRunStream.Outbound.Error(failed.getMessage()));
                             session.closeOk(null);
                         } catch (Exception e) {
-                            log.error("failed to close downstream after client error", e);
+                            logger.error("failed to close downstream after client error", e);
                         }
                     }
                 }
@@ -144,7 +144,7 @@ public class CompileAndRunWebSocketHandler
             TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
             CompileAndRunSessionState state,
             CloseStatus status) throws IOException {
-        
+
         state.closeUpstream();
     }
 

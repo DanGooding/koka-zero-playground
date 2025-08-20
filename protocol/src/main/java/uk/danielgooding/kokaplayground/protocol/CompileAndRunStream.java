@@ -1,6 +1,10 @@
 package uk.danielgooding.kokaplayground.protocol;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import uk.danielgooding.kokaplayground.common.KokaSourceCode;
 import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 
@@ -13,6 +17,8 @@ public class CompileAndRunStream {
                 @JsonSubTypes.Type(value = Stdin.class, name = "stdin")
         })
         public static abstract sealed class Message {
+            @Override
+            public abstract String toString();
         }
 
         @JsonTypeName("compile-and-run")
@@ -28,6 +34,13 @@ public class CompileAndRunStream {
             public KokaSourceCode getSourceCode() {
                 return this.sourceCode;
             }
+
+            @Override
+            public String toString() {
+                return "CompileAndRun{" +
+                        "sourceCode=" + sourceCode +
+                        '}';
+            }
         }
 
         @JsonTypeName("stdin")
@@ -42,6 +55,13 @@ public class CompileAndRunStream {
             @JsonGetter
             public String getContent() {
                 return content;
+            }
+
+            @Override
+            public String toString() {
+                return "Stdin{" +
+                        "content='" + content + '\'' +
+                        '}';
             }
         }
     }

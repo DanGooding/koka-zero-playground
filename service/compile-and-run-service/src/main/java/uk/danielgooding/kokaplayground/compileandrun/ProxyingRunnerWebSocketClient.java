@@ -1,7 +1,7 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -17,7 +17,6 @@ import java.util.function.Function;
 
 @Service
 public class ProxyingRunnerWebSocketClient {
-    private static final Log log = LogFactory.getLog(ProxyingRunnerWebSocketClient.class);
     private final String uri;
     private final TypedWebSocketClient<
             RunStream.Outbound.Message,
@@ -25,6 +24,8 @@ public class ProxyingRunnerWebSocketClient {
             Void,
             ProxyingRunnerClientState,
             Void> client;
+
+    private static final Logger logger = LoggerFactory.getLogger(ProxyingRunnerWebSocketClient.class);
 
     public ProxyingRunnerWebSocketClient(
             @Autowired WebSocketClient webSocketClient,
@@ -53,7 +54,7 @@ public class ProxyingRunnerWebSocketClient {
 
     public CompletableFuture<TypedWebSocketSession<RunStream.Inbound.Message, Void>>
     execute(ProxyingRunnerClientState downstreamSessionAndState) {
-        log.info(String.format("connecting to Runner service %s from downstream %s", uri, downstreamSessionAndState.getSession()));
+        logger.info("connecting to Runner service {} from downstream {}", uri, downstreamSessionAndState.getSession());
         return client.execute(uri, downstreamSessionAndState);
     }
 }

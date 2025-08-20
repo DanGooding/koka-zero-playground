@@ -2,6 +2,7 @@ export type RunStatus = "idle" | "connecting" | "requestedRun" | "compiling" | "
 
 export type State = {
     runStatus: RunStatus,
+    websocket: WebSocket | null,
     output: string,
     error: string | null,
 }
@@ -11,6 +12,7 @@ export function manageState(initial: State, onChange: (state: State) => void): {
     modifyState: (modify: (state: State) => void) => void,
     // getters intended to help prevent accidentally setting the state object's fields directly
     getRunStatus: () => RunStatus,
+    getWebSocket: () => WebSocket | null,
 } {
     let state = initial
     onChange(state)
@@ -27,5 +29,7 @@ export function manageState(initial: State, onChange: (state: State) => void): {
 
     const getRunStatus = () => state.runStatus
 
-    return {setState, modifyState, getRunStatus}
+    const getWebSocket = () => state.websocket
+
+    return {setState, modifyState, getRunStatus, getWebSocket}
 }

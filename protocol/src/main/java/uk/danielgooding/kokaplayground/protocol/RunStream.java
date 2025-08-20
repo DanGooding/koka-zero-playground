@@ -1,6 +1,9 @@
 package uk.danielgooding.kokaplayground.protocol;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 
 public class RunStream {
@@ -12,6 +15,8 @@ public class RunStream {
                 @JsonSubTypes.Type(value = Stdin.class, name = "stdin")
         })
         public static abstract sealed class Message {
+            @Override
+            public abstract String toString();
         }
 
         @JsonTypeName("run")
@@ -27,6 +32,13 @@ public class RunStream {
             public ExeHandle getExeHandle() {
                 return this.exeHandle;
             }
+
+            @Override
+            public String toString() {
+                return "Run{" +
+                        "exeHandle=" + exeHandle +
+                        '}';
+            }
         }
 
         @JsonTypeName("stdin")
@@ -41,6 +53,13 @@ public class RunStream {
             @JsonGetter
             public String getContent() {
                 return content;
+            }
+
+            @Override
+            public String toString() {
+                return "Stdin{" +
+                        "content='" + content + '\'' +
+                        '}';
             }
         }
     }
