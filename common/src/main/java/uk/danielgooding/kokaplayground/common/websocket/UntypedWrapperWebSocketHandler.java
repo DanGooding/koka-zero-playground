@@ -49,6 +49,14 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
         typedSessions.put(session.getId(), sessionAndState);
     }
 
+    void closeUserExn(TypedWebSocketSession<OutboundMessage, Outcome> session, Throwable exn) throws IOException {
+        session.closeExn(
+                String.format("exception in websocket handler %s for session %s",
+                        typedWebSocketHandler.getClass(),
+                        session.getId()),
+                exn);
+    }
+
     public void handleTextMessage(@NonNull IWebSocketSession session, @NonNull TextMessage textMessage) throws IOException {
         TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.get(session.getId());
         InboundMessage message =
@@ -57,7 +65,7 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
         try {
             typedWebSocketHandler.handleMessage(sessionAndState.getSession(), sessionAndState.getState(), message);
         } catch (IOException e) {
-            sessionAndState.getSession().closeUserExn(e);
+            closeUserExn(sessionAndState.getSession(), e);
         }
     }
 
@@ -75,15 +83,17 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
                                 sessionAndState.getSession(), sessionAndState.getState());
                 sessionAndState.getSession().closeOk(outcome);
             } catch (Throwable e) {
-                sessionAndState.getSession().closeUserExn(e);
+                closeUserExn(sessionAndState.getSession(), e);
             }
         } else {
             try {
                 typedWebSocketHandler.afterConnectionClosedErroneously(
                         sessionAndState.getSession(), sessionAndState.getState(), status);
-                sessionAndState.getSession().closeError(status);
+                sessionAndState.getSession().closeErrorStatus(
+                        String.format("websocket connection %s closed with error", session.getId()),
+                        status);
             } catch (Throwable e) {
-                sessionAndState.getSession().closeUserExn(e);
+                closeUserExn(sessionAndState.getSession(), e);
             }
         }
     }
@@ -96,7 +106,7 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
                     sessionAndState.getSession(), sessionAndState.getState(), exception);
 
         } catch (Throwable e) {
-            sessionAndState.getSession().closeUserExn(e);
+            closeUserExn(sessionAndState.getSession(), e);
         }
     }
 

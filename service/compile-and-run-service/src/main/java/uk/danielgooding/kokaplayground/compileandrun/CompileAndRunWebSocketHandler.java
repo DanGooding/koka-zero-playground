@@ -45,7 +45,7 @@ public class CompileAndRunWebSocketHandler
 
         if (!state.isFirstRequest()) {
             session.sendMessage(new CompileAndRunStream.Outbound.AnotherRequestInProgress());
-            session.closeError(CloseStatus.POLICY_VIOLATION);
+            session.closeErrorStatus("another request in progress", CloseStatus.POLICY_VIOLATION);
             return;
         }
         state.setReceivedRequest();
@@ -89,7 +89,7 @@ public class CompileAndRunWebSocketHandler
                 // server error
 
                 try {
-                    session.closeError(CloseStatus.SERVER_ERROR);
+                    session.closeExn("failure in CompileAndRun handler", exn);
                 } catch (Exception e) {
                     // okay to swallow - already closed
                     log.error("failed to close downstream after upstream error", e);
@@ -135,7 +135,7 @@ public class CompileAndRunWebSocketHandler
             TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
             CompileAndRunSessionState state) throws IOException {
 
-        state.closeUpstream(CloseStatus.GOING_AWAY);
+        state.closeUpstream();
         return null;
     }
 
@@ -144,9 +144,8 @@ public class CompileAndRunWebSocketHandler
             TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
             CompileAndRunSessionState state,
             CloseStatus status) throws IOException {
-
-        // if we failed, it doesn't mean that upstream caused this
-        state.closeUpstream(CloseStatus.GOING_AWAY);
+        
+        state.closeUpstream();
     }
 
     @Override

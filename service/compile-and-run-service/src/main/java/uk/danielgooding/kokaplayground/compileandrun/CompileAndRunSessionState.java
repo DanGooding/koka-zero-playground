@@ -1,7 +1,6 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
 import org.springframework.lang.Nullable;
-import org.springframework.web.socket.CloseStatus;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
@@ -16,7 +15,7 @@ public class CompileAndRunSessionState {
             upstreamSessionAndState = null;
 
     /// proxied events are buffered until the upstream connection is create
-    private @Nullable CloseStatus upstreamCloseStatus = null;
+    private @Nullable boolean bufferedCloseUpstream = false;
     private final List<RunStream.Inbound.Message> bufferedInbound;
 
     private boolean receivedRequest = false;
@@ -35,13 +34,10 @@ public class CompileAndRunSessionState {
 
     private static void closeUpstreamInternal(
             TypedWebSocketSession<RunStream.Inbound.Message, Void>
-                    upstreamSessionAndState,
-            CloseStatus closeStatus) throws IOException {
-        if (closeStatus.equalsCode(CloseStatus.NORMAL)) {
-            upstreamSessionAndState.closeOk(null);
-        } else {
-            upstreamSessionAndState.closeError(closeStatus);
-        }
+                    upstreamSessionAndState) throws IOException {
+
+        // if we failed, it doesn't mean that upstream caused this
+        upstreamSessionAndState.closeGoingAway(null);
     }
 
     public void onUpstreamConnectionEstablished(
@@ -50,9 +46,9 @@ public class CompileAndRunSessionState {
     ) throws IOException {
         this.upstreamSessionAndState = upstreamSession;
 
-        if (upstreamCloseStatus != null) {
+        if (bufferedCloseUpstream) {
             // deliver the buffered close
-            closeUpstreamInternal(upstreamSession, upstreamCloseStatus);
+            closeUpstreamInternal(upstreamSession);
             return;
         }
 
@@ -63,11 +59,12 @@ public class CompileAndRunSessionState {
     }
 
 
-    public void closeUpstream(CloseStatus status) throws IOException {
-        upstreamCloseStatus = status;
+    public void closeUpstream() throws IOException {
         if (upstreamSessionAndState != null) {
             // close unless not yet opened
-            closeUpstreamInternal(upstreamSessionAndState, status);
+            closeUpstreamInternal(upstreamSessionAndState);
+        } else {
+            bufferedCloseUpstream = true;
         }
     }
 
