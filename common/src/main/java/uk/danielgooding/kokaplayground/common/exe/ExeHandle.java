@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Objects;
+
 public class ExeHandle {
     private final String path;
 
@@ -22,5 +24,17 @@ public class ExeHandle {
         return "ExeHandle{" +
                 "path='" + path + '\'' +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        ExeHandle exeHandle = (ExeHandle) o;
+        return Objects.equals(path, exeHandle.path);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(path);
     }
 }

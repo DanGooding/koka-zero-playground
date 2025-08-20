@@ -4,11 +4,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.web.socket.CloseStatus;
-import uk.danielgooding.kokaplayground.common.websocket.ITypedWebSocketSession;
+import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
+
+import java.io.IOException;
 
 
 public class ProxyingRunnerClientWebSocketHandler
@@ -27,16 +29,16 @@ public class ProxyingRunnerClientWebSocketHandler
 
     @Override
     public Void
-    handleConnectionEstablished(ITypedWebSocketSession<RunStream.Inbound.Message> session) {
+    handleConnectionEstablished(TypedWebSocketSession<RunStream.Inbound.Message, Void> session) {
         return null;
     }
 
     @Override
     public void handleMessage(
-            ITypedWebSocketSession<RunStream.Inbound.Message> session,
+            TypedWebSocketSession<RunStream.Inbound.Message, Void> session,
             Void ignored,
             @NonNull RunStream.Outbound.Message outbound
-    ) throws Exception {
+    ) throws IOException {
         switch (outbound) {
             case RunStream.Outbound.AnotherRequestInProgress anotherRequestInProgress -> {
                 downstreamSessionAndState.getSession()
@@ -69,27 +71,25 @@ public class ProxyingRunnerClientWebSocketHandler
 
     @Override
     public Void afterConnectionClosedOk(
-            ITypedWebSocketSession<RunStream.Inbound.Message> session, Void ignored) {
+            TypedWebSocketSession<RunStream.Inbound.Message, Void> session, Void ignored) throws IOException {
 
-        downstreamSessionAndState.setClosedOk(null);
+        downstreamSessionAndState.getSession().closeOk(null);
         return null;
     }
 
     @Override
     public void afterConnectionClosedErroneously(
-            ITypedWebSocketSession<RunStream.Inbound.Message> session,
+            TypedWebSocketSession<RunStream.Inbound.Message, Void> session,
             Void ignored,
-            CloseStatus closeStatus) {
+            CloseStatus closeStatus) throws IOException {
 
-        downstreamSessionAndState.setClosedError(closeStatus);
+        downstreamSessionAndState.getSession().closeError(closeStatus);
     }
 
     @Override
     public void handleTransportError(
-            ITypedWebSocketSession<RunStream.Inbound.Message> session,
+            TypedWebSocketSession<RunStream.Inbound.Message, Void> session,
             Void ignored,
             Throwable exception) {
-
-        log.error("ProxyingRunnerClient: transport error", exception);
     }
 }

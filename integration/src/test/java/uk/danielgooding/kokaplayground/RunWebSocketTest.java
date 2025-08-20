@@ -6,11 +6,13 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.socket.client.WebSocketClient;
 import uk.danielgooding.kokaplayground.common.*;
 import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 import uk.danielgooding.kokaplayground.common.exe.ExeStore;
@@ -23,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertThrows;
@@ -31,11 +34,12 @@ import static org.junit.Assert.assertThrows;
 @EnableAutoConfiguration
 @SpringBootTest(classes = {TestConfig.class, RunnerService.class, CompileAndRunService.class})
 @TestPropertySource(properties = {
-        "which-exe-store=local-exe-store",
+        "which-exe-store=test-exe-store",
         "local-exe-store.directory=UNUSED",
         "compiler.exe-path=UNUSED",
         "compiler.koka-zero-config-path=UNUSED",
-        "runner.bubblewrap-path=UNUSED"})
+        "runner.bubblewrap-path=UNUSED",
+        "runner-service-hostname=UNUSED"})
 public class RunWebSocketTest {
 
     // mocked services
@@ -100,7 +104,7 @@ public class RunWebSocketTest {
                             onStdout.call("hello ");
                             onStdout.call("world ");
                             onStdout.call(":)");
-                        } catch (Exception e) {
+                        } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
 
@@ -166,8 +170,8 @@ public class RunWebSocketTest {
         // act
         CompletableFuture<OrError<String>> runResult = compileAndRunService.compileAndRun(sourceCode);
 
-        // assert
-        assertThat(runResult).isCompletedExceptionally();
+        // assert future is failed
+        assertThrows(ExecutionException.class, runResult::get);
     }
 
     @Test
@@ -302,6 +306,7 @@ public class RunWebSocketTest {
     public void resetMocks() {
         Mockito.reset(
                 runnerServiceMock,
+                runnerWebSocketClientMock,
                 compileServiceAPIClientMock,
                 exeStoreMock);
     }

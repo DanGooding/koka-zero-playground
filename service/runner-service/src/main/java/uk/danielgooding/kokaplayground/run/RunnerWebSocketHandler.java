@@ -5,9 +5,11 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.CloseStatus;
 import uk.danielgooding.kokaplayground.common.*;
-import uk.danielgooding.kokaplayground.common.websocket.ITypedWebSocketSession;
+import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
+
+import java.io.IOException;
 
 @Controller
 public class RunnerWebSocketHandler
@@ -17,15 +19,15 @@ public class RunnerWebSocketHandler
     RunnerService runnerService;
 
     @Override
-    public RunnerSessionState handleConnectionEstablished(ITypedWebSocketSession<RunStream.Outbound.Message> session) {
+    public RunnerSessionState handleConnectionEstablished(TypedWebSocketSession<RunStream.Outbound.Message, Void> session) {
         return new RunnerSessionState();
     }
 
     @Override
     public void handleMessage(
-            ITypedWebSocketSession<RunStream.Outbound.Message> session,
+            TypedWebSocketSession<RunStream.Outbound.Message, Void> session,
             RunnerSessionState sessionState,
-            @NonNull RunStream.Inbound.Message inbound) throws Exception {
+            @NonNull RunStream.Inbound.Message inbound) throws IOException {
         switch (inbound) {
             case RunStream.Inbound.Run run -> {
                 if (sessionState.isRunning()) {
@@ -47,6 +49,7 @@ public class RunnerWebSocketHandler
                                 run.getExeHandle(),
                                 onStart,
                                 onStdout)
+                        // TODO: yuck, - clean this up
                         .whenComplete((error, exn) -> {
                             sessionState.setRunning(false);
 
@@ -65,9 +68,9 @@ public class RunnerWebSocketHandler
                         }).whenComplete((error, exn) -> {
                             try {
                                 if (exn != null) {
-                                    session.close(CloseStatus.SERVER_ERROR);
+                                    session.closeError(CloseStatus.SERVER_ERROR);
                                 } else {
-                                    session.closeOk();
+                                    session.closeOk(null);
                                 }
                             } catch (Exception e) {
                                 // okay to swallow - already failing due to original exn.
@@ -82,14 +85,14 @@ public class RunnerWebSocketHandler
 
     @Override
     public Void afterConnectionClosedOk(
-            ITypedWebSocketSession<RunStream.Outbound.Message> session,
+            TypedWebSocketSession<RunStream.Outbound.Message, Void> session,
             RunnerSessionState sessionState) {
         return null;
     }
 
     @Override
     public void afterConnectionClosedErroneously(
-            ITypedWebSocketSession<RunStream.Outbound.Message> session,
+            TypedWebSocketSession<RunStream.Outbound.Message, Void> session,
             RunnerSessionState sessionState,
             CloseStatus status) {
         // nothing to cleanup
@@ -97,9 +100,7 @@ public class RunnerWebSocketHandler
 
     @Override
     public void handleTransportError(
-            ITypedWebSocketSession<RunStream.Outbound.Message> session,
+            TypedWebSocketSession<RunStream.Outbound.Message, Void> session,
             RunnerSessionState sessionState, Throwable exception) {
-        // not required to do anything (the client will find out about the close)
-        // however we could abort the run if it isn't already
     }
 }

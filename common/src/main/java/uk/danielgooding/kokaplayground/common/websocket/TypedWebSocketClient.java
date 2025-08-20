@@ -13,6 +13,7 @@ public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState,
     private final Function<
             Context,
             UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome>> handlerFactory;
+    private final ConcurrentWebSocketWriteLimits writeLimits;
 
     public TypedWebSocketClient(
             WebSocketClient webSocketClient,
@@ -27,8 +28,9 @@ public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState,
                 new UntypedWrapperWebSocketHandler<>(
                         handlerFactory.apply(context),
                         inboundMessageClass,
-                        objectMapperBuilder,
-                        writeLimits);
+                        objectMapperBuilder);
+
+        this.writeLimits = writeLimits;
     }
 
     private WebSocketHandler decorateHandler(WebSocketHandler handler) {
@@ -38,7 +40,8 @@ public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState,
     public CompletableFuture<TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome>> execute(String uri, Context context) {
         UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome>
                 handler = handlerFactory.apply(context);
-        WebSocketHandler decoratedHandler = decorateHandler(handler);
+        RealWebSocketHandler realHandler = new RealWebSocketHandler(handler, writeLimits);
+        WebSocketHandler decoratedHandler = decorateHandler(realHandler);
         return webSocketClient.execute(decoratedHandler, uri)
                 .thenApply(handler::getSessionAndState);
     }

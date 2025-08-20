@@ -11,6 +11,7 @@ import org.springframework.web.socket.handler.ExceptionWebSocketHandlerDecorator
 import org.springframework.web.socket.handler.LoggingWebSocketHandlerDecorator;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 import uk.danielgooding.kokaplayground.common.websocket.ConcurrentWebSocketWriteLimits;
+import uk.danielgooding.kokaplayground.common.websocket.RealWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.UntypedWrapperWebSocketHandler;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
@@ -30,15 +31,16 @@ public class CompileAndRunWebsocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        UntypedWrapperWebSocketHandler<CompileAndRunStream.Inbound.Message, CompileAndRunStream.Outbound.Message, CompileAndRunSessionState, Void> untypedRunnerWebsocketHandler =
-                new UntypedWrapperWebSocketHandler<>(
-                        compileAndRunWebSocketHandler,
-                        CompileAndRunStream.Inbound.Message.class,
-                        objectMapperBuilder,
+        RealWebSocketHandler realHandler =
+                new RealWebSocketHandler(
+                        new UntypedWrapperWebSocketHandler<>(
+                                compileAndRunWebSocketHandler,
+                                CompileAndRunStream.Inbound.Message.class,
+                                objectMapperBuilder),
                         concurrentWebSocketWriteLimits);
 
         WebSocketHandler handler = new LoggingWebSocketHandlerDecorator(
-                new ExceptionWebSocketHandlerDecorator(untypedRunnerWebsocketHandler));
+                new ExceptionWebSocketHandlerDecorator(realHandler));
 
         registry.addHandler(handler, "/ws/compile-and-run")
                 .addInterceptors(new HttpSessionHandshakeInterceptor());

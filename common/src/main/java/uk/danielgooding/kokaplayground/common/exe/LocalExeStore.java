@@ -11,13 +11,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@Service("local-exe-store")
+@Service
 @Lazy
 public class LocalExeStore implements ExeStore {
     private final Path directory;
     private int nextId = 0;
 
-    LocalExeStore(@Value("${local-exe-store.directory}") Path inDirectory) throws IOException {
+    public LocalExeStore(@Value("${local-exe-store.directory}") Path inDirectory) throws IOException {
         Files.createDirectories(inDirectory);
         directory = Files.createTempDirectory(inDirectory, "exe-store");
     }
