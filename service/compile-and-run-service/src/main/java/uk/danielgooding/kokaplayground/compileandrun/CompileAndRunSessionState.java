@@ -2,7 +2,7 @@ package uk.danielgooding.kokaplayground.compileandrun;
 
 import org.springframework.lang.Nullable;
 import org.springframework.web.socket.CloseStatus;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
+import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.io.IOException;
@@ -12,7 +12,7 @@ import java.util.List;
 public class CompileAndRunSessionState {
     /// upstreamSessionAndState will be populated once the connection is established
     private @Nullable
-    TypedWebSocketSessionAndState<RunStream.Inbound.Message, ?, Void>
+    TypedWebSocketSession<RunStream.Inbound.Message, Void>
             upstreamSessionAndState = null;
 
     /// proxied events are buffered until the upstream connection is create
@@ -29,35 +29,35 @@ public class CompileAndRunSessionState {
         if (upstreamSessionAndState == null) {
             bufferedInbound.add(message);
         } else {
-            upstreamSessionAndState.getSession().sendMessage(message);
+            upstreamSessionAndState.sendMessage(message);
         }
     }
 
     private static void closeUpstreamInternal(
-            TypedWebSocketSessionAndState<RunStream.Inbound.Message, ?, Void>
+            TypedWebSocketSession<RunStream.Inbound.Message, Void>
                     upstreamSessionAndState,
             CloseStatus closeStatus) throws IOException {
         if (closeStatus.equalsCode(CloseStatus.NORMAL)) {
-            upstreamSessionAndState.getSession().closeOk(null);
+            upstreamSessionAndState.closeOk(null);
         } else {
-            upstreamSessionAndState.getSession().closeError(closeStatus);
+            upstreamSessionAndState.closeError(closeStatus);
         }
     }
 
     public void onUpstreamConnectionEstablished(
-            TypedWebSocketSessionAndState<
-                    RunStream.Inbound.Message, ?, Void> upstreamSessionAndState
+            TypedWebSocketSession<
+                    RunStream.Inbound.Message, Void> upstreamSession
     ) throws Exception {
-        this.upstreamSessionAndState = upstreamSessionAndState;
+        this.upstreamSessionAndState = upstreamSession;
 
         if (upstreamCloseStatus != null) {
             // deliver the buffered close
-            closeUpstreamInternal(upstreamSessionAndState, upstreamCloseStatus);
+            closeUpstreamInternal(upstreamSession, upstreamCloseStatus);
             return;
         }
 
         for (RunStream.Inbound.Message message : bufferedInbound) {
-            upstreamSessionAndState.getSession().sendMessage(message);
+            upstreamSession.sendMessage(message);
         }
         bufferedInbound.clear();
     }

@@ -37,12 +37,12 @@ public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState,
         return new LoggingWebSocketHandlerDecorator(handler);
     }
 
-    public CompletableFuture<TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome>> execute(String uri, Context context) {
+    public CompletableFuture<TypedWebSocketSession<OutboundMessage, Outcome>> execute(String uri, Context context) {
         UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome>
                 handler = handlerFactory.apply(context);
         RealWebSocketHandler realHandler = new RealWebSocketHandler(handler, writeLimits);
         WebSocketHandler decoratedHandler = decorateHandler(realHandler);
         return webSocketClient.execute(decoratedHandler, uri)
-                .thenApply(handler::getSessionAndState);
+                .thenApply(session -> handler.getSessionAndState(session).getSession());
     }
 }
