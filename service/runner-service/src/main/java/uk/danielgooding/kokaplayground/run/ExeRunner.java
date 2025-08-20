@@ -8,6 +8,8 @@ import uk.danielgooding.kokaplayground.common.Subprocess;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -25,14 +27,14 @@ public class ExeRunner implements IExeRunner {
         });
     }
 
-    public CompletableFuture<OrError<Void>> runStreamingStdout(
+    public CompletableFuture<OrError<Void>> runStreamingStdinAndStdout(
             Path exe,
             List<String> args,
-            String stdin,
+            BlockingQueue<String> stdinBuffer,
             Callback<Void> onStart,
             Callback<String> onStdout) {
 
-        return Subprocess.runStreamingStdout(exe, args, stdin, onStart, onStdout)
+        return Subprocess.runStreamingStdinAndStdout(exe, args, stdinBuffer, onStart, onStdout)
                 .thenApply(output -> {
                     if (output.isExitSuccess()) {
                         return OrError.ok(null);

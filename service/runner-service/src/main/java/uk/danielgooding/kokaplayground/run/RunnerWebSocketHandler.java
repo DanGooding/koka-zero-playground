@@ -1,6 +1,7 @@
 package uk.danielgooding.kokaplayground.run;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.CloseStatus;
@@ -19,9 +20,73 @@ public class RunnerWebSocketHandler
     @Autowired
     RunnerService runnerService;
 
+    @Value("${runner.max-buffered-stdin-items}")
+    int maxBufferedStdinItems;
+
     @Override
     public RunnerSessionState handleConnectionEstablished(TypedWebSocketSession<RunStream.Outbound.Message, Void> session) {
-        return new RunnerSessionState();
+        return new RunnerSessionState(maxBufferedStdinItems);
+    }
+
+    public void handleRunMessage(
+            RunStream.Inbound.Run run,
+            TypedWebSocketSession<RunStream.Outbound.Message, Void> session,
+            RunnerSessionState sessionState
+    ) throws IOException {
+        if (sessionState.isRunning()) {
+            session.sendMessage(new RunStream.Outbound.AnotherRequestInProgress());
+            return;
+        }
+
+        sessionState.setRunning(true);
+
+        Callback<Void> onStart = (ignored) -> {
+            session.sendMessage(new RunStream.Outbound.Starting());
+        };
+
+        Callback<String> onStdout = (chunk) -> {
+            session.sendMessage(new RunStream.Outbound.Stdout(chunk));
+        };
+
+
+        runnerService.runStreamingStdinAndStdout(
+                        run.getExeHandle(),
+                        sessionState.getStdinBuffer(),
+                        onStart,
+                        onStdout)
+                .thenAccept(error -> {
+                    try {
+                        session.sendMessage(
+                                switch (error) {
+                                    case Ok<Void> ok -> new RunStream.Outbound.Done();
+                                    case Failed<?> failed -> new RunStream.Outbound.Error(failed.getMessage());
+                                });
+                    } catch (IOException e) {
+                        // next block will handle
+                        throw new UncheckedIOException(e);
+                    }
+                })
+                .whenComplete((error, exn) -> {
+                    try {
+                        if (exn != null) {
+                            session.closeError(CloseStatus.SERVER_ERROR);
+                        } else {
+                            session.closeOk(null);
+                        }
+                    } catch (IOException e) {
+                        // okay to swallow - already failing due to original exn.
+                    } finally {
+                        sessionState.setRunning(false);
+                    }
+                });
+    }
+
+    public void handleStdin(
+            RunStream.Inbound.Stdin stdin,
+            TypedWebSocketSession<RunStream.Outbound.Message, Void> session,
+            RunnerSessionState sessionState
+    ) {
+        sessionState.bufferOrDropStdin(stdin.getContent());
     }
 
     @Override
@@ -31,53 +96,10 @@ public class RunnerWebSocketHandler
             @NonNull RunStream.Inbound.Message inbound) throws IOException {
         switch (inbound) {
             case RunStream.Inbound.Run run -> {
-                if (sessionState.isRunning()) {
-                    session.sendMessage(new RunStream.Outbound.AnotherRequestInProgress());
-                    return;
-                }
-
-                sessionState.setRunning(true);
-
-                Callback<Void> onStart = (ignored) -> {
-                    session.sendMessage(new RunStream.Outbound.Starting());
-                };
-
-                Callback<String> onStdout = (chunk) -> {
-                    session.sendMessage(new RunStream.Outbound.Stdout(chunk));
-                };
-
-                runnerService.runWithoutStdinStreamingStdout(
-                                run.getExeHandle(),
-                                onStart,
-                                onStdout)
-                        .thenAccept(error -> {
-                            try {
-                                session.sendMessage(
-                                        switch (error) {
-                                            case Ok<Void> ok -> new RunStream.Outbound.Done();
-                                            case Failed<?> failed -> new RunStream.Outbound.Error(failed.getMessage());
-                                        });
-                            } catch (IOException e) {
-                                // next block will handle
-                                throw new UncheckedIOException(e);
-                            }
-                        })
-                        .whenComplete((error, exn) -> {
-                            try {
-                                if (exn != null) {
-                                    session.closeError(CloseStatus.SERVER_ERROR);
-                                } else {
-                                    session.closeOk(null);
-                                }
-                            } catch (IOException e) {
-                                // okay to swallow - already failing due to original exn.
-                            } finally {
-                                sessionState.setRunning(false);
-                            }
-                        });
+                handleRunMessage(run, session, sessionState);
             }
             case RunStream.Inbound.Stdin stdin -> {
-                throw new UnsupportedOperationException("Stdin not yet supported");
+                handleStdin(stdin, session, sessionState);
             }
         }
     }

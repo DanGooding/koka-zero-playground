@@ -25,7 +25,7 @@ public class CompileAndRunSessionState {
         this.bufferedInbound = new ArrayList<>();
     }
 
-    public void sendUpstream(RunStream.Inbound.Message message) throws Exception {
+    public void sendUpstream(RunStream.Inbound.Message message) throws IOException {
         if (upstreamSessionAndState == null) {
             bufferedInbound.add(message);
         } else {
@@ -47,7 +47,7 @@ public class CompileAndRunSessionState {
     public void onUpstreamConnectionEstablished(
             TypedWebSocketSession<
                     RunStream.Inbound.Message, Void> upstreamSession
-    ) throws Exception {
+    ) throws IOException {
         this.upstreamSessionAndState = upstreamSession;
 
         if (upstreamCloseStatus != null) {

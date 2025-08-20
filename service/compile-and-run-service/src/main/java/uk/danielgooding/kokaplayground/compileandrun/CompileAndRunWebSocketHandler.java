@@ -26,6 +26,7 @@ public class CompileAndRunWebSocketHandler
         Void> {
 
     private static final Log log = LogFactory.getLog(CompileAndRunWebSocketHandler.class);
+
     @Autowired
     CompileServiceAPIClient compileServiceAPIClient;
 
@@ -76,7 +77,7 @@ public class CompileAndRunWebSocketHandler
                                     OrError<Void> result = OrError.ok(null);
                                     return CompletableFuture.completedFuture(result);
 
-                                } catch (Exception e) {
+                                } catch (IOException e) {
                                     // failure to send upstream is a server error
                                     return CompletableFuture.failedFuture(e);
                                 }
@@ -110,6 +111,13 @@ public class CompileAndRunWebSocketHandler
         });
     }
 
+    void handleStdin(
+            CompileAndRunStream.Inbound.Stdin stdin,
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
+            CompileAndRunSessionState state) throws IOException {
+        state.sendUpstream(new RunStream.Inbound.Stdin(stdin.getContent()));
+    }
+
     @Override
     public void handleMessage(
             TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
@@ -118,8 +126,7 @@ public class CompileAndRunWebSocketHandler
         switch (inbound) {
             case CompileAndRunStream.Inbound.CompileAndRun compileAndRun ->
                     compileAndRun(compileAndRun, session, state);
-            case CompileAndRunStream.Inbound.Stdin stdin ->
-                    throw new UnsupportedOperationException("stdin not supported yet");
+            case CompileAndRunStream.Inbound.Stdin stdin -> handleStdin(stdin, session, state);
         }
     }
 
