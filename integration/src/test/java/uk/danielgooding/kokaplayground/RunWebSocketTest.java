@@ -6,26 +6,25 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.socket.client.WebSocketClient;
 import uk.danielgooding.kokaplayground.common.*;
 import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import uk.danielgooding.kokaplayground.common.websocket.SessionId;
 import uk.danielgooding.kokaplayground.compileandrun.*;
+import uk.danielgooding.kokaplayground.protocol.RunStream;
 import uk.danielgooding.kokaplayground.run.RunnerService;
+import uk.danielgooding.kokaplayground.run.RunnerSessionState;
 import uk.danielgooding.kokaplayground.run.RunnerWebSocketHandler;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertThrows;
@@ -34,7 +33,6 @@ import static org.junit.Assert.assertThrows;
 @EnableAutoConfiguration
 @SpringBootTest(classes = {TestConfig.class, RunnerService.class, CompileAndRunService.class})
 @TestPropertySource(properties = {
-        "which-exe-store=test-exe-store",
         "local-exe-store.directory=UNUSED",
         "compiler.exe-path=UNUSED",
         "compiler.koka-zero-config-path=UNUSED",
@@ -66,15 +64,26 @@ public class RunWebSocketTest {
     @Autowired
     CompileAndRunService compileAndRunService;
 
+    TestWebSocketConnection<
+            RunStream.Inbound.Message,
+            RunStream.Outbound.Message,
+            CollectingRunnerClientWebSocketState,
+            RunnerSessionState,
+            OrError<String>>
+    createRunnerConnection() {
+        return new TestWebSocketConnection<>(
+                runnerWebSocketHandler,
+                runnerClientWebSocketHandler,
+                RunStream.Inbound.Message.class,
+                RunStream.Outbound.Message.class,
+                new SessionId("123"));
+    }
+
     @Test
     public void runWebSocketCommunication() throws ExecutionException, InterruptedException, IOException {
         // setup mocks
 
-        TestWebSocketConnection connection =
-                new TestWebSocketConnection(
-                        runnerWebSocketHandler,
-                        runnerClientWebSocketHandler,
-                        new SessionId("123"));
+        var connection = createRunnerConnection();
 
         Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
             connection.establishConnection();
@@ -123,11 +132,7 @@ public class RunWebSocketTest {
     public void breakConnectionWhileRunning() throws IOException {
         // setup mocks
 
-        TestWebSocketConnection connection =
-                new TestWebSocketConnection(
-                        runnerWebSocketHandler,
-                        runnerClientWebSocketHandler,
-                        new SessionId("123"));
+        var connection = createRunnerConnection();
 
         Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
             connection.establishConnection();
@@ -178,11 +183,7 @@ public class RunWebSocketTest {
     public void raiseDuringRunnerService() throws IOException {
         // setup mocks
 
-        TestWebSocketConnection connection =
-                new TestWebSocketConnection(
-                        runnerWebSocketHandler,
-                        runnerClientWebSocketHandler,
-                        new SessionId("123"));
+        var connection = createRunnerConnection();
 
         Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
             connection.establishConnection();
@@ -217,11 +218,7 @@ public class RunWebSocketTest {
     public void clientErrorInRunnerService() throws IOException, ExecutionException, InterruptedException {
         // setup mocks
 
-        TestWebSocketConnection connection =
-                new TestWebSocketConnection(
-                        runnerWebSocketHandler,
-                        runnerClientWebSocketHandler,
-                        new SessionId("123"));
+        var connection = createRunnerConnection();
 
         Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
             connection.establishConnection();
@@ -269,11 +266,7 @@ public class RunWebSocketTest {
     public void runnerStateRaises() throws IOException {
         // setup mocks
 
-        TestWebSocketConnection connection =
-                new TestWebSocketConnection(
-                        runnerWebSocketHandler,
-                        runnerClientWebSocketHandler,
-                        new SessionId("123"));
+        var connection = createRunnerConnection();
 
         Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
             connection.establishConnection();

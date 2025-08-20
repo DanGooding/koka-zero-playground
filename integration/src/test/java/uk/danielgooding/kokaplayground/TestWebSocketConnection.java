@@ -5,13 +5,7 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 import uk.danielgooding.kokaplayground.common.Callback;
-import uk.danielgooding.kokaplayground.common.OrError;
 import uk.danielgooding.kokaplayground.common.websocket.*;
-import uk.danielgooding.kokaplayground.compileandrun.CollectingRunnerClientWebSocketHandler;
-import uk.danielgooding.kokaplayground.compileandrun.CollectingRunnerClientWebSocketState;
-import uk.danielgooding.kokaplayground.protocol.RunStream;
-import uk.danielgooding.kokaplayground.run.RunnerSessionState;
-import uk.danielgooding.kokaplayground.run.RunnerWebSocketHandler;
 
 import java.io.IOException;
 
@@ -59,34 +53,31 @@ class TestSession<Inbound, Outbound, State, Outcome> implements IWebSocketSessio
 }
 
 /// for now this class mocks a single websocket connection
-class TestWebSocketConnection {
+class TestWebSocketConnection<Inbound, Outbound, ClientState, ServerState, ClientOutcome> {
 
-    // TODO: make the message/outcome types generic
-    private final UntypedWrapperWebSocketHandler<
-            RunStream.Inbound.Message, RunStream.Outbound.Message, RunnerSessionState, Void
-            > serverHandler;
-    private final UntypedWrapperWebSocketHandler<
-            RunStream.Outbound.Message, RunStream.Inbound.Message, CollectingRunnerClientWebSocketState, OrError<String>
-            > clientHandler;
+    private final UntypedWrapperWebSocketHandler<Inbound, Outbound, ServerState, Void> serverHandler;
+    private final UntypedWrapperWebSocketHandler<Outbound, Inbound, ClientState, ClientOutcome> clientHandler;
 
     private final SessionId sessionId;
 
-    TestWebSocketConnection(RunnerWebSocketHandler serverHandler, CollectingRunnerClientWebSocketHandler clientHandler, SessionId sessionId) {
+    TestWebSocketConnection(
+            TypedWebSocketHandler<Inbound, Outbound, ServerState, Void> serverHandler,
+            TypedWebSocketHandler<Outbound, Inbound, ClientState, ClientOutcome> clientHandler,
+            Class<Inbound> inboundClass, Class<Outbound> outboundClass,
+            SessionId sessionId) {
         Jackson2ObjectMapperBuilder objectMapperBuilder = new Jackson2ObjectMapperBuilder();
         this.serverHandler = new UntypedWrapperWebSocketHandler<>(
-                serverHandler, RunStream.Inbound.Message.class, objectMapperBuilder);
+                serverHandler, inboundClass, objectMapperBuilder);
         this.clientHandler = new UntypedWrapperWebSocketHandler<>(
-                clientHandler, RunStream.Outbound.Message.class, objectMapperBuilder);
+                clientHandler, outboundClass, objectMapperBuilder);
         this.sessionId = sessionId;
     }
 
     public void establishConnection() throws IOException {
-        TestSession<RunStream.Inbound.Message, RunStream.Outbound.Message,
-                RunnerSessionState, Void> serverSession =
+        TestSession<Inbound, Outbound, ServerState, Void> serverSession =
                 new TestSession<>(sessionId);
 
-        TestSession<RunStream.Outbound.Message, RunStream.Inbound.Message,
-                CollectingRunnerClientWebSocketState, OrError<String>> clientSession =
+        TestSession<Outbound, Inbound, ClientState, ClientOutcome> clientSession =
                 new TestSession<>(sessionId);
 
         serverHandler.afterConnectionEstablished(serverSession);
@@ -115,7 +106,7 @@ class TestWebSocketConnection {
                 serverSession::close);
     }
 
-    public TypedWebSocketSessionAndState<RunStream.Inbound.Message, CollectingRunnerClientWebSocketState, OrError<String>> getClientSessionAndState() {
+    public TypedWebSocketSessionAndState<Inbound, ClientState, ClientOutcome> getClientSessionAndState() {
         return clientHandler.getSessionAndState(sessionId);
     }
 
