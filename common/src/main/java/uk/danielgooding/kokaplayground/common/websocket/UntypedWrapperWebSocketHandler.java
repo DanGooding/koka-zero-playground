@@ -64,8 +64,6 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
     public void afterConnectionClosed(@NonNull IWebSocketSession session, @NonNull CloseStatus status) throws IOException {
         TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.remove(session.getId());
 
-        // TODO: allow registering listeners for this?
-        // TODO: what about CloseStatus.GOING_AWAY ?
         sessionAndState.getSession().getOutcomeFuture().whenComplete((ignored, exn) -> {
             log.error(String.format("websocket connection %s closed with error", typedWebSocketHandler.getClass()), exn);
         });

@@ -37,7 +37,8 @@ import static org.junit.Assert.assertThrows;
         "compiler.exe-path=UNUSED",
         "compiler.koka-zero-config-path=UNUSED",
         "runner.bubblewrap-path=UNUSED",
-        "runner-service-hostname=UNUSED"})
+        "runner-service-hostname=UNUSED",
+        "runner.max-buffered-stdin-items=10"})
 public class RunWebSocketTest {
 
     // mocked services
@@ -98,13 +99,14 @@ public class RunWebSocketTest {
         Mockito.when(exeStoreMock.getExe(ArgumentMatchers.eq(exeHandle), ArgumentMatchers.any()))
                 .thenReturn(OrError.ok(Path.of("/path/to/exe")));
 
-        Mockito.when(runnerServiceMock.runWithoutStdinStreamingStdout(
+        Mockito.when(runnerServiceMock.runStreamingStdinAndStdout(
                         ArgumentMatchers.eq(exeHandle),
+                        ArgumentMatchers.any(),
                         ArgumentMatchers.any(),
                         ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    Callback<Void> onStart = invocation.getArgument(1);
-                    Callback<String> onStdout = invocation.getArgument(2);
+                    Callback<Void> onStart = invocation.getArgument(2);
+                    Callback<String> onStdout = invocation.getArgument(3);
 
                     return CompletableFuture.supplyAsync(() -> {
                         try {
@@ -147,13 +149,14 @@ public class RunWebSocketTest {
         Mockito.when(exeStoreMock.getExe(ArgumentMatchers.eq(exeHandle), ArgumentMatchers.any()))
                 .thenReturn(OrError.ok(Path.of("/path/to/exe")));
 
-        Mockito.when(runnerServiceMock.runWithoutStdinStreamingStdout(
+        Mockito.when(runnerServiceMock.runStreamingStdinAndStdout(
                         ArgumentMatchers.eq(exeHandle),
+                        ArgumentMatchers.any(),
                         ArgumentMatchers.any(),
                         ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    Callback<Void> onStart = invocation.getArgument(1);
-                    Callback<String> onStdout = invocation.getArgument(2);
+                    Callback<Void> onStart = invocation.getArgument(2);
+                    Callback<String> onStdout = invocation.getArgument(3);
 
                     return CompletableFuture.supplyAsync(() -> {
                         try {
@@ -198,8 +201,9 @@ public class RunWebSocketTest {
         Mockito.when(exeStoreMock.getExe(ArgumentMatchers.eq(exeHandle), ArgumentMatchers.any()))
                 .thenReturn(OrError.ok(Path.of("/path/to/exe")));
 
-        Mockito.when(runnerServiceMock.runWithoutStdinStreamingStdout(
+        Mockito.when(runnerServiceMock.runStreamingStdinAndStdout(
                         ArgumentMatchers.eq(exeHandle),
+                        ArgumentMatchers.any(),
                         ArgumentMatchers.any(),
                         ArgumentMatchers.any()))
                 .thenAnswer(invocation -> CompletableFuture.supplyAsync(() -> {
@@ -233,13 +237,14 @@ public class RunWebSocketTest {
         Mockito.when(exeStoreMock.getExe(ArgumentMatchers.eq(exeHandle), ArgumentMatchers.any()))
                 .thenReturn(OrError.ok(Path.of("/path/to/exe")));
 
-        Mockito.when(runnerServiceMock.runWithoutStdinStreamingStdout(
+        Mockito.when(runnerServiceMock.runStreamingStdinAndStdout(
                         ArgumentMatchers.eq(exeHandle),
+                        ArgumentMatchers.any(),
                         ArgumentMatchers.any(),
                         ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    Callback<Void> onStart = invocation.getArgument(1);
-                    Callback<String> onStdout = invocation.getArgument(2);
+                    Callback<Void> onStart = invocation.getArgument(2);
+                    Callback<String> onStdout = invocation.getArgument(3);
 
                     return CompletableFuture.supplyAsync(() -> {
                         try {
@@ -281,8 +286,9 @@ public class RunWebSocketTest {
         Mockito.when(exeStoreMock.getExe(ArgumentMatchers.eq(exeHandle), ArgumentMatchers.any()))
                 .thenReturn(OrError.ok(Path.of("/path/to/exe")));
 
-        Mockito.when(runnerServiceMock.runWithoutStdinStreamingStdout(
+        Mockito.when(runnerServiceMock.runStreamingStdinAndStdout(
                         ArgumentMatchers.eq(exeHandle),
+                        ArgumentMatchers.any(),
                         ArgumentMatchers.any(),
                         ArgumentMatchers.any()))
                 .thenThrow(new RuntimeException("error in runner service"));

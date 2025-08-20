@@ -6,10 +6,10 @@ import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.Callback;
 import uk.danielgooding.kokaplayground.common.OrError;
 
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -48,8 +48,8 @@ public class SandboxedExeRunner implements IExeRunner {
     }
 
     @Override
-    public CompletableFuture<OrError<Void>> runStreamingStdout(Path exe, List<String> exeArgs, String stdin, Callback<Void> onStart, Callback<String> onStdout) {
+    public CompletableFuture<OrError<Void>> runStreamingStdinAndStdout(Path exe, List<String> exeArgs, BlockingQueue<String> stdinBuffer, Callback<Void> onStart, Callback<String> onStdout) {
         List<String> args = addBubblewrapArgs(exe, exeArgs);
-        return exeRunner.runStreamingStdout(bubblewrapPath, args, stdin, onStart, onStdout);
+        return exeRunner.runStreamingStdinAndStdout(bubblewrapPath, args, stdinBuffer, onStart, onStdout);
     }
 }
