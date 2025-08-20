@@ -38,7 +38,7 @@ public class CompileAndRunService {
                                         throw new RuntimeException(e);
                                     }
 
-                                    return sessionAndState.getOutcomeFuture();
+                                    return sessionAndState.getSession().getOutcomeFuture();
                                 })
 
         );

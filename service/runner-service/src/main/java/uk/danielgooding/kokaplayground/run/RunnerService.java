@@ -15,15 +15,27 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 public class RunnerService {
-    @Resource(name = "${which-exe-store}")
     private ExeStore exeStore;
 
-    @Autowired
     private SandboxedExeRunner exeRunner;
 
-    @Autowired
     @Qualifier("runner-workdir")
     private Workdir workdir;
+
+    public RunnerService(
+            @Autowired
+            ExeStore exeStore,
+
+            @Autowired
+            SandboxedExeRunner exeRunner,
+
+            @Autowired
+            @Qualifier("runner-workdir")
+            Workdir workdir) {
+        this.exeStore = exeStore;
+        this.exeRunner = exeRunner;
+        this.workdir = workdir;
+    }
 
     public CompletableFuture<OrError<String>> runWithoutStdin(ExeHandle handle) {
         try {

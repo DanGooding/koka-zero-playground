@@ -9,11 +9,12 @@ import org.springframework.web.socket.CloseStatus;
 import uk.danielgooding.kokaplayground.common.Failed;
 import uk.danielgooding.kokaplayground.common.Ok;
 import uk.danielgooding.kokaplayground.common.OrError;
-import uk.danielgooding.kokaplayground.common.websocket.ITypedWebSocketSession;
+import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 @Controller
@@ -32,18 +33,18 @@ public class CompileAndRunWebSocketHandler
     ProxyingRunnerWebSocketClient proxyingRunnerWebSocketClient;
 
     @Override
-    public CompileAndRunSessionState handleConnectionEstablished(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session) {
+    public CompileAndRunSessionState handleConnectionEstablished(TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session) {
         return new CompileAndRunSessionState();
     }
 
     void compileAndRun(
             CompileAndRunStream.Inbound.CompileAndRun compileAndRun,
-            ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session,
-            CompileAndRunSessionState state) throws Exception {
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
+            CompileAndRunSessionState state) throws IOException {
 
         if (!state.isFirstRequest()) {
             session.sendMessage(new CompileAndRunStream.Outbound.AnotherRequestInProgress());
-            session.close(CloseStatus.POLICY_VIOLATION);
+            session.closeError(CloseStatus.POLICY_VIOLATION);
             return;
         }
         state.setReceivedRequest();
@@ -87,7 +88,7 @@ public class CompileAndRunWebSocketHandler
                 // server error
 
                 try {
-                    session.close(CloseStatus.SERVER_ERROR);
+                    session.closeError(CloseStatus.SERVER_ERROR);
                 } catch (Exception e) {
                     // okay to swallow - already closed
                     log.error("failed to close downstream after upstream error", e);
@@ -99,7 +100,7 @@ public class CompileAndRunWebSocketHandler
                     case Failed<?> failed -> {
                         try {
                             session.sendMessage(new CompileAndRunStream.Outbound.Error(failed.getMessage()));
-                            session.closeOk();
+                            session.closeOk(null);
                         } catch (Exception e) {
                             log.error("failed to close downstream after client error", e);
                         }
@@ -110,7 +111,10 @@ public class CompileAndRunWebSocketHandler
     }
 
     @Override
-    public void handleMessage(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session, CompileAndRunSessionState state, @NonNull CompileAndRunStream.Inbound.Message inbound) throws Exception {
+    public void handleMessage(
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
+            CompileAndRunSessionState state,
+            @NonNull CompileAndRunStream.Inbound.Message inbound) throws IOException {
         switch (inbound) {
             case CompileAndRunStream.Inbound.CompileAndRun compileAndRun ->
                     compileAndRun(compileAndRun, session, state);
@@ -121,8 +125,8 @@ public class CompileAndRunWebSocketHandler
 
     @Override
     public Void afterConnectionClosedOk(
-            ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session,
-            CompileAndRunSessionState state) {
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
+            CompileAndRunSessionState state) throws IOException {
 
         state.closeUpstream(CloseStatus.GOING_AWAY);
         return null;
@@ -130,15 +134,18 @@ public class CompileAndRunWebSocketHandler
 
     @Override
     public void afterConnectionClosedErroneously(
-            ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session,
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
             CompileAndRunSessionState state,
-            CloseStatus status) {
+            CloseStatus status) throws IOException {
 
         // if we failed, it doesn't mean that upstream caused this
         state.closeUpstream(CloseStatus.GOING_AWAY);
     }
 
     @Override
-    public void handleTransportError(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session, CompileAndRunSessionState compileAndRunSessionState, Throwable exception) {
+    public void handleTransportError(
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
+            CompileAndRunSessionState compileAndRunSessionState,
+            Throwable exception) {
     }
 }

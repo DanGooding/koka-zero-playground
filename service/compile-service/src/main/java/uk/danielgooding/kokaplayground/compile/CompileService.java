@@ -2,6 +2,8 @@ package uk.danielgooding.kokaplayground.compile;
 
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.*;
 import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
@@ -16,7 +18,7 @@ public class CompileService {
     @Autowired
     private CompilerTool compilerTool;
 
-    @Resource(name = "${which-exe-store}")
+    @Autowired
     private ExeStore exeStore;
 
     public CompletableFuture<OrError<Void>> typecheck(KokaSourceCode sourceCode) {

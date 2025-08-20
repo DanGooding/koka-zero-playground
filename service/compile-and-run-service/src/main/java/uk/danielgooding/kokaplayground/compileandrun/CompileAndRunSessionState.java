@@ -5,6 +5,7 @@ import org.springframework.web.socket.CloseStatus;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,11 +36,11 @@ public class CompileAndRunSessionState {
     private static void closeUpstreamInternal(
             TypedWebSocketSessionAndState<RunStream.Inbound.Message, ?, Void>
                     upstreamSessionAndState,
-            CloseStatus closeStatus) {
+            CloseStatus closeStatus) throws IOException {
         if (closeStatus.equalsCode(CloseStatus.NORMAL)) {
-            upstreamSessionAndState.setClosedOk(null);
+            upstreamSessionAndState.getSession().closeOk(null);
         } else {
-            upstreamSessionAndState.setClosedError(closeStatus);
+            upstreamSessionAndState.getSession().closeError(closeStatus);
         }
     }
 
@@ -62,7 +63,7 @@ public class CompileAndRunSessionState {
     }
 
 
-    public void closeUpstream(CloseStatus status) {
+    public void closeUpstream(CloseStatus status) throws IOException {
         upstreamCloseStatus = status;
         if (upstreamSessionAndState != null) {
             // close unless not yet opened

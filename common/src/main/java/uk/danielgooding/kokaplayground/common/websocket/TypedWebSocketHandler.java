@@ -3,15 +3,34 @@ package uk.danielgooding.kokaplayground.common.websocket;
 import org.springframework.lang.NonNull;
 import org.springframework.web.socket.CloseStatus;
 
+import java.io.IOException;
+
 public interface TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> {
 
-    SessionState handleConnectionEstablished(ITypedWebSocketSession<OutboundMessage> session) throws Exception;
+    SessionState handleConnectionEstablished(
+            TypedWebSocketSession<OutboundMessage, Outcome> session
+    ) throws IOException;
 
-    void handleMessage(ITypedWebSocketSession<OutboundMessage> session, SessionState sessionState, @NonNull InboundMessage inbound) throws Exception;
+    void handleMessage(
+            TypedWebSocketSession<OutboundMessage, Outcome> session,
+            SessionState sessionState,
+            @NonNull InboundMessage inbound
+    ) throws IOException;
 
-    Outcome afterConnectionClosedOk(ITypedWebSocketSession<OutboundMessage> session, SessionState sessionState) throws Exception;
+    Outcome afterConnectionClosedOk(
+            TypedWebSocketSession<OutboundMessage, Outcome> session,
+            SessionState sessionState
+    ) throws IOException;
 
-    void afterConnectionClosedErroneously(ITypedWebSocketSession<OutboundMessage> session, SessionState sessionState, CloseStatus status) throws Exception;
+    void afterConnectionClosedErroneously(
+            TypedWebSocketSession<OutboundMessage, Outcome> session,
+            SessionState sessionState,
+            CloseStatus status
+    ) throws IOException;
 
-    void handleTransportError(ITypedWebSocketSession<OutboundMessage> session, SessionState sessionState, Throwable exception) throws Exception;
+    void handleTransportError(
+            TypedWebSocketSession<OutboundMessage, Outcome> session,
+            SessionState sessionState,
+            Throwable exception
+    ) throws IOException;
 }

@@ -4,7 +4,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import uk.danielgooding.kokaplayground.common.OrError;
-import uk.danielgooding.kokaplayground.common.websocket.ITypedWebSocketSession;
+import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
@@ -14,14 +14,14 @@ public class CollectingRunnerClientWebSocketHandler
         implements TypedWebSocketHandler<RunStream.Outbound.Message, RunStream.Inbound.Message, CollectingRunnerClientWebSocketState, OrError<String>> {
 
     @Override
-    public CollectingRunnerClientWebSocketState handleConnectionEstablished(ITypedWebSocketSession<RunStream.Inbound.Message> session) {
+    public CollectingRunnerClientWebSocketState handleConnectionEstablished(TypedWebSocketSession<RunStream.Inbound.Message, OrError<String>> session) {
         // nothing
         return new CollectingRunnerClientWebSocketState();
     }
 
     @Override
     public void handleMessage(
-            ITypedWebSocketSession<RunStream.Inbound.Message> session,
+            TypedWebSocketSession<RunStream.Inbound.Message, OrError<String>> session,
             CollectingRunnerClientWebSocketState state,
             @NonNull RunStream.Outbound.Message outbound
     ) {
@@ -48,21 +48,21 @@ public class CollectingRunnerClientWebSocketHandler
 
     @Override
     public OrError<String> afterConnectionClosedOk(
-            ITypedWebSocketSession<RunStream.Inbound.Message> session,
+            TypedWebSocketSession<RunStream.Inbound.Message, OrError<String>> session,
             CollectingRunnerClientWebSocketState state) {
         return state.getOutcome();
     }
 
     @Override
     public void afterConnectionClosedErroneously(
-            ITypedWebSocketSession<RunStream.Inbound.Message> session,
+            TypedWebSocketSession<RunStream.Inbound.Message, OrError<String>> session,
             CollectingRunnerClientWebSocketState state,
             CloseStatus closeStatus) {
     }
 
     @Override
     public void handleTransportError(
-            ITypedWebSocketSession<RunStream.Inbound.Message> session,
+            TypedWebSocketSession<RunStream.Inbound.Message, OrError<String>> session,
             CollectingRunnerClientWebSocketState state,
             Throwable exception) {
 

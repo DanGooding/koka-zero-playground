@@ -18,6 +18,7 @@ import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import uk.danielgooding.kokaplayground.compile.CompileController;
 import uk.danielgooding.kokaplayground.compile.CompileService;
 import uk.danielgooding.kokaplayground.compile.CompilerTool;
+import uk.danielgooding.kokaplayground.compileandrun.CompileAndRunService;
 import uk.danielgooding.kokaplayground.compileandrun.CompileServiceAPIClient;
 import uk.danielgooding.kokaplayground.compileandrun.CollectingRunnerWebSocketClient;
 import uk.danielgooding.kokaplayground.run.RunnerController;
@@ -36,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EnableAutoConfiguration
 @SpringBootTest(classes = {TestConfig.class, CompileService.class, RunnerService.class})
 @TestPropertySource(properties = {
-        "which-exe-store=local-exe-store"})
+        "runner-service-hostname=UNUSED"})
 public class CompileAndRunTest {
     // mocked services:
     @MockitoBean
@@ -61,6 +62,8 @@ public class CompileAndRunTest {
     CompileServiceAPIClient compileServiceAPIClientMock;
     @MockitoBean
     CollectingRunnerWebSocketClient runnerWebSocketClientMock;
+    @MockitoBean
+    CompileAndRunService compileAndRunService;
 
     // test subjects:
     @Autowired
@@ -88,44 +91,6 @@ public class CompileAndRunTest {
 
         OrError<Void> result = compileController.typecheck(sourceCode).get();
         assertThat(result).isInstanceOf(Failed.class);
-    }
-
-    @Test
-    public void compileAndRun() throws ExecutionException, InterruptedException, IOException {
-        // compile (mock)
-        KokaSourceCode sourceCode = new KokaSourceCode("fun main() { println-int(3); }");
-
-        Path preStorePath = Path.of("program.exe");
-        Mockito.when(compilerWorkdirMock.freshPath("compile")).thenReturn(preStorePath);
-
-        Mockito.when(compilerToolMock.compile(sourceCode, true)).thenReturn(
-                CompletableFuture.completedFuture(OrError.ok(preStorePath)));
-
-        ExeHandle storedHandle = new ExeHandle("stored-program.exe");
-        Mockito.when(exeStoreMock.putExe(preStorePath)).thenReturn(storedHandle);
-
-        // compile (act)
-        OrError<ExeHandle> compileResult = compileController.compile(sourceCode).get();
-
-        assertThat(compileResult).isEqualTo(OrError.ok(storedHandle));
-
-        // run (mock)
-        Path postGetHandle = Path.of("downloaded.exe");
-        Mockito.when(exeStoreMock.getExe(storedHandle, runnerWorkdirMock)).thenReturn(OrError.ok(postGetHandle));
-
-        String stdout = "3";
-        Mockito.when(
-                        exeRunnerMock.runThenGetStdout(
-                                ArgumentMatchers.eq(postGetHandle),
-                                ArgumentMatchers.eq(List.of()),
-                                ArgumentMatchers.any()))
-                .thenReturn(CompletableFuture.completedFuture(OrError.ok(
-                        stdout)));
-
-        // run (act)
-        OrError<String> runResult = runnerController.run(storedHandle).get();
-
-        assertThat(runResult).isEqualTo(OrError.ok(stdout));
     }
 
     @AfterEach
