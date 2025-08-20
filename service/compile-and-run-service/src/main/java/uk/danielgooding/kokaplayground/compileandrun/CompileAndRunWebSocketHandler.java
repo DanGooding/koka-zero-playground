@@ -6,11 +6,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.CloseStatus;
+import uk.danielgooding.kokaplayground.common.Failed;
+import uk.danielgooding.kokaplayground.common.Ok;
 import uk.danielgooding.kokaplayground.common.OrError;
 import uk.danielgooding.kokaplayground.common.websocket.ITypedWebSocketSession;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
+
+import java.util.concurrent.CompletableFuture;
 
 @Controller
 public class CompileAndRunWebSocketHandler
@@ -28,26 +32,30 @@ public class CompileAndRunWebSocketHandler
     ProxyingRunnerWebSocketClient proxyingRunnerWebSocketClient;
 
     @Override
-    public CompileAndRunSessionState handleConnectionEstablished(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session) throws Exception {
+    public CompileAndRunSessionState handleConnectionEstablished(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session) {
         return new CompileAndRunSessionState();
     }
 
-    @Override
-    public void handleMessage(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session, CompileAndRunSessionState state, @NonNull CompileAndRunStream.Inbound.Message inbound) throws Exception {
-        switch (inbound) {
-            case CompileAndRunStream.Inbound.CompileAndRun compileAndRun -> {
+    void compileAndRun(
+            CompileAndRunStream.Inbound.CompileAndRun compileAndRun,
+            ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session,
+            CompileAndRunSessionState state) throws Exception {
 
-                if (!state.isFirstRequest()) {
-                    session.sendMessage(new CompileAndRunStream.Outbound.AnotherRequestInProgress());
-                    session.close(CloseStatus.POLICY_VIOLATION);
-                    return;
-                }
-                state.setReceivedRequest();
+        if (!state.isFirstRequest()) {
+            session.sendMessage(new CompileAndRunStream.Outbound.AnotherRequestInProgress());
+            session.close(CloseStatus.POLICY_VIOLATION);
+            return;
+        }
+        state.setReceivedRequest();
 
-                session.sendMessage(new CompileAndRunStream.Outbound.StartingCompilation());
+        session.sendMessage(new CompileAndRunStream.Outbound.StartingCompilation());
 
-                log.info(String.format("compiling: %s", session.getId()));
-                OrError.thenComposeFuture(compileServiceAPIClient.compile(compileAndRun.getSourceCode()),
+        log.info(String.format("compiling: %s", session.getId()));
+
+        CompletableFuture<OrError<Void>> requestOutcomeFuture =
+                OrError.thenComposeFuture(
+                        // failed is a server error, OrError.error is a client error
+                        compileServiceAPIClient.compile(compileAndRun.getSourceCode()),
                         exeHandle -> {
                             log.info(String.format("compiled: %s", session.getId()));
                             try {
@@ -63,14 +71,49 @@ public class CompileAndRunWebSocketHandler
                                 try {
                                     state.onUpstreamConnectionEstablished(upstreamSessionAndState);
                                     state.sendUpstream(new RunStream.Inbound.Run(exeHandle));
-                                    return null;
+
+                                    OrError<Void> result = OrError.ok(null);
+                                    return CompletableFuture.completedFuture(result);
 
                                 } catch (Exception e) {
-                                    throw new RuntimeException(e);
+                                    // failure to send upstream is a server error
+                                    return CompletableFuture.failedFuture(e);
                                 }
                             });
                         });
+
+        requestOutcomeFuture.whenComplete((result, exn) -> {
+            if (exn != null) {
+                // server error
+
+                try {
+                    session.close(CloseStatus.SERVER_ERROR);
+                } catch (Exception e) {
+                    // okay to swallow - already closed
+                    log.error("failed to close downstream after upstream error", e);
+                }
+            } else {
+                switch (result) {
+                    case Ok<Void> ignored -> {
+                    }
+                    case Failed<?> failed -> {
+                        try {
+                            session.sendMessage(new CompileAndRunStream.Outbound.Error(failed.getMessage()));
+                            session.closeOk();
+                        } catch (Exception e) {
+                            log.error("failed to close downstream after client error", e);
+                        }
+                    }
+                }
             }
+        });
+    }
+
+    @Override
+    public void handleMessage(ITypedWebSocketSession<CompileAndRunStream.Outbound.Message> session, CompileAndRunSessionState state, @NonNull CompileAndRunStream.Inbound.Message inbound) throws Exception {
+        switch (inbound) {
+            case CompileAndRunStream.Inbound.CompileAndRun compileAndRun ->
+                    compileAndRun(compileAndRun, session, state);
             case CompileAndRunStream.Inbound.Stdin stdin ->
                     throw new UnsupportedOperationException("stdin not supported yet");
         }
@@ -91,7 +134,8 @@ public class CompileAndRunWebSocketHandler
             CompileAndRunSessionState state,
             CloseStatus status) {
 
-        state.closeUpstream(status);
+        // if we failed, it doesn't mean that upstream caused this
+        state.closeUpstream(CloseStatus.GOING_AWAY);
     }
 
     @Override
