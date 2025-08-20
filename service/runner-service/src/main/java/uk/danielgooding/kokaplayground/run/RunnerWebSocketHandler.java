@@ -10,6 +10,7 @@ import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
 @Controller
 public class RunnerWebSocketHandler
@@ -49,31 +50,29 @@ public class RunnerWebSocketHandler
                                 run.getExeHandle(),
                                 onStart,
                                 onStdout)
-                        // TODO: yuck, - clean this up
-                        .whenComplete((error, exn) -> {
-                            sessionState.setRunning(false);
-
-                            if (exn == null) {
-                                try {
-                                    session.sendMessage(
-                                            switch (error) {
-                                                case Ok<Void> ok -> new RunStream.Outbound.Done();
-                                                case Failed<?> failed ->
-                                                        new RunStream.Outbound.Error(failed.getMessage());
-                                            });
-                                } catch (Exception e) {
-                                    // okay to swallow - already failing due to original exn.
-                                }
+                        .thenAccept(error -> {
+                            try {
+                                session.sendMessage(
+                                        switch (error) {
+                                            case Ok<Void> ok -> new RunStream.Outbound.Done();
+                                            case Failed<?> failed -> new RunStream.Outbound.Error(failed.getMessage());
+                                        });
+                            } catch (IOException e) {
+                                // next block will handle
+                                throw new UncheckedIOException(e);
                             }
-                        }).whenComplete((error, exn) -> {
+                        })
+                        .whenComplete((error, exn) -> {
                             try {
                                 if (exn != null) {
                                     session.closeError(CloseStatus.SERVER_ERROR);
                                 } else {
                                     session.closeOk(null);
                                 }
-                            } catch (Exception e) {
+                            } catch (IOException e) {
                                 // okay to swallow - already failing due to original exn.
+                            } finally {
+                                sessionState.setRunning(false);
                             }
                         });
             }
