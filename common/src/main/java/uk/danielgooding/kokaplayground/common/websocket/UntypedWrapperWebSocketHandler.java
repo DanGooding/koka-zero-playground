@@ -1,6 +1,8 @@
 package uk.danielgooding.kokaplayground.common.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.lang.NonNull;
 import org.springframework.web.socket.CloseStatus;
@@ -18,6 +20,8 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
     private final TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> typedWebSocketHandler;
 
     private final Class<InboundMessage> inboundMessageClass;
+
+    private static final Log log = LogFactory.getLog(UntypedWrapperWebSocketHandler.class);
 
     public UntypedWrapperWebSocketHandler(
             TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> typedWebSocketHandler,
@@ -52,13 +56,20 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
 
         try {
             typedWebSocketHandler.handleMessage(sessionAndState.getSession(), sessionAndState.getState(), message);
-        } catch (Throwable e) {
+        } catch (IOException e) {
             sessionAndState.getSession().closeUserExn(e);
         }
     }
 
     public void afterConnectionClosed(@NonNull IWebSocketSession session, @NonNull CloseStatus status) throws IOException {
         TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.remove(session.getId());
+
+        // TODO: allow registering listeners for this?
+        // TODO: what about CloseStatus.GOING_AWAY ?
+        sessionAndState.getSession().getOutcomeFuture().whenComplete((ignored, exn) -> {
+            log.error(String.format("websocket connection %s closed with error", typedWebSocketHandler.getClass()), exn);
+        });
+
         if (status.equalsCode(CloseStatus.NORMAL)) {
             try {
                 Outcome outcome =

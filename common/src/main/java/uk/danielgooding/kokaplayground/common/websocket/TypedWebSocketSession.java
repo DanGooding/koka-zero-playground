@@ -48,8 +48,8 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
     }
 
     public void closeUserExn(Throwable exn) throws IOException {
-        session.close(CloseStatus.SERVER_ERROR);
         outcomeFuture.completeExceptionally(new RuntimeException("user code raised into WebSocket handler", exn));
+        session.close(CloseStatus.SERVER_ERROR);
     }
 
     public CompletableFuture<Outcome> getOutcomeFuture() {
