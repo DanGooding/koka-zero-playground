@@ -28,17 +28,15 @@ public class CompileAndRunService {
                 compileServiceAPIClient.compile(sourceCode),
                 handle ->
                         runnerWebSocketClient.execute().thenCompose(
-                                sessionAndState -> {
+                                (session) -> {
 
                                     try {
-                                        sessionAndState
-                                                .getSession()
-                                                .sendMessage(new RunStream.Inbound.Run(handle));
+                                        session.sendMessage(new RunStream.Inbound.Run(handle));
                                     } catch (Exception e) {
                                         throw new RuntimeException(e);
                                     }
 
-                                    return sessionAndState.getSession().getOutcomeFuture();
+                                    return session.getOutcomeFuture();
                                 })
 
         );

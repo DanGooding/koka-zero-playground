@@ -87,7 +87,7 @@ public class RunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
             connection.establishConnection();
-            return CompletableFuture.completedFuture(connection.getClientSessionAndState());
+            return CompletableFuture.completedFuture(connection.getClientSessionAndState().getSession());
         });
 
         KokaSourceCode sourceCode = new KokaSourceCode("fun main() { ... }");
@@ -136,7 +136,7 @@ public class RunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
             connection.establishConnection();
-            return CompletableFuture.completedFuture(connection.getClientSessionAndState());
+            return CompletableFuture.completedFuture(connection.getClientSessionAndState().getSession());
         });
 
         KokaSourceCode sourceCode = new KokaSourceCode("fun main() { ... }");
@@ -187,7 +187,7 @@ public class RunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
             connection.establishConnection();
-            return CompletableFuture.completedFuture(connection.getClientSessionAndState());
+            return CompletableFuture.completedFuture(connection.getClientSessionAndState().getSession());
         });
 
         KokaSourceCode sourceCode = new KokaSourceCode("fun main() { ... }");
@@ -222,7 +222,7 @@ public class RunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
             connection.establishConnection();
-            return CompletableFuture.completedFuture(connection.getClientSessionAndState());
+            return CompletableFuture.completedFuture(connection.getClientSessionAndState().getSession());
         });
 
         KokaSourceCode sourceCode = new KokaSourceCode("fun main() { ... }");
@@ -270,7 +270,7 @@ public class RunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute()).thenAnswer(invocation -> {
             connection.establishConnection();
-            return CompletableFuture.completedFuture(connection.getClientSessionAndState());
+            return CompletableFuture.completedFuture(connection.getClientSessionAndState().getSession());
         });
 
         KokaSourceCode sourceCode = new KokaSourceCode("fun main() { ... }");

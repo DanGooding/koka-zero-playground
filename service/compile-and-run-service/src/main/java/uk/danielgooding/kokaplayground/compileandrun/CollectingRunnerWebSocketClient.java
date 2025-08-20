@@ -6,10 +6,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.client.WebSocketClient;
 import uk.danielgooding.kokaplayground.common.OrError;
-import uk.danielgooding.kokaplayground.common.websocket.ConcurrentWebSocketWriteLimits;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketClient;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
+import uk.danielgooding.kokaplayground.common.websocket.*;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.net.URI;
@@ -45,7 +42,7 @@ public class CollectingRunnerWebSocketClient {
         this.uri = String.format("ws://%s/ws/run", host);
     }
 
-    public CompletableFuture<TypedWebSocketSessionAndState<RunStream.Inbound.Message, CollectingRunnerClientWebSocketState, OrError<String>>> execute() {
+    public CompletableFuture<TypedWebSocketSession<RunStream.Inbound.Message, OrError<String>>> execute() {
         return client.execute(uri, null);
     }
 }

@@ -8,10 +8,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.client.WebSocketClient;
-import uk.danielgooding.kokaplayground.common.websocket.ConcurrentWebSocketWriteLimits;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketClient;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
+import uk.danielgooding.kokaplayground.common.websocket.*;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.net.URI;
@@ -56,7 +53,7 @@ public class ProxyingRunnerWebSocketClient {
         this.uri = String.format("ws://%s/ws/run", host);
     }
 
-    public CompletableFuture<TypedWebSocketSessionAndState<RunStream.Inbound.Message, Void, Void>>
+    public CompletableFuture<TypedWebSocketSession<RunStream.Inbound.Message, Void>>
     execute(ProxyingRunnerClientState downstreamSessionAndState) {
         log.info(String.format("connecting to Runner service %s from downstream %s", uri, downstreamSessionAndState.getSession()));
         return client.execute(uri, downstreamSessionAndState);

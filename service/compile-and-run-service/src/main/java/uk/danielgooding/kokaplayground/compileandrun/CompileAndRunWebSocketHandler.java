@@ -67,10 +67,10 @@ public class CompileAndRunWebSocketHandler
                             ProxyingRunnerClientState context =
                                     new ProxyingRunnerClientState(session, state);
                             log.info(String.format("will request run: %s", session.getId()));
-                            return proxyingRunnerWebSocketClient.execute(context).thenCompose(upstreamSessionAndState -> {
+                            return proxyingRunnerWebSocketClient.execute(context).thenCompose(upstreamSession -> {
                                 log.info(String.format("began running: %s", session.getId()));
                                 try {
-                                    state.onUpstreamConnectionEstablished(upstreamSessionAndState);
+                                    state.onUpstreamConnectionEstablished(upstreamSession);
                                     state.sendUpstream(new RunStream.Inbound.Run(exeHandle));
 
                                     OrError<Void> result = OrError.ok(null);
