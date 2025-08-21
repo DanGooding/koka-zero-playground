@@ -47,6 +47,7 @@ public class Subprocess {
             String stderr = new String(process.getErrorStream().readAllBytes());
 
             int exitCode = process.waitFor();
+            logger.debug("process exited {} with code {}", command, exitCode);
             return CompletableFuture.completedFuture(new Output(exitCode, stdout, stderr));
 
         } catch (IOException | InterruptedException e) {
@@ -115,6 +116,7 @@ public class Subprocess {
 
                 int exitCode = process.waitFor();
                 processCompleted.set(true);
+                logger.debug("process {} exited with code {}", command, exitCode);
                 String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
 
                 return new Output(exitCode, null, stderr);
