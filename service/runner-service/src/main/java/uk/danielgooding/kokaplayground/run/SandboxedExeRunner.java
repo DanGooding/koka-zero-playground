@@ -26,7 +26,10 @@ public class SandboxedExeRunner implements IExeRunner {
                 // for dynamic linking - could maybe limit to just a specific lib
                 "--ro-bind", "/lib", "/lib",
                 "--ro-bind", "/usr/local/lib", "/usr/local/lib",
+                // GC reads /proc/stat, presumably to find system memory / num cpus
+                "--ro-bind", "/proc/stat", "/proc/stat",
                 "--cap-drop", "all",
+                // run in a new namespace for every resource
                 "--unshare-all",
                 "--clearenv",
                 // https://github.com/containers/bubblewrap?tab=readme-ov-file#limitations
