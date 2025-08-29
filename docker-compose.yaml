@@ -1,66 +1,49 @@
-name: koka-playground
 services:
   compile-service:
     build:
       context: .
       dockerfile: Dockerfile
       target: koka-playground-compile-service
-      additional_contexts:
-        # production version is ghcr.io/dangooding/koka-zero:main
-        - koka-compiler-image=docker-image://run-koka-compiler
     volumes:
       - exe-store:/etc/exe-store
     environment:
       # binds property local-exe-store.directory
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
-      DEBUG: true
-      ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: DEBUG
-      LOGGING_LEVEL_ROOT: debug
+      DEBUG: "true"
+      ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "DEBUG"
+      LOGGING_LEVEL_ROOT: "debug"
     networks:
       common-bridge:
 
   runner-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: koka-playground-runner-service
-      additional_contexts:
-        - koka-compiler-image=docker-image://run-koka-compiler
     cap_add:
       - SYS_ADMIN
-    security_opt:
-      - seccomp:bwrap-seccomp-profile.json
+    # ideally we would set the seccomp profile just for this service,
+    # however docker swarm doesn't support passing this option yet
+    # so instead we set it at the daemon level.
+    #    security_opt:
+    #      - seccomp:bwrap-seccomp-profile.json
     volumes:
       - exe-store:/etc/exe-store
     environment:
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
-      DEBUG: true
-      ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: DEBUG
-      LOGGING_LEVEL_ROOT: debug
+      DEBUG: "true"
+      ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "DEBUG"
+      LOGGING_LEVEL_ROOT: "debug"
     networks:
       common-bridge:
 
   compile-and-run-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: koka-playground-compile-and-run-service
     environment:
       COMPILE_SERVICE_HOSTNAME: "compile-service"
       RUNNER_SERVICE_HOSTNAME: "runner-service"
-      DEBUG: true
-      ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: DEBUG
-      LOGGING_LEVEL_ROOT: debug
+      DEBUG: "true"
+      ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "DEBUG"
+      LOGGING_LEVEL_ROOT: "debug"
     networks:
       common-bridge:
-    command:
-      # enable JVM remote debugging on port 5005
-      - "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
-      - "-jar"
-      - "app.war"
     ports:
       - "80:80"
-      - "5005:5005"
 
 volumes:
   exe-store:

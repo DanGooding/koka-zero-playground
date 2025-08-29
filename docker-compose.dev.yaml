@@ -1,0 +1,21 @@
+services:
+  compile-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: koka-playground-compile-service
+
+  runner-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: koka-playground-runner-service
+
+    security_opt:
+      - seccomp:bwrap-seccomp-profile.json
+
+  compile-and-run-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: koka-playground-compile-and-run-service
