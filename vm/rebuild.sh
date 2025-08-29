@@ -3,10 +3,12 @@
 set -euo pipefail
 set -x
 
-# expects BUILD_HOST to be set here
-. ./.env
+REPO_ROOT=$(git rev-parse --show-toplevel)
 
-DEPLOY_HOST=$(./prod-host.sh)
+# expects BUILD_HOST to be set here
+. "$REPO_ROOT"/vm/.env
+
+DEPLOY_HOST=$("$REPO_ROOT"/terraform/prod-host.sh)
 
 # interactively connect to DEPLOY_HOST from REMOTE_HOST
 # in case DEPLOY_HOST was newly created 

@@ -2,9 +2,11 @@
 
 set -euo pipefail
 
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
 ADDR=$(
   terraform output \
-  --state=../terraform/terraform.tfstate \
+  --state="$REPO_ROOT"/terraform/terraform.tfstate \
   --json \
   | jq .main_ipv4.value -r
 )
