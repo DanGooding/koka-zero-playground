@@ -21,7 +21,9 @@ RUN for project in compile-service-app runner-service-app compile-and-run-servic
       $project.war ; \
     done
 
-FROM $RUN_COMPILER_IMAGE AS koka-playground-compile-service
+FROM $RUN_COMPILER_IMAGE AS run-koka-compiler
+
+FROM run-koka-compiler AS koka-playground-compile-service
 WORKDIR /app
 
 RUN apk add openjdk21-jre-headless
@@ -41,7 +43,7 @@ RUN apk add openjdk21-jre-headless
 RUN apk add bubblewrap
 
 COPY --from=package /build/runner-service-app.war app.war
-COPY --from=koka-compiler-image /usr/local/lib/* /usr/local/lib/
+COPY --from=run-koka-compiler /usr/local/lib/* /usr/local/lib/
 
 EXPOSE 8080
 ENTRYPOINT [ "java" ]
