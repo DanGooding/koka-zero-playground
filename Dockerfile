@@ -1,6 +1,6 @@
 ARG JAVA_BUILD_IMAGE=maven:3.9.11-eclipse-temurin-21-alpine
 ARG RUN_IMAGE=alpine:3.22
-ARG RUN_COMPILER_IMAGE=koka-compiler-image
+ARG RUN_COMPILER_IMAGE=ghcr.io/dangooding/koka-zero:main
 
 FROM $JAVA_BUILD_IMAGE AS package
 WORKDIR /build
@@ -30,9 +30,7 @@ RUN apk add openjdk21-jre-headless
 
 COPY --from=package /build/compile-service-app.war app.war
 
-EXPOSE 8080
-ENTRYPOINT [ "java" ]
-CMD [ "-jar", "app.war", \
+CMD [ "java", "-jar", "app.war", \
     "--compiler.exe-path=/app/koka-zero", \
     "--compiler.koka-zero-config-path=/app/koka-zero-config.sexp" ]
 
@@ -45,9 +43,7 @@ RUN apk add bubblewrap
 COPY --from=package /build/runner-service-app.war app.war
 COPY --from=run-koka-compiler /usr/local/lib/* /usr/local/lib/
 
-EXPOSE 8080
-ENTRYPOINT [ "java" ]
-CMD [ "-jar", "app.war", \
+CMD [ "java", "-jar", "app.war", \
     "--runner.bubblewrap-path=/usr/bin/bwrap" ]
 
 FROM $RUN_IMAGE AS koka-playground-compile-and-run-service
@@ -57,6 +53,4 @@ RUN apk add openjdk21-jre-headless
 
 COPY --from=package /build/compile-and-run-service-app.war app.war
 
-EXPOSE 8080
-ENTRYPOINT [ "java" ]
-CMD [ "-jar", "app.war" ]
+CMD [ "java", "-jar", "app.war" ]
