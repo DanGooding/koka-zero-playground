@@ -1,0 +1,9 @@
+services:
+  compile-service:
+    image: TODO
+
+  runner-service:
+    image: TODO
+
+  compile-and-run-service:
+    image: TODO
