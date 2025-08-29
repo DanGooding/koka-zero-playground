@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
+set -x
 
 # expects BUILD_HOST to be set here
 . ./.env
@@ -13,7 +14,9 @@ DEPLOY_HOST=$(./prod-host.sh)
 ssh $BUILD_HOST -tt -- "ssh $DEPLOY_HOST -- true"
 
 # from https://discourse.nixos.org/t/cross-platform-deployments/56606
-nixos-rebuild switch \
+nix run nixpkgs#nixos-rebuild -- \
+  switch \
+  --fast \
   --build-host $BUILD_HOST \
   --target-host $DEPLOY_HOST \
   --flake .#main
