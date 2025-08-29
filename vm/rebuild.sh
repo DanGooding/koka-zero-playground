@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-# TODO: dont hardcode
-BUILD_HOST=dan@192.168.0.30
+# expects BUILD_HOST to be set here
+. ./.env
 
 DEPLOY_HOST=$(./prod-host.sh)
 
