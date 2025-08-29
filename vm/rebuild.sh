@@ -21,4 +21,4 @@ nix run nixpkgs#nixos-rebuild -- \
   --fast \
   --build-host $BUILD_HOST \
   --target-host $DEPLOY_HOST \
-  --flake .#main
+  --flake $REPO_ROOT/vm/#main
