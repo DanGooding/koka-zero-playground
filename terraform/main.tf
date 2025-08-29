@@ -2,8 +2,24 @@ data "digitalocean_image" "nixos_vm_image" {
   name = var.nixos_vm_image_name
 }
 
-data "digitalocean_ssh_key" "from_nixos_build_machine" {
-  name = "NixOS Build Machine"
+data "digitalocean_ssh_keys" "keys" {
+  filter {
+    key = "name"
+    values = [
+      "NixOS Build Machine",
+      "Ubuntu Inspiron"
+    ]
+  }
+}
+
+resource "digitalocean_ssh_key" "keys" {
+  for_each = {
+    for key in var.ssh_keys :
+    key.name => key
+  }
+
+  name       = each.value.name
+  public_key = each.value.public_key
 }
 
 resource "digitalocean_droplet" "main" {
@@ -11,7 +27,7 @@ resource "digitalocean_droplet" "main" {
   name     = "main"
   region   = var.region
   size     = "s-1vcpu-1gb"
-  ssh_keys = [data.digitalocean_ssh_key.from_nixos_build_machine.id]
+  ssh_keys = [for key in digitalocean_ssh_key.keys : key.id]
 }
 
 resource "digitalocean_project" "koka_zero_playground" {
