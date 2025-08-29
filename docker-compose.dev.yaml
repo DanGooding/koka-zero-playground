@@ -12,7 +12,7 @@ services:
       target: koka-playground-runner-service
 
     security_opt:
-      - seccomp:bwrap-seccomp-profile.json
+      - seccomp:seccomp/bwrap-seccomp-profile.json
 
   compile-and-run-service:
     build:
