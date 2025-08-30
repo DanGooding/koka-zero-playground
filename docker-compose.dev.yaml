@@ -25,6 +25,8 @@ services:
       target: koka-playground-compile-and-run-service
     environment:
       COMPILE_AND_RUN_SERVICE_ALLOWED_WS_ORIGIN: "http://localhost"
+    ports:
+      - "80:80"
 
 networks:
   common:
