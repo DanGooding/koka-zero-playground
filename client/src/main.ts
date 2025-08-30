@@ -79,20 +79,25 @@ function runCode() {
         }
     }
     websocket.onerror = () => {
+        console.error('websocket error')
         setState({
             runStatus: "idle",
-            error: `websocket error`,
+            error: "websocket error",
             websocket: null
         })
     }
     websocket.onclose = (e: CloseEvent) => {
-        if (!e.wasClean) {
-            setState({
-                runStatus: "idle",
-                error: `websocket closed with error`,
-                websocket: null
-            })
+        let error = null
+
+        // NORMAL or GOING_AWAY are successful closes, otherwise it's an error
+        if (e.code !== 1000 && e.code !== 1001) {
+            error = `websocket closed with error:\n ${event.reason}`
         }
+        setState({
+            runStatus: "idle",
+            websocket: null,
+            error
+        })
     }
 
 }
