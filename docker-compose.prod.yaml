@@ -7,3 +7,7 @@ services:
 
   compile-and-run-service:
     image: ghcr.io/dangooding/koka-playground-compile-and-run-service:main
+
+networks:
+  common:
+    driver: overlay

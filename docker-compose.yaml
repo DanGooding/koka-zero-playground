@@ -1,9 +1,6 @@
+# this is a base file which the .prod/.dev files add to
 services:
   compile-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: koka-playground-compile-service
     volumes:
       - exe-store:/etc/exe-store
     environment:
@@ -13,7 +10,7 @@ services:
       ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "DEBUG"
       LOGGING_LEVEL_ROOT: "debug"
     networks:
-      common-bridge:
+      common:
 
   runner-service:
     cap_add:
@@ -22,7 +19,7 @@ services:
     # however docker swarm doesn't support passing this option yet
     # so instead we set it at the daemon level.
     #    security_opt:
-    #      - seccomp:bwrap-seccomp-profile.json
+    #      - seccomp:bwrap-seccomp-profi~le.json
     volumes:
       - exe-store:/etc/exe-store
     environment:
@@ -31,7 +28,7 @@ services:
       ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "DEBUG"
       LOGGING_LEVEL_ROOT: "debug"
     networks:
-      common-bridge:
+      common:
 
   compile-and-run-service:
     environment:
@@ -41,14 +38,9 @@ services:
       ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "DEBUG"
       LOGGING_LEVEL_ROOT: "debug"
     networks:
-      common-bridge:
+      common:
     ports:
       - "80:80"
 
 volumes:
   exe-store:
-
-networks:
-  common-bridge:
-    driver: bridge
-
