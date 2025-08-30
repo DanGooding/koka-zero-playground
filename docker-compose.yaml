@@ -39,8 +39,6 @@ services:
       LOGGING_LEVEL_ROOT: "debug"
     networks:
       common:
-    ports:
-      - "80:80"
 
 volumes:
   exe-store:

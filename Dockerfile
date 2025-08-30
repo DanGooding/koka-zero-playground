@@ -1,12 +1,16 @@
+# syntax=docker.io/docker/dockerfile:1.7-labs
+
 ARG JAVA_BUILD_IMAGE=maven:3.9.11-eclipse-temurin-21-alpine
 ARG RUN_IMAGE=alpine:3.22
 ARG RUN_COMPILER_IMAGE=ghcr.io/dangooding/koka-zero:main
+ARG NODE_BUILD_IMAGE=node:22-alpine3.22
+ARG NGINX_IMAGE=nginx:1.29-alpine3.22
 
 FROM $JAVA_BUILD_IMAGE AS package
 WORKDIR /build
 
 # need to copy all modules in, since maven expects to find all pom files specified in the root pom
-COPY . .
+COPY --exclude=client/  . .
 
 RUN --mount=type=cache,target=/root/.m2 \
     mvn clean install -X
@@ -54,3 +58,20 @@ RUN apk add openjdk21-jre-headless
 COPY --from=package /build/compile-and-run-service-app.war app.war
 
 CMD [ "java", "-jar", "app.war" ]
+
+FROM $NODE_BUILD_IMAGE AS frontend-build
+WORKDIR /build
+
+COPY client/package.json client/package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm clean-install
+
+COPY --exclude=client/nginx.conf \
+  client/ ./
+
+RUN npm run build
+
+FROM $NGINX_IMAGE AS koka-playground-proxy
+
+COPY client/nginx.conf /etc/nginx/nginx.conf
+COPY --from=frontend-build /build/dist /data/www

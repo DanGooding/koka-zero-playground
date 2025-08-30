@@ -8,6 +8,13 @@ services:
   compile-and-run-service:
     image: ghcr.io/dangooding/koka-playground-compile-and-run-service:main
 
+  proxy:
+    image: ghcr.io/dangooding/koka-playground-proxy:main
+    networks:
+      common:
+    ports:
+      - "80:80"
+
 networks:
   common:
     driver: overlay
