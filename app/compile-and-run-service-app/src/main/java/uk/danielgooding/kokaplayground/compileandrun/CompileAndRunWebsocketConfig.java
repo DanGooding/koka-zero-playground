@@ -1,6 +1,7 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.socket.WebSocketHandler;
@@ -14,7 +15,6 @@ import uk.danielgooding.kokaplayground.common.websocket.ConcurrentWebSocketWrite
 import uk.danielgooding.kokaplayground.common.websocket.RealWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.UntypedWrapperWebSocketHandler;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
-import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 @Configuration
 @EnableWebSocket
@@ -28,6 +28,9 @@ public class CompileAndRunWebsocketConfig implements WebSocketConfigurer {
 
     @Autowired
     ConcurrentWebSocketWriteLimits concurrentWebSocketWriteLimits;
+
+    @Value("${compile-and-run-service.allowed-ws-origin}")
+    String allowedOrigin;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
@@ -43,6 +46,7 @@ public class CompileAndRunWebsocketConfig implements WebSocketConfigurer {
                 new ExceptionWebSocketHandlerDecorator(realHandler));
 
         registry.addHandler(handler, "/ws/compile-and-run")
+                .setAllowedOrigins(allowedOrigin)
                 .addInterceptors(new HttpSessionHandshakeInterceptor());
     }
 }
