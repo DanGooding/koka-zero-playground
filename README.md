@@ -12,7 +12,7 @@ Orchestrated with Docker Swarm, atop a NixOS DigitalOcean droplet.
 Startup the backend services
 
 ```shell
-docker compose up --build
+./dev-compose.sh
 ```
 
 Run the frontend with Vite dev mode
