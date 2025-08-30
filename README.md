@@ -5,6 +5,8 @@ implementation [KokaZero](https://github.com/DanGooding/koka-zero/).
 
 Built with Java Spring, with [Bubblewrap](https://github.com/containers/bubblewrap) to sandbox user binaries.
 
+Orchestrated with Docker Swarm, atop a NixOS DigitalOcean droplet.
+
 ## Local Development
 
 Startup the backend services
