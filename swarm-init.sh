@@ -7,6 +7,7 @@ repo_root=$(git rev-parse --show-toplevel)
 DOCKER_HOST=ssh://$("$repo_root"/terraform/prod-host.sh)
 export DOCKER_HOST
 
-# TODO: get the private IP addr programatically
+private_ip=$("$repo_root"/terraform/prod-host-private-ip.sh)
+
 docker swarm init \
-  --advertise-addr ens4
+  --advertise-addr "$private_ip"
