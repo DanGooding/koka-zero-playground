@@ -23,6 +23,9 @@ public class RunnerWebSocketHandler
     @Value("${runner.max-buffered-stdin-items}")
     int maxBufferedStdinItems;
 
+    @Value("${runner.max-stderr-bytes}")
+    int maxErrorBytes;
+
     @Override
     public RunnerSessionState handleConnectionEstablished(TypedWebSocketSession<RunStream.Outbound.Message, Void> session) {
         return new RunnerSessionState(maxBufferedStdinItems);
@@ -59,7 +62,13 @@ public class RunnerWebSocketHandler
                         session.sendMessage(
                                 switch (error) {
                                     case Ok<Void> ok -> new RunStream.Outbound.Done();
-                                    case Failed<?> failed -> new RunStream.Outbound.Error(failed.getMessage());
+                                    case Failed<?> failed -> {
+                                        String message = failed.getMessage();
+                                        if (message.length() > maxErrorBytes) {
+                                            message = message.substring(0, maxErrorBytes) + "...";
+                                        }
+                                        yield new RunStream.Outbound.Error(message);
+                                    }
                                 });
                     } catch (IOException e) {
                         // next block will handle

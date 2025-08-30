@@ -45,7 +45,8 @@ import static org.junit.Assert.assertThrows;
         "compiler.koka-zero-config-path=UNUSED",
         "runner.bubblewrap-path=UNUSED",
         "runner-service-hostname=UNUSED",
-        "runner.max-buffered-stdin-items=10"})
+        "runner.max-buffered-stdin-items=10",
+        "runner.max-stderr-bytes=100"})
 public class CompileAndRunWebSocketTest {
 
     // mocked services
