@@ -4,6 +4,10 @@ services:
       context: .
       dockerfile: Dockerfile
       target: koka-playground-compile-service
+      args:
+        # use a locally built version of this image for local development
+        # since the published registry version is amd64 only
+        RUN_COMPILER_IMAGE: run-koka-compiler:latest
 
   runner-service:
     build:
@@ -19,3 +23,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: koka-playground-compile-and-run-service
+
+networks:
+  common:
+    driver: bridge
