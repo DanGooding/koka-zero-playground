@@ -13,3 +13,6 @@ bwrap-seccomp-profile.json
 *.md
 **/*Dockerfile
 **/docker-compose.yaml
+
+terraform/
+vm/
