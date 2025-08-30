@@ -42,6 +42,8 @@ function runCode() {
     }
 
     websocket.onmessage = (e: MessageEvent) => {
+        if (e.target !== getWebSocket()) return;
+
         const message = JSON.parse(e.data)
         if (message.hasOwnProperty("another-request-in-progress")) {
             setState({
@@ -78,8 +80,9 @@ function runCode() {
             })
         }
     }
-    websocket.onerror = () => {
-        console.error('websocket error')
+    websocket.onerror = (e: Event) => {
+        if (e.target !== getWebSocket()) return;
+
         setState({
             runStatus: "idle",
             error: "websocket error",
@@ -87,6 +90,8 @@ function runCode() {
         })
     }
     websocket.onclose = (e: CloseEvent) => {
+        if (e.target !== getWebSocket()) return;
+
         let error = null
 
         // NORMAL or GOING_AWAY are successful closes, otherwise it's an error
