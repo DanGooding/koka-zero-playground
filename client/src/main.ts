@@ -113,7 +113,7 @@ function sendStdin() {
     if (!websocket) return
 
     const content = stdinInput.value + '\n'
-    if (!content) return
+    if (/^\s*$/.test(content)) return;
 
     websocket.send(JSON.stringify({
         stdin: {
