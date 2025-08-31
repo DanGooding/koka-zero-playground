@@ -1,6 +1,7 @@
 import type {State} from "./state.ts";
 import fibonacciGeneratorCode from './fibonacci-generator.kk?raw'
 import escape from 'escape-html'
+import { basicEditor } from 'prism-code-editor/setups'
 
 const runStatusDiv = document.querySelector<HTMLDivElement>('#run-status')!
 const errorDiv = document.querySelector<HTMLDivElement>('#error')!
@@ -8,9 +9,14 @@ const inputOutputPre = document.querySelector<HTMLPreElement>('#input-output')!
 
 export const runButton = document.querySelector<HTMLButtonElement>('#run-code')!
 export const stdinInput = document.querySelector<HTMLInputElement>("#stdin")!
-export const sourceCode = document.querySelector<HTMLTextAreaElement>('#source-code')!
 
-sourceCode.value = fibonacciGeneratorCode
+export const editor = basicEditor(
+    '#editor',
+    {
+        language: 'html',
+        theme: 'prism',
+        value: fibonacciGeneratorCode
+    })
 
 function updateViewForRunStatus(state: State) {
     let content: string;

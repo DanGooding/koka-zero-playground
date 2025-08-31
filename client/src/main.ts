@@ -1,6 +1,6 @@
 import './style.css'
 import {manageState} from "./state.ts";
-import {runButton, sourceCode, stdinInput, updateViewForState} from "./view.ts";
+import {runButton, editor, stdinInput, updateViewForState} from "./view.ts";
 
 const {setState, modifyState, getRunStatus, getWebSocket} = manageState(
     {
@@ -33,7 +33,7 @@ function runCode() {
         websocket.send(JSON.stringify({
             "compile-and-run": {
                 sourceCode: {
-                    code: sourceCode.value
+                    code: editor.value
                 }
             }
         }))
