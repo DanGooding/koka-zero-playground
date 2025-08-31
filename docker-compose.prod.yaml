@@ -7,6 +7,8 @@ services:
 
   compile-and-run-service:
     image: ghcr.io/dangooding/koka-playground-compile-and-run-service:main
+    environment:
+      COMPILE_AND_RUN_SERVICE_ALLOWED_WS_ORIGIN: "https://koka-zero.danielgooding.uk"
 
   proxy:
     image: ghcr.io/dangooding/koka-playground-proxy:main
