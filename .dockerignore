@@ -8,11 +8,16 @@
 **/*.class
 ./*/target/
 
-bwrap-seccomp-profile.json
 *.sh
 *.md
 **/*Dockerfile
-**/docker-compose.yaml
+**/docker-compose.*.yaml
 
 terraform/
 vm/
+seccomp/
+.mvn/
+.github/
+
+.env
+
