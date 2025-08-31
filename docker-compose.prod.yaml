@@ -16,7 +16,6 @@ services:
       common:
     environment:
       CERTBOT_EMAIL: "dan.gooding2000@gmail.com"
-      STAGING: 1
       DEBUG: 1
     volumes:
       - nginx_secrets:/etc/letsencrypt
