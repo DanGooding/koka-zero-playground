@@ -1,4 +1,6 @@
-import type {Grammar} from "prism-code-editor/prism"
+import type { Language, CommentTokens, InputSelection } from "prism-code-editor"
+import type { Grammar } from "prism-code-editor/prism"
+import { getLineBefore } from "prism-code-editor/utils"
 
 export const kokaGrammar: Grammar = {
     comment: {
@@ -31,3 +33,26 @@ export const kokaGrammar: Grammar = {
     operator: /[+*/=!%-]|(==|!=|<=|>=|<|>|&&|\|\|)/,
     punctuation: /[(){},;:]/,
 }
+
+// rules for when to add closing brackets / indent within {}
+// copied from bracketIndenting in prism-code-editor since it doesn't seem to be exported
+const isBracketPair = /\[]|\(\)|{}/
+const openBracket = /[([{][^)\]}]*$/
+
+const testBracketPair =
+    ([start, end]: InputSelection, value: string) => {
+    return isBracketPair.test(value[start - 1] + value[end])
+}
+
+const comments: CommentTokens = {
+    line: "//",
+    block: ["/*", "*/"],
+}
+
+export const kokaLanguage: Language = ({
+    comments,
+    autoIndent: [
+        ([start], value) => openBracket.test(getLineBefore(value, start)),
+        testBracketPair,
+    ],
+})

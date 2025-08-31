@@ -1,9 +1,10 @@
 import type {State} from "./state.ts";
 import fibonacciGeneratorCode from './fibonacci-generator.kk?raw'
 import escape from 'escape-html'
-import { kokaGrammar } from './syntax'
+import { kokaGrammar, kokaLanguage } from './syntax'
 import { basicEditor } from 'prism-code-editor/setups'
 import { languages } from "prism-code-editor/prism"
+import { languageMap } from "prism-code-editor"
 
 const runStatusDiv = document.querySelector<HTMLDivElement>('#run-status')!
 const errorDiv = document.querySelector<HTMLDivElement>('#error')!
@@ -13,6 +14,8 @@ export const runButton = document.querySelector<HTMLButtonElement>('#run-code')!
 export const stdinInput = document.querySelector<HTMLInputElement>("#stdin")!
 
 languages['koka'] = kokaGrammar
+languageMap['koka'] = kokaLanguage
+
 export const editor = basicEditor(
     '#editor',
     {
