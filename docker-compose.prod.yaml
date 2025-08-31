@@ -14,9 +14,19 @@ services:
     image: ghcr.io/dangooding/koka-playground-proxy:main
     networks:
       common:
+    environment:
+      CERTBOT_EMAIL: "dan.gooding2000@gmail.com"
+      STAGING: 1
+      DEBUG: 1
+    volumes:
+      - nginx_secrets:/etc/letsencrypt
     ports:
       - "80:80"
+      - "443:443"
 
 networks:
   common:
     driver: overlay
+
+volumes:
+  nginx_secrets:

@@ -4,7 +4,7 @@ ARG JAVA_BUILD_IMAGE=maven:3.9.11-eclipse-temurin-21-alpine
 ARG RUN_IMAGE=alpine:3.22
 ARG RUN_COMPILER_IMAGE=ghcr.io/dangooding/koka-zero:main
 ARG NODE_BUILD_IMAGE=node:22-alpine3.22
-ARG NGINX_IMAGE=nginx:1.29-alpine3.22
+ARG NGINX_IMAGE=jonasal/nginx-certbot:6.0.1-nginx1.29.1-alpine
 
 FROM $JAVA_BUILD_IMAGE AS package
 WORKDIR /build
@@ -73,5 +73,7 @@ RUN npm run build
 
 FROM $NGINX_IMAGE AS koka-playground-proxy
 
-COPY client/nginx.conf /etc/nginx/nginx.conf
+COPY client/nginx.conf /etc/nginx/user_conf.d/
 COPY --from=frontend-build /build/dist /data/www
+
+CMD ["nginx", "-g", "daemon off;"]
