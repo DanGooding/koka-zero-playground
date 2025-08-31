@@ -31,6 +31,7 @@ FROM run-koka-compiler AS koka-playground-compile-service
 WORKDIR /app
 
 RUN apk add openjdk21-jre-headless
+RUN apk add jq
 
 COPY --from=package /build/compile-service-app.war app.war
 
@@ -43,6 +44,7 @@ WORKDIR /app
 
 RUN apk add openjdk21-jre-headless
 RUN apk add bubblewrap
+RUN apk add jq
 
 COPY --from=package /build/runner-service-app.war app.war
 COPY --from=run-koka-compiler /usr/local/lib/* /usr/local/lib/
@@ -54,6 +56,7 @@ FROM $RUN_IMAGE AS koka-playground-compile-and-run-service
 WORKDIR /app
 
 RUN apk add openjdk21-jre-headless
+RUN apk add jq
 
 COPY --from=package /build/compile-and-run-service-app.war app.war
 
