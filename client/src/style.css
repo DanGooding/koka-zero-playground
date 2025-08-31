@@ -24,16 +24,53 @@ a:hover {
 }
 
 body {
-    margin: 2em;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    align-content: flex-start;
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 100vh;
+    gap: 0;
+    justify-content: stretch;
+    align-content: stretch;
 }
 
-.section {
-    flex-basis: 45%;
+#readme {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: 50vh;
+    box-sizing: border-box;
+    padding: 2em;
+    overflow: auto;
+    border-bottom: 1px solid #4444;
+}
+
+#terminal {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: 50vh;
+    box-sizing: border-box;
+    padding: 2em;
+    overflow: auto;
+    position: relative;
+    top: 50vh;
+    border-top: 1px solid #4444;
+}
+
+#editor-container {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 2em;
+    overflow: auto;
 }
 
 h1 {
@@ -96,8 +133,4 @@ button:focus-visible:enabled {
 
 .terminal-input {
     text-decoration: underline;
-}
-
-#editor-container {
-    display: grid;
 }
