@@ -5,16 +5,19 @@ x-health-check: &healthcheck
     [ "CMD-SHELL",
       "wget -q -O - http://localhost/actuator/health | jq --exit-status '.status == \"UP\"' >/dev/null" ]
 
+x-logging-env-vars: &logging-env-vars
+  DEBUG: "true"
+  ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "DEBUG"
+  LOGGING_LEVEL_ROOT: "debug"
+
 services:
   compile-service:
     volumes:
       - exe-store:/etc/exe-store
     environment:
+      <<: *logging-env-vars
       # binds property local-exe-store.directory
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
-      DEBUG: "true"
-      ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "DEBUG"
-      LOGGING_LEVEL_ROOT: "debug"
     networks:
       common:
     healthcheck: *healthcheck
@@ -30,21 +33,17 @@ services:
     volumes:
       - exe-store:/etc/exe-store
     environment:
+      <<: *logging-env-vars
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
-      DEBUG: "true"
-      ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "DEBUG"
-      LOGGING_LEVEL_ROOT: "debug"
     networks:
       common:
     healthcheck: *healthcheck
 
   compile-and-run-service:
     environment:
+      <<: *logging-env-vars
       COMPILE_SERVICE_HOSTNAME: "compile-service"
       RUNNER_SERVICE_HOSTNAME: "runner-service"
-      DEBUG: "true"
-      ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "DEBUG"
-      LOGGING_LEVEL_ROOT: "debug"
     networks:
       common:
     healthcheck: *healthcheck
