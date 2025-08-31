@@ -1,4 +1,10 @@
 # this is a base file which the .prod/.dev files add to
+
+x-health-check: &healthcheck
+  test:
+    [ "CMD-SHELL",
+      "wget -q -O - http://localhost/actuator/health | jq --exit-status '.status == \"UP\"' >/dev/null" ]
+
 services:
   compile-service:
     volumes:
@@ -11,6 +17,7 @@ services:
       LOGGING_LEVEL_ROOT: "debug"
     networks:
       common:
+    healthcheck: *healthcheck
 
   runner-service:
     cap_add:
@@ -29,6 +36,7 @@ services:
       LOGGING_LEVEL_ROOT: "debug"
     networks:
       common:
+    healthcheck: *healthcheck
 
   compile-and-run-service:
     environment:
@@ -39,6 +47,7 @@ services:
       LOGGING_LEVEL_ROOT: "debug"
     networks:
       common:
+    healthcheck: *healthcheck
 
 volumes:
   exe-store:
