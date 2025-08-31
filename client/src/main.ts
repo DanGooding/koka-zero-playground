@@ -96,7 +96,7 @@ function runCode() {
 
         // NORMAL or GOING_AWAY are successful closes, otherwise it's an error
         if (e.code !== 1000 && e.code !== 1001) {
-            error = `websocket closed with error:\n ${event.reason}`
+            error = `websocket closed with error:\n ${e.reason}`
         }
         setState({
             runStatus: "idle",
