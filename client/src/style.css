@@ -72,6 +72,21 @@ body {
     border-top: 1px solid #4444;
 }
 
+#run-controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    gap: 1em;
+    margin-bottom: 1em;
+}
+
+#run-status {
+    font-size: 1em;
+    justify-content: right;
+}
+
 #editor-container {
     grid-column: 2 / 3;
     grid-row: 1 / 2;
