@@ -19,6 +19,9 @@ services:
       DEBUG: 1
     volumes:
       - nginx_secrets:/etc/letsencrypt
+    healthcheck:
+      # check whether 'GET /' succeeds, don't download the page
+      test: [ "CMD", "wget", "--no-check-certificate", "--spider", "https://localhost" ]
     ports:
       - "80:80"
       - "443:443"
