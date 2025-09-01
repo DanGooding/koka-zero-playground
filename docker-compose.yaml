@@ -23,6 +23,8 @@ services:
     healthcheck: *healthcheck
 
   runner-service:
+    # bwrap creates zombies, so need an init process to reap them
+    init: true
     cap_add:
       - SYS_ADMIN
     # ideally we would set the seccomp profile just for this service,
