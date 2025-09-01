@@ -1,4 +1,4 @@
-import type {State} from "./state.ts";
+import type { State } from "./state.ts";
 import fibonacciGeneratorCode from './fibonacci-generator.kk?raw'
 import escape from 'escape-html'
 import { kokaGrammar, kokaLanguage } from './syntax'
@@ -51,15 +51,34 @@ function updateViewForRunStatus(state: State) {
 
     runButton.disabled = state.runStatus !== "idle"
     stdinInput.disabled = state.runStatus === "idle"
+
+    // Hide placeholder when disabled
+    if (stdinInput.disabled) {
+        stdinInput.placeholder = "";
+    } else {
+        stdinInput.placeholder = "input";
+    }
 }
 
 function updateTerminalForState(state: State) {
     errorDiv.textContent = state.error || ""
 
+    // Save stdin value and focus state
+    const stdinHadFocus = document.activeElement === stdinInput;
+    const stdinValue = stdinInput.value;
+
+    // Render output HTML (excluding stdin input)
     inputOutputPre.innerHTML =
         state.output.map(([kind, content]) =>
             `<span class="terminal-${kind}">${escape(content)}</span>`
-        ).join('')
+        ).join('');
+
+    // Append the stdin input at the end
+    inputOutputPre.appendChild(stdinInput);
+
+    // Restore value and focus if needed
+    stdinInput.value = stdinValue;
+    if (stdinHadFocus) stdinInput.focus();
 }
 
 export function updateViewForState(state: State) {

@@ -121,7 +121,6 @@ function sendStdin() {
         }
     }))
     modifyState(state => {
-        // TODO: distinguish input from output
         state.output.push(['input', content])
     })
     stdinInput.value = ""

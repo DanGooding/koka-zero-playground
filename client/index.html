@@ -18,7 +18,8 @@
             the optimiser.
         </p>
 
-        <p>Use the language playground to explore algebraic effects by writing and running <i>Koka Zero</i> programs.</p>
+        <p>Use the language playground to explore algebraic effects by writing and running <i>Koka Zero</i> programs.
+        </p>
     </div>
 
     <div id="editor-container" class="section">
@@ -30,8 +31,10 @@
             <button id="run-code">Run Code</button>
         </div>
         <div id="error" class="error mono"></div>
-        <pre id="input-output" class="mono"></pre>
-        <input id="stdin" class="mono" placeholder="input">
+        <pre id="input-output" class="mono">
+            <!-- output will be injected here -->
+            <input id="stdin" class="mono" placeholder="input">
+        </pre>
     </div>
 
     <script type="module" src="/src/main.ts"></script>

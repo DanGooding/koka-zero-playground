@@ -176,3 +176,52 @@ button:focus-visible:enabled {
 .terminal-input {
     text-decoration: underline;
 }
+
+#input-output {
+    background: #181818;
+    color: #e0e0e0;
+    border-radius: 6px;
+    border: 1px solid #333;
+    padding: 1em;
+    min-height: 8em;
+    font-size: 1em;
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 0.2em;
+    box-shadow: 0 2px 8px #0002;
+    font-family: Monaco, "Courier New", monospace;
+    overflow-y: auto;
+    max-height: 16em;
+}
+
+#input-output .terminal-input {
+    color: #8be9fd;
+    font-weight: bold;
+    text-decoration: none;
+    background: none;
+}
+
+#input-output .terminal-output {
+    color: #e0e0e0;
+}
+
+#stdin {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #444;
+    color: #8be9fd;
+    font-family: inherit;
+    font-size: 1em;
+    outline: none;
+    padding: 0.2em 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+#stdin:focus {
+    border-bottom: 1px solid #646cff;
+    background: #222;
+}
