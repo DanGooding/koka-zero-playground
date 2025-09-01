@@ -19,13 +19,6 @@ public class CompileAndRunServiceConfig {
     }
 
     @Bean
-    RunnerServiceAPIClient runnerServiceAPIClient(@Value("${runner-service-hostname}") URI host) {
-        return new RunnerServiceAPIClient(
-                new APIClient(
-                        RestClient.create(String.format("http://%s", host))));
-    }
-
-    @Bean
     StandardWebSocketClient standardWebSocketClient() {
         return new StandardWebSocketClient();
     }

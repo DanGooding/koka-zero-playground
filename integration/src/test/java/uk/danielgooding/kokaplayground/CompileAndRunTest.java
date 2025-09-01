@@ -3,7 +3,6 @@ package uk.danielgooding.kokaplayground;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,21 +12,14 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import uk.danielgooding.kokaplayground.common.*;
-import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import uk.danielgooding.kokaplayground.compile.CompileController;
 import uk.danielgooding.kokaplayground.compile.CompileService;
 import uk.danielgooding.kokaplayground.compile.CompilerTool;
-import uk.danielgooding.kokaplayground.compileandrun.CompileAndRunService;
 import uk.danielgooding.kokaplayground.compileandrun.CompileServiceAPIClient;
-import uk.danielgooding.kokaplayground.compileandrun.CollectingRunnerWebSocketClient;
-import uk.danielgooding.kokaplayground.run.RunnerController;
 import uk.danielgooding.kokaplayground.run.RunnerService;
 import uk.danielgooding.kokaplayground.run.SandboxedExeRunner;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -62,16 +54,10 @@ public class CompileAndRunTest {
     // unused - mocked to avoid creating a real instance:
     @MockitoBean
     CompileServiceAPIClient compileServiceAPIClientMock;
-    @MockitoBean
-    CollectingRunnerWebSocketClient runnerWebSocketClientMock;
-    @MockitoBean
-    CompileAndRunService compileAndRunService;
 
     // test subjects:
     @Autowired
     CompileController compileController;
-    @Autowired
-    RunnerController runnerController;
 
     @Test
     public void typecheckValid() throws ExecutionException, InterruptedException {

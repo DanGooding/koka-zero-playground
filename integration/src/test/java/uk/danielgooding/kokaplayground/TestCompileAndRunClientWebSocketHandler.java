@@ -4,55 +4,84 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
+import uk.danielgooding.kokaplayground.common.OrError;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 
 import java.io.IOException;
 
+
 @Service
 public class TestCompileAndRunClientWebSocketHandler
         implements TypedWebSocketHandler<
         CompileAndRunStream.Outbound.Message,
         CompileAndRunStream.Inbound.Message,
-        StringBuilder,
-        String> {
+        TestCompileAndRunClientWebSocketHandler.State,
+        OrError<String>> {
 
-    @Override
-    public StringBuilder handleConnectionEstablished(
-            TypedWebSocketSession<CompileAndRunStream.Inbound.Message, String> session) {
-        return new StringBuilder();
-    }
+    public static class State {
+        private final StringBuilder stdoutBuilder;
+        private String maybeError;
 
-    @Override
-    public void handleMessage(
-            TypedWebSocketSession<CompileAndRunStream.Inbound.Message, String> session,
-            StringBuilder stdoutBuilder,
-            @NonNull CompileAndRunStream.Outbound.Message inbound) {
-        if (inbound instanceof CompileAndRunStream.Outbound.Stdout stdout) {
-            stdoutBuilder.append(stdout.getContent());
+        State() {
+            stdoutBuilder = new StringBuilder();
+        }
+
+        void addStdout(String chunk) {
+            stdoutBuilder.append(chunk);
+        }
+
+        void setError(String message) {
+            maybeError = message;
+        }
+
+        OrError<String> getOutcome() {
+            if (maybeError == null) {
+                return OrError.ok(stdoutBuilder.toString());
+            } else {
+                return OrError.error(maybeError);
+            }
         }
     }
 
     @Override
-    public String afterConnectionClosedOk(
-            TypedWebSocketSession<CompileAndRunStream.Inbound.Message, String> session,
-            StringBuilder stdoutBuilder) {
-        return stdoutBuilder.toString();
+    public State handleConnectionEstablished(
+            TypedWebSocketSession<CompileAndRunStream.Inbound.Message, OrError<String>> session) {
+        return new State();
+    }
+
+    @Override
+    public void handleMessage(
+            TypedWebSocketSession<CompileAndRunStream.Inbound.Message, OrError<String>> session,
+            State state,
+            @NonNull CompileAndRunStream.Outbound.Message inbound) {
+        if (inbound instanceof CompileAndRunStream.Outbound.Stdout stdout) {
+            state.addStdout(stdout.getContent());
+        } else if (inbound instanceof CompileAndRunStream.Outbound.Error error) {
+            state.setError(error.getMessage());
+        }
+    }
+
+    @Override
+    public OrError<String> afterConnectionClosedOk(
+            TypedWebSocketSession<CompileAndRunStream.Inbound.Message, OrError<String>> session,
+            State state) {
+        return state.getOutcome();
     }
 
     @Override
     public void afterConnectionClosedErroneously(
-            TypedWebSocketSession<CompileAndRunStream.Inbound.Message, String> session,
-            StringBuilder stdoutBuilder,
+            TypedWebSocketSession<CompileAndRunStream.Inbound.Message, OrError<String>> session,
+            State state,
             CloseStatus status) throws IOException {
 
     }
 
     @Override
     public void handleTransportError(
-            TypedWebSocketSession<CompileAndRunStream.Inbound.Message, String> session,
-            StringBuilder stdoutBuilder,
+            TypedWebSocketSession<CompileAndRunStream.Inbound.Message, OrError<String>> session,
+            State state,
             Throwable exception) throws IOException {
 
     }
