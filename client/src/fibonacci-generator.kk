@@ -22,7 +22,7 @@ fun main() {
       print-int(n);
       resume(());  // keep generating
     }else {
-      ();  // stop generating once
+      ();  // stop generating once we hit 100
     };
   };
   // call this under the above handler
