@@ -19,7 +19,7 @@ fun main() {
     if n <= 100
     then {
       // print the fibonacci numbers below 100
-      print-int(n);
+      println-int(n);
       resume(());  // keep generating
     }else {
       ();  // stop generating once we hit 100
