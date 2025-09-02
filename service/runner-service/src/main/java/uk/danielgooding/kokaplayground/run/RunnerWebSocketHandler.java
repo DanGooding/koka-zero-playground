@@ -41,8 +41,6 @@ public class RunnerWebSocketHandler
             return;
         }
 
-        sessionState.setRunning(true);
-
         Callback<Void> onStart = (ignored) -> {
             session.sendMessage(new RunStream.Outbound.Starting());
         };
@@ -51,43 +49,41 @@ public class RunnerWebSocketHandler
             session.sendMessage(new RunStream.Outbound.Stdout(chunk));
         };
 
-
-        runnerService.runStreamingStdinAndStdout(
-                        run.getExeHandle(),
-                        sessionState.getStdinBuffer(),
-                        onStart,
-                        onStdout)
-                .thenAccept(error -> {
-                    try {
-                        session.sendMessage(
-                                switch (error) {
-                                    case Ok<Void> ok -> new RunStream.Outbound.Done();
-                                    case Failed<?> failed -> {
-                                        String message = failed.getMessage();
-                                        if (message.length() > maxErrorBytes) {
-                                            message = message.substring(0, maxErrorBytes) + "...";
-                                        }
-                                        yield new RunStream.Outbound.Error(message);
-                                    }
-                                });
-                    } catch (IOException e) {
-                        // next block will handle
-                        throw new UncheckedIOException(e);
-                    }
-                })
-                .whenComplete((error, exn) -> {
-                    try {
-                        if (exn != null) {
-                            session.closeExn("failure in Runner service", exn);
-                        } else {
-                            session.closeOk(null);
-                        }
-                    } catch (IOException e) {
-                        // okay to swallow - already failing due to original exn.
-                    } finally {
-                        sessionState.setRunning(false);
-                    }
-                });
+        sessionState.setRunning(
+                runnerService.runStreamingStdinAndStdout(
+                                run.getExeHandle(),
+                                sessionState.getStdinBuffer(),
+                                onStart,
+                                onStdout)
+                        .thenAccept(error -> {
+                            try {
+                                session.sendMessage(
+                                        switch (error) {
+                                            case Ok<Void> ok -> new RunStream.Outbound.Done();
+                                            case Failed<?> failed -> {
+                                                String message = failed.getMessage();
+                                                if (message.length() > maxErrorBytes) {
+                                                    message = message.substring(0, maxErrorBytes) + "...";
+                                                }
+                                                yield new RunStream.Outbound.Error(message);
+                                            }
+                                        });
+                            } catch (IOException e) {
+                                // next block will handle
+                                throw new UncheckedIOException(e);
+                            }
+                        })
+                        .whenComplete((error, exn) -> {
+                            try {
+                                if (exn != null) {
+                                    session.closeExn("failure in Runner service", exn);
+                                } else {
+                                    session.closeOk(null);
+                                }
+                            } catch (IOException e) {
+                                // okay to swallow - already failing due to original exn.
+                            }
+                        }));
     }
 
     public void handleStdin(
@@ -117,6 +113,8 @@ public class RunnerWebSocketHandler
     public Void afterConnectionClosedOk(
             TypedWebSocketSession<RunStream.Outbound.Message, Void> session,
             RunnerSessionState sessionState) {
+
+        sessionState.cancelCurrentRun();
         return null;
     }
 
@@ -125,7 +123,8 @@ public class RunnerWebSocketHandler
             TypedWebSocketSession<RunStream.Outbound.Message, Void> session,
             RunnerSessionState sessionState,
             CloseStatus status) {
-        // nothing to cleanup
+
+        sessionState.cancelCurrentRun();
     }
 
     @Override

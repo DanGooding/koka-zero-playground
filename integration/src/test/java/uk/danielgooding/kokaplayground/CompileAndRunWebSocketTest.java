@@ -11,10 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit4.SpringRunner;
-import uk.danielgooding.kokaplayground.common.Callback;
-import uk.danielgooding.kokaplayground.common.Failed;
-import uk.danielgooding.kokaplayground.common.KokaSourceCode;
-import uk.danielgooding.kokaplayground.common.OrError;
+import uk.danielgooding.kokaplayground.common.*;
 import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import uk.danielgooding.kokaplayground.common.websocket.SessionId;
@@ -147,7 +144,7 @@ public class CompileAndRunWebSocketTest {
                     Callback<Void> onStart = invocation.getArgument(2);
                     Callback<String> onStdout = invocation.getArgument(3);
 
-                    return CompletableFuture.supplyAsync(() -> {
+                    return CancellableFuture.supplyAsync((canceler) -> {
                         try {
                             onStart.call(null);
 
@@ -157,7 +154,7 @@ public class CompileAndRunWebSocketTest {
                             throw new RuntimeException(e);
                         }
 
-                        return OrError.ok(null);
+                        return OrCancelled.ok(OrError.ok(null));
                     });
                 });
 
@@ -222,7 +219,7 @@ public class CompileAndRunWebSocketTest {
                     Callback<Void> onStart = invocation.getArgument(2);
                     Callback<String> onStdout = invocation.getArgument(3);
 
-                    return CompletableFuture.supplyAsync(() -> {
+                    return CancellableFuture.supplyAsync((canceler) -> {
                         try {
                             onStart.call(null);
 
@@ -234,7 +231,7 @@ public class CompileAndRunWebSocketTest {
                             throw new RuntimeException(e);
                         }
 
-                        return OrError.ok(null);
+                        return OrCancelled.ok(OrError.ok(null));
                     });
                 });
 
@@ -290,7 +287,7 @@ public class CompileAndRunWebSocketTest {
                     Callback<Void> onStart = invocation.getArgument(2);
                     Callback<String> onStdout = invocation.getArgument(3);
 
-                    return CompletableFuture.supplyAsync(() -> {
+                    return CancellableFuture.supplyAsync((canceler) -> {
                         try {
                             onStart.call(null);
 
@@ -309,7 +306,7 @@ public class CompileAndRunWebSocketTest {
                 compileAndRunClientSession = compileAndRunConnection.getClientSessionAndState().getSession();
 
         compileAndRunClientSession.sendMessage(new CompileAndRunStream.Inbound.CompileAndRun(sourceCode));
-        
+
         CompletableFuture<OrError<String>> outcomeStdout = compileAndRunClientSession.getOutcomeFuture();
 
         // assert
@@ -350,7 +347,7 @@ public class CompileAndRunWebSocketTest {
                     Callback<Void> onStart = invocation.getArgument(2);
                     Callback<String> onStdout = invocation.getArgument(3);
 
-                    return CompletableFuture.supplyAsync(() -> {
+                    return CancellableFuture.supplyAsync((canceler) -> {
                         try {
                             onStart.call(null);
 
@@ -358,7 +355,7 @@ public class CompileAndRunWebSocketTest {
                             throw new RuntimeException(e);
                         }
 
-                        return OrError.error("your code was bad");
+                        return OrCancelled.ok(OrError.error("your code was bad"));
                     });
                 });
 
@@ -406,7 +403,7 @@ public class CompileAndRunWebSocketTest {
                         ArgumentMatchers.any(),
                         ArgumentMatchers.any(),
                         ArgumentMatchers.any()))
-                .thenThrow(new RuntimeException("error in runner service"));
+                .thenThrow(new RuntimeException("simulate error in runner service"));
 
         // act
 

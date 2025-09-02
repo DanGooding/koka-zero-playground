@@ -61,13 +61,13 @@ public class RunnerService {
         }
     }
 
-    public CompletableFuture<OrError<Void>> runStreamingStdinAndStdout(
+    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
             ExeHandle handle, BlockingQueue<String> stdinBuffer, Callback<Void> onStart, Callback<String> onStdout) {
         try {
             Path exe;
             switch (exeStore.getExe(handle, workdir)) {
                 case Failed<?> failed -> {
-                    return CompletableFuture.completedFuture(failed.castValue());
+                    return CancellableFuture.completedFuture(failed.castValue());
                 }
                 case Ok<Path> okExe -> {
                     exe = okExe.getValue();
@@ -85,7 +85,7 @@ public class RunnerService {
                     });
 
         } catch (IOException e) {
-            return CompletableFuture.failedFuture(e);
+            return CancellableFuture.failedFuture(e);
         }
     }
 }

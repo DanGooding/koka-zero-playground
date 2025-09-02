@@ -2,6 +2,7 @@ package uk.danielgooding.kokaplayground.run;
 
 import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.Callback;
+import uk.danielgooding.kokaplayground.common.CancellableFuture;
 import uk.danielgooding.kokaplayground.common.OrError;
 import uk.danielgooding.kokaplayground.common.Subprocess;
 
@@ -34,7 +35,7 @@ public class ExeRunner implements IExeRunner {
         });
     }
 
-    public CompletableFuture<OrError<Void>> runStreamingStdinAndStdout(
+    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
             Path exe,
             List<String> args,
             BlockingQueue<String> stdinBuffer,
