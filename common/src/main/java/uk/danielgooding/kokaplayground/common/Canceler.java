@@ -18,7 +18,7 @@ public class Canceler {
             onCancel = null;
         }
     }
-    
+
     public synchronized void setOnCancel(Runnable cancel) throws CancelledException {
         if (isCancelled) { // cancelled before we attached this callback - run it now
             cancel();
@@ -26,16 +26,13 @@ public class Canceler {
         }
         this.onCancel = cancel;
     }
-
-    // TODO: this should be done by completableFuture:
-
-    /// helper function for CancellableFutures - call in the worker thread to poll cancelled()
-    public synchronized <T> OrCancelled<T> resultIfNotCancelled(T result) {
-        // no need to run onCancel:
-        if (isCancelled) {
+    
+    public synchronized <T> OrCancelled<T> wrapIfCancelled(OrCancelled<T> result) {
+        if (result instanceof OrCancelled.Ok<T> && isCancelled) {
+            // must have already run onCancel if it was set
+            // so no need to run again
             return OrCancelled.cancelled();
-        } else {
-            return OrCancelled.ok(result);
         }
+        return result;
     }
 }

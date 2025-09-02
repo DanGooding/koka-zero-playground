@@ -37,14 +37,16 @@ public class CancellableFuture<T> {
     /// which it is expected to populate
     public static <T> CancellableFuture<T> supplyAsync(Function<Canceler, OrCancelled<T>> run) {
         Canceler canceler = new Canceler();
-        CompletableFuture<OrCancelled<T>> result = CompletableFuture.supplyAsync(() -> run.apply(canceler));
+        CompletableFuture<OrCancelled<T>> result = CompletableFuture.supplyAsync(() ->
+                canceler.wrapIfCancelled(run.apply(canceler)));
         return new CancellableFuture<>(result, canceler);
     }
 
     public <U> CancellableFuture<U> thenApply(Function<T, U> fn) {
 
         CompletableFuture<OrCancelled<U>> resultFuture =
-                this.resultFuture.thenApply((result) -> result.thenApply(fn));
+                this.resultFuture.thenApply((result) ->
+                        canceler.wrapIfCancelled(result.thenApply(fn)));
         return new CancellableFuture<>(resultFuture, canceler);
     }
 
