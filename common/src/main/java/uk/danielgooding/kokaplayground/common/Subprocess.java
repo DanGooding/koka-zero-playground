@@ -117,8 +117,7 @@ public class Subprocess {
                 logger.debug("process {} exited with code {}", command, exitCode);
                 String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
 
-                return canceler.resultIfNotCancelled(
-                        new Output(exitCode, null, stderr));
+                return OrCancelled.ok(new Output(exitCode, null, stderr));
 
             } catch (InterruptedException | IOException e) {
                 throw new RuntimeException(e);
