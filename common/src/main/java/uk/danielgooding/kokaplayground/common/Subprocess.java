@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Subprocess {
 
@@ -61,7 +60,7 @@ public class Subprocess {
     /// onStdout will be called with chunks of stdout
     /// then the future will resolve, and onStdout will not be called any further
     /// Output will have stdout=null
-    public static CompletableFuture<Output> runStreamingStdinAndStdout(
+    public static CancellableFuture<Output> runStreamingStdinAndStdout(
             Path command,
             List<String> args,
             BlockingQueue<String> stdinBuffer,
@@ -74,24 +73,23 @@ public class Subprocess {
 
         ProcessBuilder processBuilder = new ProcessBuilder(commandAndArgs);
 
-        return CompletableFuture.supplyAsync(() -> {
 
+        return CancellableFuture.supplyAsync(canceler -> {
             try {
                 Process process = processBuilder.start();
+                canceler.setOnCancel(process::destroy);
                 onStart.call(null);
 
-                AtomicBoolean processCompleted = new AtomicBoolean(false);
 
-                // the process might not read all the provided stdin.
-                // avoid causing a deadlock by blocking this thread
-                // which would otherwise be waiting for the thread to exit.
+                // since write() can block, the point of this thread is to be blocked,
+                // so that the thread running the websocket handler doesn't.
                 CompletableFuture.runAsync(() -> {
                     try (OutputStream stdin = process.getOutputStream()) {
 
                         // we can't signal that we're done writing stdin (BlockingQueue has no close())
                         // so to avoid leaking this worker thread (it would block forever on take())
                         // use poll() with a timeout and check processCompleted
-                        while (!processCompleted.get()) {
+                        while (process.isAlive()) {
                             String maybeChunk = stdinBuffer.poll(1, TimeUnit.MILLISECONDS);
                             if (maybeChunk == null) continue;
 
@@ -115,14 +113,17 @@ public class Subprocess {
                 }
 
                 int exitCode = process.waitFor();
-                processCompleted.set(true);
+
                 logger.debug("process {} exited with code {}", command, exitCode);
                 String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
 
-                return new Output(exitCode, null, stderr);
+                return canceler.resultIfNotCancelled(
+                        new Output(exitCode, null, stderr));
 
-            } catch (Exception e) {
+            } catch (InterruptedException | IOException e) {
                 throw new RuntimeException(e);
+            } catch (CancelledException e) {
+                return OrCancelled.cancelled();
             }
         });
 

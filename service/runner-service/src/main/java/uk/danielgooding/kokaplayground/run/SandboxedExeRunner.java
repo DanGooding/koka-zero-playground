@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.Callback;
+import uk.danielgooding.kokaplayground.common.CancellableFuture;
 import uk.danielgooding.kokaplayground.common.OrError;
 
 import java.nio.file.Path;
@@ -51,7 +52,7 @@ public class SandboxedExeRunner implements IExeRunner {
     }
 
     @Override
-    public CompletableFuture<OrError<Void>> runStreamingStdinAndStdout(Path exe, List<String> exeArgs, BlockingQueue<String> stdinBuffer, Callback<Void> onStart, Callback<String> onStdout) {
+    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(Path exe, List<String> exeArgs, BlockingQueue<String> stdinBuffer, Callback<Void> onStart, Callback<String> onStdout) {
         List<String> args = addBubblewrapArgs(exe, exeArgs);
         return exeRunner.runStreamingStdinAndStdout(bubblewrapPath, args, stdinBuffer, onStart, onStdout);
     }
