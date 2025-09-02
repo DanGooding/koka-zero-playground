@@ -6,6 +6,7 @@
 
   environment.systemPackages = with pkgs; [
     docker
+    fail2ban
   ];
 
   virtualisation.docker = {
@@ -15,6 +16,8 @@
     # we have to set it on the daemon, to be inherited.
     daemon.settings."seccomp-profile" = ../seccomp/bwrap-seccomp-profile.json;
   };
+
+  services.fail2ban.enable = true;
 
   system.stateVersion = "25.05";
 }
