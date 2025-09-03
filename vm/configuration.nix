@@ -19,5 +19,12 @@
 
   services.fail2ban.enable = true;
 
+  swapDevices = [
+    {
+      device = "/swapfile";
+      size = 2048; # 2GB
+    }
+  ];
+
   system.stateVersion = "25.05";
 }
