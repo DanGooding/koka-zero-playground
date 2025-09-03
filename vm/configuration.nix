@@ -26,5 +26,28 @@
     }
   ];
 
+  # Docker's overlay network pollutes the host routing table with routes from
+  # the link-local range into the containers. These appear unused, and they
+  # prevent do-agent from reaching the metadata service.
+  # Fix this by adding a static route out of the correct interface.
+  # Nix support for static routes is poor, so have to use a hacky startup script.
+  systemd.services.do-metadata-static-route = {
+    enable = true;
+    description = "add a static route to the digitalocean metadata service";
+    unitConfig = {
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+    };
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart =
+        let metadataFixedIP = "169.254.169.254"; in
+        "/run/current-system/sw/bin/ip route replace ${metadataFixedIP} dev ens3";
+      RemainAfterExit = "yes";
+    };
+
+    wantedBy = [ "multi-user.target" ];
+  };
+
   system.stateVersion = "25.05";
 }
