@@ -2,10 +2,12 @@ import escape from 'escape-html'
 import { basicEditor } from 'prism-code-editor/setups'
 import { languages } from "prism-code-editor/prism"
 import { languageMap } from "prism-code-editor"
+import { insertText } from "prism-code-editor/utils"
+import type { PrismEditor } from "prism-code-editor"
+import { codeExampleOfButtonId, codeExampleCode } from './code-examples'
 
-import type { State } from "./state.ts";
+import type { State, CodeExample } from "./state.ts";
 import { kokaGrammar, kokaLanguage } from './syntax'
-import fibonacciGeneratorCode from './fibonacci-generator.kk?raw'
 
 const runStatusDiv = document.querySelector<HTMLDivElement>('#run-status')!
 const errorDiv = document.querySelector<HTMLDivElement>('#error')!
@@ -14,16 +16,26 @@ const inputOutputPre = document.querySelector<HTMLPreElement>('#input-output')!
 export const runButton = document.querySelector<HTMLButtonElement>('#run-code')!
 export const stdinInput = document.querySelector<HTMLInputElement>("#stdin")!
 
+export const codeExampleButtons: Map<CodeExample, HTMLButtonElement> =
+    new Map(
+        Array
+            .from(
+                document.querySelectorAll<HTMLButtonElement>('#code-example-selectors > button').values())
+            .map(button => [codeExampleOfButtonId(button.id), button]))
+
+
 languages['koka'] = kokaGrammar
 languageMap['koka'] = kokaLanguage
 
-export const editor = basicEditor(
-    '#editor',
-    {
-        language: 'koka',
-        theme: 'prism',
-        value: fibonacciGeneratorCode
-    })
+export function createEditor(onReady: () => void) {
+    return basicEditor(
+        '#editor',
+        {
+            language: 'koka',
+            theme: 'prism',
+        },
+        onReady)
+}
 
 function statusDescription(state: Readonly<State>): string {
     switch (state.runStatus) {
@@ -81,7 +93,26 @@ function updateTerminalForState(state: Readonly<State>) {
     if (stdinHadFocus) stdinInput.focus();
 }
 
-export function updateViewForState(state: Readonly<State>) {
+function updateEditorForState(editor: PrismEditor, state: Readonly<State>) {
+    if (state.codeExampleState.needsLoad) {
+        state.codeExampleState.needsLoad = false
+
+        insertText(
+            editor,
+            codeExampleCode(state.codeExampleState.base),
+            0,
+            editor.value.length,
+            0)
+        console.log(editor.value)
+    }
+
+    for (const [buttonCodeExample, button] of codeExampleButtons.entries()) {
+        button.className = buttonCodeExample === state.codeExampleState.base ? "active" : "inactive"
+    }
+}
+
+export function updateViewForState(state: Readonly<State>, editor: PrismEditor) {
     updateViewForRunStatus(state)
     updateTerminalForState(state)
+    updateEditorForState(editor, state)
 }
