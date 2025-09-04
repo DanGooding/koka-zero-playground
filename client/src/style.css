@@ -225,3 +225,11 @@ button:focus-visible:enabled {
     border-bottom: 1px solid #646cff;
     background: #222;
 }
+
+#code-example-selectors > button.active {
+    background: #646cff;
+    color: #222;
+}
+#code-example-selectors > button.inactive {
+
+}

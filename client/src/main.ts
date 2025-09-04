@@ -1,15 +1,24 @@
 import './style.css'
 import {manageState} from "./state.ts";
-import {runButton, editor, stdinInput, updateViewForState} from "./view.ts";
+import {runButton, createEditor, stdinInput, codeExampleButtons, updateViewForState} from "./view.ts";
+
+const editor = createEditor(() => {
+    // populate editor with code example once it loads
+    modifyState(state => state.codeExampleState.needsLoad = true);
+})
 
 const {setState, modifyState, getState} = manageState(
     {
+        codeExampleState: {
+            base: "fibonacciGenerator",
+            needsLoad: true,
+        },
         runStatus: "idle",
         output: [],
         error: null,
         websocket: null,
     },
-    updateViewForState
+    (state) => updateViewForState(state, editor)
 )
 
 function runCode() {
@@ -144,3 +153,11 @@ runButton.addEventListener('click', runCode)
 stdinInput.addEventListener('keyup', (event) => {
     if (event.key === 'Enter') sendStdin()
 })
+for (const [codeExample, button] of codeExampleButtons.entries()) {
+    button.addEventListener('click', () => {
+        modifyState(state => {
+            state.codeExampleState.base = codeExample
+            state.codeExampleState.needsLoad = true
+        })
+    })
+}
