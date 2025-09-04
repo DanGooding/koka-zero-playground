@@ -21,10 +21,11 @@ public class RunStream {
 
         @JsonTypeName("run")
         public static final class Run extends Message {
+            @JsonUnwrapped
             private final ExeHandle exeHandle;
 
             @JsonCreator
-            public Run(@JsonProperty("exeHandle") ExeHandle handle) {
+            public Run(ExeHandle handle) {
                 this.exeHandle = handle;
             }
 

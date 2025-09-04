@@ -32,9 +32,7 @@ function runCode() {
 
         websocket.send(JSON.stringify({
             "@type": "compile-and-run",
-            sourceCode: {
-                code: editor.value
-            }
+            code: editor.value
         }))
 
         setState({runStatus: "requestedRun"})

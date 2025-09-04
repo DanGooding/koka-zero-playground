@@ -2,13 +2,13 @@ package uk.danielgooding.kokaplayground.common;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import java.util.Objects;
 
 public class KokaSourceCode {
     private final String code;
 
-    @JsonCreator
     public KokaSourceCode(@JsonProperty("code") String code) {
         this.code = code;
     }
