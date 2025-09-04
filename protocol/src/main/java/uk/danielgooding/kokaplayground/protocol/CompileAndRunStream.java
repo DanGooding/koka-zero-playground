@@ -23,10 +23,11 @@ public class CompileAndRunStream {
 
         @JsonTypeName("compile-and-run")
         public static final class CompileAndRun extends Message {
+            @JsonUnwrapped
             private final KokaSourceCode sourceCode;
 
             @JsonCreator
-            public CompileAndRun(@JsonProperty("sourceCode") KokaSourceCode sourceCode) {
+            public CompileAndRun(KokaSourceCode sourceCode) {
                 this.sourceCode = sourceCode;
             }
 
