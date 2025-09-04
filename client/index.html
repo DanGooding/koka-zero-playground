@@ -1,16 +1,21 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Koka Zero Playground</title>
 </head>
+
 <body>
     <div id="readme" class="section">
         <h1><i>Koka Zero</i> Playground</h1>
         <p><a href="https://koka-lang.github.io/koka/doc/index.html"><i>Koka</i></a>
             is a research programming language with
-            algebraic effects and handlers, built by Leijen et al.</p>
+            algebraic effects and handlers, built by Leijen et&nbsp;al.
+            Algebraic effects are a feature generalising exceptions, generators, and async/await.
+            I like to think of them as resumable exceptions; precisely, they are delimited continuations.
+        </p>
 
         <p><a href="https://github.com/DanGooding/koka-zero"><i>Koka Zero</i></a>
             is my implementation of a subset of <i>Koka</i>. It compiles to <i>LLVM-IR</i>, and its type system
@@ -44,4 +49,5 @@
 
     <script type="module" src="/src/main.ts"></script>
 </body>
+
 </html>
