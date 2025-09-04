@@ -1,4 +1,4 @@
-export type RunStatus = "idle" | "connecting" | "requestedRun" | "compiling" | "running"
+export type RunStatus = "idle" | "connecting" | "requestedRun" | "compiling" | "startingRun" | "running"
 
 export type State = {
     runStatus: RunStatus,
