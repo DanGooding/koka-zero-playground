@@ -2,7 +2,7 @@ import './style.css'
 import {manageState} from "./state.ts";
 import {runButton, editor, stdinInput, updateViewForState} from "./view.ts";
 
-const {setState, modifyState, getRunStatus, getWebSocket} = manageState(
+const {setState, modifyState, getState} = manageState(
     {
         runStatus: "idle",
         output: [],
@@ -13,7 +13,7 @@ const {setState, modifyState, getRunStatus, getWebSocket} = manageState(
 )
 
 function runCode() {
-    if (getRunStatus() !== "idle") {
+    if (getState().runStatus !== "idle") {
         return
     }
 
@@ -39,7 +39,7 @@ function runCode() {
     }
 
     websocket.onmessage = (e: MessageEvent) => {
-        if (e.target !== getWebSocket()) return;
+        if (e.target !== getState().websocket) return;
 
         const message = JSON.parse(e.data)
         switch (message["@type"]) {
@@ -96,7 +96,7 @@ function runCode() {
 
     }
     websocket.onerror = (e: Event) => {
-        if (e.target !== getWebSocket()) return;
+        if (e.target !== getState().websocket) return;
 
         setState({
             runStatus: "idle",
@@ -105,7 +105,7 @@ function runCode() {
         })
     }
     websocket.onclose = (e: CloseEvent) => {
-        if (e.target !== getWebSocket()) return;
+        if (e.target !== getState().websocket) return;
 
         let error = null
 
@@ -123,8 +123,8 @@ function runCode() {
 }
 
 function sendStdin() {
-    if (getRunStatus() === "idle") return
-    const websocket = getWebSocket()
+    if (getState().runStatus === "idle") return
+    const websocket = getState().websocket
     if (!websocket) return
 
     const content = stdinInput.value + '\n'

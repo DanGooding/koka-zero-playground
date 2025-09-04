@@ -10,9 +10,7 @@ export type State = {
 export function manageState(initial: State, onChange: (state: State) => void): {
     setState: (newState: Partial<State>) => void,
     modifyState: (modify: (state: State) => void) => void,
-    // getters intended to help prevent accidentally setting the state object's fields directly
-    getRunStatus: () => RunStatus,
-    getWebSocket: () => WebSocket | null,
+    getState: () => Readonly<State>
 } {
     let state = initial
     onChange(state)
@@ -27,9 +25,7 @@ export function manageState(initial: State, onChange: (state: State) => void): {
         onChange(state)
     }
 
-    const getRunStatus = () => state.runStatus
+    const getState = () => state
 
-    const getWebSocket = () => state.websocket
-
-    return {setState, modifyState, getRunStatus, getWebSocket}
+    return {setState, modifyState, getState}
 }
