@@ -1,10 +1,11 @@
-import type { State } from "./state.ts";
-import fibonacciGeneratorCode from './fibonacci-generator.kk?raw'
 import escape from 'escape-html'
-import { kokaGrammar, kokaLanguage } from './syntax'
 import { basicEditor } from 'prism-code-editor/setups'
 import { languages } from "prism-code-editor/prism"
 import { languageMap } from "prism-code-editor"
+
+import type { State } from "./state.ts";
+import { kokaGrammar, kokaLanguage } from './syntax'
+import fibonacciGeneratorCode from './fibonacci-generator.kk?raw'
 
 const runStatusDiv = document.querySelector<HTMLDivElement>('#run-status')!
 const errorDiv = document.querySelector<HTMLDivElement>('#error')!
@@ -24,7 +25,7 @@ export const editor = basicEditor(
         value: fibonacciGeneratorCode
     })
 
-function statusDescription(state: State): string {
+function statusDescription(state: Readonly<State>): string {
     switch (state.runStatus) {
         case "idle":
             if (state.error != null) {
@@ -45,7 +46,7 @@ function statusDescription(state: State): string {
     }
 }
 
-function updateViewForRunStatus(state: State) {
+function updateViewForRunStatus(state: Readonly<State>) {
     runStatusDiv.textContent = statusDescription(state);
 
     runButton.disabled = state.runStatus !== "idle"
@@ -59,7 +60,7 @@ function updateViewForRunStatus(state: State) {
     }
 }
 
-function updateTerminalForState(state: State) {
+function updateTerminalForState(state: Readonly<State>) {
     errorDiv.textContent = state.error || ""
 
     // Save stdin value and focus state
@@ -80,7 +81,7 @@ function updateTerminalForState(state: State) {
     if (stdinHadFocus) stdinInput.focus();
 }
 
-export function updateViewForState(state: State) {
+export function updateViewForState(state: Readonly<State>) {
     updateViewForRunStatus(state)
     updateTerminalForState(state)
 }
