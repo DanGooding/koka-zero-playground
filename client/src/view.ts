@@ -24,33 +24,32 @@ export const editor = basicEditor(
         value: fibonacciGeneratorCode
     })
 
-function updateViewForRunStatus(state: State) {
-    let content: string;
+function statusDescription(state: State): string {
     switch (state.runStatus) {
         case "idle":
             if (state.error != null) {
-                content = "failed"
+                return "failed"
             } else {
-                content = ""
+                return ""
             }
-            break;
         case "connecting":
-            content = "connecting..."
-            break
+            return "connecting..."
         case "requestedRun":
-            content = "awaiting run..."
-            break
+            return "awaiting run..."
         case "compiling":
-            content = "compiling..."
-            break
+            return "compiling..."
+        case "startingRun":
+            return "starting..."
         case "running":
-            content = "running..."
-            break
+            return "running..."
     }
-    runStatusDiv.textContent = content
+}
+
+function updateViewForRunStatus(state: State) {
+    runStatusDiv.textContent = statusDescription(state);
 
     runButton.disabled = state.runStatus !== "idle"
-    stdinInput.disabled = state.runStatus === "idle"
+    stdinInput.disabled = state.runStatus !== "running"
 
     // Hide placeholder when disabled
     if (stdinInput.disabled) {

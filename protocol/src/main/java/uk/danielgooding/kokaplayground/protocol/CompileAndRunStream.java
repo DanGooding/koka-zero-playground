@@ -106,6 +106,18 @@ public class CompileAndRunStream {
             }
         }
 
+        @JsonTypeName("starting-run")
+        public static final class StartingRun extends Message {
+            @JsonCreator
+            public StartingRun() {
+            }
+
+            @Override
+            public String toString() {
+                return "StartingRun";
+            }
+        }
+
         @JsonTypeName("running")
         public static final class Running extends Message {
             @JsonCreator
@@ -114,7 +126,7 @@ public class CompileAndRunStream {
 
             @Override
             public String toString() {
-                return "StartingCompilation";
+                return "Running";
             }
         }
 

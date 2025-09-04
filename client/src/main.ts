@@ -54,6 +54,9 @@ function runCode() {
         } else if (message.hasOwnProperty("starting-compilation")) {
             setState({runStatus: "compiling"})
 
+        } else if (message.hasOwnProperty("starting-run")) {
+            setState({runStatus: "startingRun"})
+
         } else if (message.hasOwnProperty("running")) {
             setState({runStatus: "running"})
 
