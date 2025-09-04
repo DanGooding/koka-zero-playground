@@ -65,7 +65,7 @@ public class RunStream {
     }
 
     public static class Outbound {
-        @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT)
+        @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
         @JsonSubTypes({
                 @JsonSubTypes.Type(value = AnotherRequestInProgress.class, name = "another-request-in-progress"),
                 @JsonSubTypes.Type(value = Starting.class, name = "starting"),

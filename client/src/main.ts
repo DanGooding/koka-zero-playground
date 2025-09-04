@@ -31,10 +31,9 @@ function runCode() {
         console.log("Connection opened", event)
 
         websocket.send(JSON.stringify({
-            "compile-and-run": {
-                sourceCode: {
-                    code: editor.value
-                }
+            "@type": "compile-and-run",
+            sourceCode: {
+                code: editor.value
             }
         }))
 
@@ -45,43 +44,58 @@ function runCode() {
         if (e.target !== getWebSocket()) return;
 
         const message = JSON.parse(e.data)
-        if (message.hasOwnProperty("another-request-in-progress")) {
-            setState({
-                runStatus: "idle",
-                error: "cannot run - another run in progress",
-            })
+        switch (message["@type"]) {
+            case "another-request-in-progress":
+                setState({
+                    runStatus: "idle",
+                    error: "cannot run - another run in progress",
+                })
+                break
 
-        } else if (message.hasOwnProperty("starting-compilation")) {
-            setState({runStatus: "compiling"})
+            case "starting-compilation":
+                setState({runStatus: "compiling"})
+                break
 
-        } else if (message.hasOwnProperty("starting-run")) {
-            setState({runStatus: "startingRun"})
 
-        } else if (message.hasOwnProperty("running")) {
-            setState({runStatus: "running"})
+            case "starting-run":
+                setState({runStatus: "startingRun"})
+                break
 
-        } else if (message.hasOwnProperty("stdout")) {
-            modifyState((state) => {
-                state.output.push(['output', message.stdout.content])
-            })
+            case "running":
+                setState({runStatus: "running"})
+                break
 
-        } else if (message.hasOwnProperty("error")) {
-            setState({
-                runStatus: "idle",
-                error: message.error.message,
-                websocket: null
-            })
+            case "stdout":
+                modifyState((state) => {
+                    state.output.push(['output', message.content])
+                })
+                break
 
-        } else if (message.hasOwnProperty("done")) {
-            setState({runStatus: "idle", websocket: null})
+            case "error":
+                setState({
+                    runStatus: "idle",
+                    error: message.message,
+                    websocket: null
+                })
+                break
 
-        } else if (message.hasOwnProperty("interrupted")) {
-            setState({
-                runStatus: "idle",
-                error: `interrupted: ${message.interrupted.message}`,
-                websocket: null
-            })
+            case "done":
+                setState({runStatus: "idle", websocket: null})
+                break
+
+            case "interrupted":
+                setState({
+                    runStatus: "idle",
+                    error: `interrupted: ${message.message}`,
+                    websocket: null
+                })
+                break
+
+            default:
+                console.error("unexpected message type", message)
         }
+
+
     }
     websocket.onerror = (e: Event) => {
         if (e.target !== getWebSocket()) return;
@@ -119,9 +133,8 @@ function sendStdin() {
     if (/^\s*$/.test(content)) return;
 
     websocket.send(JSON.stringify({
-        stdin: {
-            content
-        }
+        "@type": "stdin",
+        content
     }))
     modifyState(state => {
         state.output.push(['input', content])

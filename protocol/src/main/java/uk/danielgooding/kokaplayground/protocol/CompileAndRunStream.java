@@ -11,7 +11,7 @@ import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 public class CompileAndRunStream {
 
     public static class Inbound {
-        @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT)
+        @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
         @JsonSubTypes({
                 @JsonSubTypes.Type(value = CompileAndRun.class, name = "compile-and-run"),
                 @JsonSubTypes.Type(value = Stdin.class, name = "stdin")
@@ -67,7 +67,7 @@ public class CompileAndRunStream {
     }
 
     public static class Outbound {
-        @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT)
+        @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
         @JsonSubTypes({
                 @JsonSubTypes.Type(value = AnotherRequestInProgress.class, name = "another-request-in-progress"),
                 @JsonSubTypes.Type(value = StartingCompilation.class, name = "starting-compilation"),
