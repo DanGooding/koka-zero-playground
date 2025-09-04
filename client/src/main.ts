@@ -70,6 +70,7 @@ function runCode() {
 
             case "running":
                 setState({runStatus: "running"})
+                stdinInput.focus()
                 break
 
             case "stdout":
