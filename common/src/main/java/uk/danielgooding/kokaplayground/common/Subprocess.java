@@ -77,7 +77,7 @@ public class Subprocess {
         return CancellableFuture.supplyAsync(canceler -> {
             try {
                 Process process = processBuilder.start();
-                canceler.setOnCancel(process::destroy);
+                canceler.setOnCancel(process::destroyForcibly);
                 onStart.call(null);
 
 
