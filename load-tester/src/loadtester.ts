@@ -1,4 +1,4 @@
-import type { RequestDetails, RequestOutcome } from './outcomes.js'
+import type { RequestDetails, RequestEvent, RequestOutcome } from './outcomes.js'
 import stats from 'stats-lite'
 
 type Requestor = (onComplete: (summary: RequestDetails) => void) => void
@@ -6,7 +6,7 @@ type Requestor = (onComplete: (summary: RequestDetails) => void) => void
 class BucketSummary {
     totalCount = 0
     outcomeCounts = new Map<RequestOutcome, number>()
-    eachOkLatencySeconds: Array<number> = new Array<number>()
+    eachOkEventLatencySeconds: Map<RequestEvent, Array<number>> = new Map<RequestEvent, Array<number>>()
 
     addSummary(summary: RequestDetails) {
         this.outcomeCounts.set(summary.outcome,
@@ -14,8 +14,14 @@ class BucketSummary {
         this.totalCount += 1
 
         if (summary.outcome === 'ok') {
-            // won't be undefined if request completed
-            this.eachOkLatencySeconds.push(summary.toEventSeconds.get('closed') as number)
+            for (const [event, latency] of summary.toEventSeconds) {
+                const latencies = this.eachOkEventLatencySeconds.get(event)
+                if (latencies == null) {
+                    this.eachOkEventLatencySeconds.set(event, [latency])
+                }else {
+                    latencies.push(latency)
+                }
+            }
         }
     }
 
@@ -31,10 +37,17 @@ class BucketSummary {
         const totalBucket = new BucketSummary()
         for (const bucket of buckets) {
             totalBucket.totalCount += bucket.totalCount
-            totalBucket.eachOkLatencySeconds = totalBucket.eachOkLatencySeconds.concat(bucket.eachOkLatencySeconds)
             for (const [outcome, count] of bucket.outcomeCounts) {
                 totalBucket.outcomeCounts.set(outcome,
                     (totalBucket.outcomeCounts.get(outcome) ?? 0) + count)
+            }
+            for (const [event, latencies] of bucket.eachOkEventLatencySeconds) {
+                const totalBucketLatencies = totalBucket.eachOkEventLatencySeconds.get(event)
+                if (totalBucketLatencies == null) {
+                    totalBucket.eachOkEventLatencySeconds.set(event, Array.from(latencies))
+                }else {
+                    totalBucket.eachOkEventLatencySeconds.set(event, totalBucketLatencies.concat(latencies))
+                }
             }
         }
         return totalBucket
@@ -77,15 +90,17 @@ export default class LoadTester {
         const outcomePercentages = windowBucket.getPercentages()
         const effectiveRPS = (windowBucket.outcomeCounts.get('ok') ?? 0) / windowSeconds
 
-        const totalOkLatencySeconds = stats.sum(windowBucket.eachOkLatencySeconds)
+        const totalOkLatencySeconds = stats.sum(windowBucket.eachOkEventLatencySeconds.get('closed') ?? [])
         const concurrency = totalOkLatencySeconds / windowSeconds
 
+        const medianOkLatencySeconds =
+            stats.median(windowBucket.eachOkEventLatencySeconds.get('closed') ?? [])
 
         console.log({
             outcomePercentages,
             effectiveRPS: effectiveRPS.toFixed(0),
             concurrency: concurrency.toFixed(1),
-            medianOkLatencySeconds: stats.median(windowBucket.eachOkLatencySeconds).toFixed(3),
+            medianOkLatencySeconds: medianOkLatencySeconds.toFixed(3),
         })
     }
 
