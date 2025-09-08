@@ -93,14 +93,17 @@ export default class LoadTester {
         const totalOkLatencySeconds = stats.sum(windowBucket.eachOkEventLatencySeconds.get('closed') ?? [])
         const concurrency = totalOkLatencySeconds / windowSeconds
 
-        const medianOkLatencySeconds =
-            stats.median(windowBucket.eachOkEventLatencySeconds.get('closed') ?? [])
+        const medianOkLatencyByEvent =
+            new Map<RequestEvent, string>(
+            Array.from(windowBucket.eachOkEventLatencySeconds)
+                .map(([event, latencies]) =>
+                    [event, stats.median(latencies).toFixed(3)]))
 
         console.log({
             outcomePercentages,
             effectiveRPS: effectiveRPS.toFixed(0),
             concurrency: concurrency.toFixed(1),
-            medianOkLatencySeconds: medianOkLatencySeconds.toFixed(3),
+            medianOkLatencyByEvent,
         })
     }
 
