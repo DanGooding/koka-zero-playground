@@ -61,7 +61,7 @@ public class CompileAndRunWebSocketHandler
                         exeHandle -> {
                             logger.info("compiled: {}", session.getId());
                             try {
-                                session.sendMessage(new CompileAndRunStream.Outbound.Running());
+                                session.sendMessage(new CompileAndRunStream.Outbound.StartingRun());
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
