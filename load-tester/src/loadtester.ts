@@ -1,11 +1,12 @@
 import type { RequestDetails, RequestOutcome } from './outcomes.js'
+import stats from 'stats-lite'
 
 type Requestor = (onComplete: (summary: RequestDetails) => void) => void
 
 class BucketSummary {
     totalCount = 0
     outcomeCounts = new Map<RequestOutcome, number>()
-    totalOkLatencyMs: number = 0
+    eachOkLatencySeconds: Array<number> = new Array<number>()
 
     addSummary(summary: RequestDetails) {
         this.outcomeCounts.set(summary.outcome,
@@ -14,7 +15,7 @@ class BucketSummary {
 
         if (summary.outcome === 'ok') {
             // won't be undefined if request completed
-            this.totalOkLatencyMs += summary.toCloseMs ?? 0
+            this.eachOkLatencySeconds.push(summary.toCloseSeconds as number)
         }
     }
 
@@ -30,7 +31,7 @@ class BucketSummary {
         const totalBucket = new BucketSummary()
         for (const bucket of buckets) {
             totalBucket.totalCount += bucket.totalCount
-            totalBucket.totalOkLatencyMs += bucket.totalOkLatencyMs
+            totalBucket.eachOkLatencySeconds = totalBucket.eachOkLatencySeconds.concat(bucket.eachOkLatencySeconds)
             for (const [outcome, count] of bucket.outcomeCounts) {
                 totalBucket.outcomeCounts.set(outcome,
                     (totalBucket.outcomeCounts.get(outcome) ?? 0) + count)
@@ -76,12 +77,15 @@ export default class LoadTester {
         const outcomeFractions = windowBucket.getFractions()
         const effectiveRPS = (windowBucket.outcomeCounts.get('ok') ?? 0) / windowSeconds
 
-        const concurrency = windowBucket.totalOkLatencyMs / (windowSeconds * 1000)
+        const totalOkLatencySeconds = stats.sum(windowBucket.eachOkLatencySeconds)
+        const concurrency = totalOkLatencySeconds / windowSeconds
+
 
         console.log({
             outcomeFractions,
             effectiveRPS,
-            concurrency
+            concurrency,
+            medianOkLatencySeconds: stats.median(windowBucket.eachOkLatencySeconds),
         })
     }
 
