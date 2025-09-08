@@ -19,12 +19,12 @@ class BucketSummary {
         }
     }
 
-    getFractions(): Map<RequestOutcome, string> {
-        const outcomeFractions = new Map<RequestOutcome, string>
+    getPercentages(): Map<RequestOutcome, string> {
+        const outcomePercentages = new Map<RequestOutcome, string>
         for (const [outcome, count] of this.outcomeCounts.entries()) {
-            outcomeFractions.set(outcome, ((count / this.totalCount) * 100).toFixed(1))
+            outcomePercentages.set(outcome, ((count / this.totalCount) * 100).toFixed(1))
         }
-        return outcomeFractions
+        return outcomePercentages
     }
 
     static combine(buckets: BucketSummary[]) {
@@ -74,7 +74,7 @@ export default class LoadTester {
             console.log(windowBucket)
         }
 
-        const outcomeFractions = windowBucket.getFractions()
+        const outcomePercentages = windowBucket.getPercentages()
         const effectiveRPS = (windowBucket.outcomeCounts.get('ok') ?? 0) / windowSeconds
 
         const totalOkLatencySeconds = stats.sum(windowBucket.eachOkLatencySeconds)
@@ -82,10 +82,10 @@ export default class LoadTester {
 
 
         console.log({
-            outcomeFractions,
-            effectiveRPS,
-            concurrency,
-            medianOkLatencySeconds: stats.median(windowBucket.eachOkLatencySeconds),
+            outcomePercentages,
+            effectiveRPS: effectiveRPS.toFixed(0),
+            concurrency: concurrency.toFixed(1),
+            medianOkLatencySeconds: stats.median(windowBucket.eachOkLatencySeconds).toFixed(3),
         })
     }
 
