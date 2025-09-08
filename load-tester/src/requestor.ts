@@ -2,15 +2,15 @@ import type { RequestDetails, RequestOutcome } from './outcomes.js'
 
 export function sendRequest(
     url: URL,
-    onComplete: (RequestDetails: RequestDetails) => void,
+    onComplete: (requestDetails: RequestDetails) => void,
 ) {
     const ws = new WebSocket(url);
 
     const openTime = Date.now()
-    let RequestDetails: Partial<RequestDetails> = {}
+    let requestDetails: Partial<RequestDetails> = {}
 
     ws.onopen = () => {
-        RequestDetails.toOpenMs = Date.now() - openTime;
+        requestDetails.toOpenSeconds = (Date.now() - openTime) / 1000;
         ws.send(JSON.stringify({
             '@type': 'compile-and-run',
             'code': 'fun main() { println-int(3 * 4); }'
@@ -18,16 +18,23 @@ export function sendRequest(
     }
 
     const onClose = (outcome: RequestOutcome) => {
-        if (RequestDetails.outcome) return; // already closed
-        RequestDetails.toCloseMs = Date.now() - openTime;
-        onComplete({ ...RequestDetails, outcome: outcome });
+        if (requestDetails.outcome) return; // already closed
+        requestDetails.toCloseSeconds = (Date.now() - openTime) / 1000;
+        onComplete({ ...requestDetails, outcome: outcome });
     }
 
     ws.onmessage = (e) => {
-        RequestDetails.toFirstResponseMs = Date.now() - openTime;
+        const secondsToNow = (Date.now() - openTime) / 1000
+        if (requestDetails.toFirstResponseSeconds == null) {
+            requestDetails.toFirstResponseSeconds = secondsToNow
+        }
         const message = JSON.parse(e.data);
         if (message['@type'] === 'error') {
             onClose('client error')
+        }else if (message['@type'] === 'starting-run') {
+            requestDetails.toRequestedRunSeconds = secondsToNow
+        }else if (message['@type'] === 'running') {
+            requestDetails.toRunningSeconds = secondsToNow
         }
     }
 
