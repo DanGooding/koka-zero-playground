@@ -1,4 +1,4 @@
-import type { RequestDetails, RequestOutcome } from './outcomes.js'
+import type { RequestDetails, RequestOutcome, RequestEvent } from './outcomes.js'
 
 export function sendRequest(
     url: URL,
@@ -7,10 +7,10 @@ export function sendRequest(
     const ws = new WebSocket(url);
 
     const openTime = Date.now()
-    let requestDetails: Partial<RequestDetails> = {}
+    const toEventSeconds = new Map<RequestEvent, number>()
 
     ws.onopen = () => {
-        requestDetails.toOpenSeconds = (Date.now() - openTime) / 1000;
+        toEventSeconds.set('opened', (Date.now() - openTime) / 1000)
         ws.send(JSON.stringify({
             '@type': 'compile-and-run',
             'code': 'fun main() { println-int(3 * 4); }'
@@ -18,23 +18,24 @@ export function sendRequest(
     }
 
     const onClose = (outcome: RequestOutcome) => {
-        if (requestDetails.outcome) return; // already closed
-        requestDetails.toCloseSeconds = (Date.now() - openTime) / 1000;
-        onComplete({ ...requestDetails, outcome: outcome });
+        if (toEventSeconds.has('closed')) return;
+
+        toEventSeconds.set('closed', (Date.now() - openTime) / 1000)
+        onComplete({ toEventSeconds, outcome });
     }
 
     ws.onmessage = (e) => {
         const secondsToNow = (Date.now() - openTime) / 1000
-        if (requestDetails.toFirstResponseSeconds == null) {
-            requestDetails.toFirstResponseSeconds = secondsToNow
+        if (!toEventSeconds.has('first-response')) {
+            toEventSeconds.set('first-response', secondsToNow)
         }
         const message = JSON.parse(e.data);
         if (message['@type'] === 'error') {
             onClose('client error')
         }else if (message['@type'] === 'starting-run') {
-            requestDetails.toRequestedRunSeconds = secondsToNow
+            toEventSeconds.set('requested-run', secondsToNow)
         }else if (message['@type'] === 'running') {
-            requestDetails.toRunningSeconds = secondsToNow
+            toEventSeconds.set('running', secondsToNow)
         }
     }
 
