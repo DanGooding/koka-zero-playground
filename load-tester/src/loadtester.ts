@@ -15,7 +15,7 @@ class BucketSummary {
 
         if (summary.outcome === 'ok') {
             // won't be undefined if request completed
-            this.eachOkLatencySeconds.push(summary.toCloseSeconds as number)
+            this.eachOkLatencySeconds.push(summary.toEventSeconds.get('closed') as number)
         }
     }
 
