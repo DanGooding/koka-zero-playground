@@ -101,6 +101,7 @@ public class Subprocess {
                         // this thread will always terminate as the write call will
                         // throw once the stream is closed
                         // this simply means the process didn't eat all of toStdin
+                        canceler.cancel();
                     }
                 });
 
@@ -120,6 +121,7 @@ public class Subprocess {
                 return OrCancelled.ok(new Output(exitCode, null, stderr));
 
             } catch (InterruptedException | IOException e) {
+                canceler.cancel();
                 throw new RuntimeException(e);
             } catch (CancelledException e) {
                 return OrCancelled.cancelled();
