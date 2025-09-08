@@ -75,7 +75,9 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
         TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.remove(session.getId());
 
         sessionAndState.getSession().getOutcomeFuture().whenComplete((ignored, exn) -> {
-            logger.error("{} websocket closed with error", typedWebSocketHandler.getClass(), exn);
+            if (exn != null) {
+                logger.error("{} websocket closed with error", typedWebSocketHandler.getClass(), exn);
+            }
         });
 
         if (status.equalsCode(CloseStatus.NORMAL)) {
