@@ -17,6 +17,7 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
     private final IWebSocketSession session;
     private final ObjectMapper objectMapper;
     private final CompletableFuture<Outcome> outcomeFuture;
+    private boolean closedByThisSide = false;
 
     private static final Logger logger = LoggerFactory.getLogger(TypedWebSocketSession.class);
 
@@ -40,21 +41,25 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
     }
 
     public void closeOk(Outcome outcome) throws IOException {
+        closedByThisSide = true;
         session.close(CloseStatus.NORMAL);
         outcomeFuture.complete(outcome);
     }
 
     public void closeGoingAway(Outcome outcome) throws IOException {
+        closedByThisSide = true;
         session.close(CloseStatus.GOING_AWAY);
         outcomeFuture.complete(outcome);
     }
 
     public void closeExn(String message, Throwable exn) throws IOException {
+        closedByThisSide = true;
         outcomeFuture.completeExceptionally(exn);
         session.close(CloseStatus.SERVER_ERROR);
     }
 
     public void closeErrorStatus(String message, CloseStatus closeStatus) throws IOException {
+        closedByThisSide = true;
         outcomeFuture.completeExceptionally(new RuntimeException(
                 String.format("websocket closing '%s': code %s", message, closeStatus)));
         session.close(closeStatus);
@@ -62,5 +67,9 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
 
     public CompletableFuture<Outcome> getOutcomeFuture() {
         return outcomeFuture;
+    }
+
+    public boolean wasClosedByThisSide() {
+        return closedByThisSide;
     }
 }

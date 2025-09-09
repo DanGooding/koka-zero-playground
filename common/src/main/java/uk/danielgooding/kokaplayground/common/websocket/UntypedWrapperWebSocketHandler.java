@@ -81,25 +81,29 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
                         typedWebSocketHandler.getClass().getSimpleName(), session.getId(), exn);
             }
         });
+        
+        if (!sessionAndState.getSession().wasClosedByThisSide()) {
+            // don't call the user afterConnectionClosed handlers if the user initiated the close
 
-        if (status.equalsCode(CloseStatus.NORMAL)) {
-            try {
-                Outcome outcome =
-                        typedWebSocketHandler.afterConnectionClosedOk(
-                                sessionAndState.getSession(), sessionAndState.getState());
-                sessionAndState.getSession().closeOk(outcome);
-            } catch (Throwable e) {
-                closeUserExn(sessionAndState.getSession(), e);
-            }
-        } else {
-            try {
-                typedWebSocketHandler.afterConnectionClosedErroneously(
-                        sessionAndState.getSession(), sessionAndState.getState(), status);
-                sessionAndState.getSession().closeErrorStatus(
-                        String.format("[%s] connection closed with error", session.getId()),
-                        status);
-            } catch (Throwable e) {
-                closeUserExn(sessionAndState.getSession(), e);
+            if (status.equalsCode(CloseStatus.NORMAL)) {
+                try {
+                    Outcome outcome =
+                            typedWebSocketHandler.afterConnectionClosedOk(
+                                    sessionAndState.getSession(), sessionAndState.getState());
+                    sessionAndState.getSession().closeOk(outcome);
+                } catch (Throwable e) {
+                    closeUserExn(sessionAndState.getSession(), e);
+                }
+            } else {
+                try {
+                    typedWebSocketHandler.afterConnectionClosedErroneously(
+                            sessionAndState.getSession(), sessionAndState.getState(), status);
+                    sessionAndState.getSession().closeErrorStatus(
+                            String.format("[%s] connection closed with error", session.getId()),
+                            status);
+                } catch (Throwable e) {
+                    closeUserExn(sessionAndState.getSession(), e);
+                }
             }
         }
     }
