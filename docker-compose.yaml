@@ -6,9 +6,9 @@ x-health-check: &healthcheck
       "wget -q -O - http://localhost/actuator/health | jq --exit-status '.status == \"UP\"' >/dev/null" ]
 
 x-logging-env-vars: &logging-env-vars
-  DEBUG: "true"
-  ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "DEBUG"
-  LOGGING_LEVEL_ROOT: "debug"
+  DEBUG: "false"
+  ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "WARN"
+  LOGGING_LEVEL_ROOT: "warn"
 
 services:
   compile-service:
