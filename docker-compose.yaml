@@ -4,6 +4,8 @@ x-health-check: &healthcheck
   test:
     [ "CMD-SHELL",
       "wget -q -O - http://localhost/actuator/health | jq --exit-status '.status == \"UP\"' >/dev/null" ]
+  timeout: 5s
+  interval: 30s
 
 x-logging-env-vars: &logging-env-vars
   DEBUG: "false"
