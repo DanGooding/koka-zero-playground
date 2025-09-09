@@ -72,6 +72,10 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
         return outcomeFuture;
     }
 
+    public IWebSocketSession getRawSession() {
+        return session;
+    }
+
     public boolean wasClosedByThisSide() {
         return closedByThisSide;
     }

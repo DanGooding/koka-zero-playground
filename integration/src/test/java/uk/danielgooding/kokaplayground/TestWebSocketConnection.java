@@ -115,10 +115,13 @@ class TestWebSocketConnection<Inbound, Outbound, ClientState, ServerState, Clien
     }
 
     public void breakConnection() throws Exception {
-        clientHandler.getSessionAndState(sessionId).getSession()
-                .closeErrorStatus("connection broken", CloseStatus.NO_CLOSE_FRAME);
-        serverHandler.getSessionAndState(sessionId).getSession()
-                .closeErrorStatus("connection broken", CloseStatus.NO_CLOSE_FRAME);
+        clientHandler.afterConnectionClosed(
+                clientHandler.getSessionAndState(sessionId).getSession().getRawSession(),
+                CloseStatus.NO_CLOSE_FRAME);
+
+        clientHandler.afterConnectionClosed(
+                clientHandler.getSessionAndState(sessionId).getSession().getRawSession(),
+                CloseStatus.NO_CLOSE_FRAME);
     }
 
 }
