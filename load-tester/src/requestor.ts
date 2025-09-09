@@ -45,3 +45,10 @@ export function sendCompileAndRunRequest(
         onClose(closeOk ? 'ok' : 'server error');
     }
 }
+
+export function sendCompileRequest(
+    url: URL,
+    onComplete: (requestDetails: RequestDetails) => void
+) {
+    console.log(`request ${url} ${onComplete}`)
+}
