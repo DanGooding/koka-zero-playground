@@ -5,17 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.lang.NonNull;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import uk.danielgooding.kokaplayground.common.Callback;
 
 import java.io.IOException;
 import java.util.Hashtable;
-import java.util.concurrent.Callable;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> {
 
