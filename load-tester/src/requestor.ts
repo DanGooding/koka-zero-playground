@@ -1,13 +1,13 @@
 import type { RequestDetails, RequestOutcome, RequestEvent } from './outcomes.js'
 
-export function sendRequest(
+export function sendCompileAndRunRequest(
     url: URL,
     onComplete: (requestDetails: RequestDetails) => void,
 ) {
     const ws = new WebSocket(url);
 
     const openTime = Date.now()
-    const toEventSeconds = new Map<RequestEvent, number>()
+    const toEventSeconds = new Map<(RequestEvent | 'first-response' | 'requested-run' | 'running'), number>()
 
     ws.onopen = () => {
         toEventSeconds.set('opened', (Date.now() - openTime) / 1000)
