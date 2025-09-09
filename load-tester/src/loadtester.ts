@@ -1,7 +1,6 @@
 import type { RequestDetails, RequestOutcome } from './outcomes.js'
+import { Requestor } from './requestor.js'
 import stats from 'stats-lite'
-
-type Requestor = (onComplete: (summary: RequestDetails) => void) => void
 
 class BucketSummary {
     totalCount = 0
@@ -56,7 +55,7 @@ class BucketSummary {
 
 export default class LoadTester {
     readonly requestsPerSecond: number
-    readonly sendRequest: Requestor
+    readonly requestor: Requestor
 
     readonly windowSeconds: number = 10
     readonly bucketsPerWindow: number = 10
@@ -68,9 +67,9 @@ export default class LoadTester {
     // so it shouldn't be used in calculations
     buckets: BucketSummary[]
 
-    constructor(requestsPerSecond: number, sendRequest: Requestor, printRawStats: boolean = false) {
+    constructor(requestsPerSecond: number, requestor: Requestor, printRawStats: boolean = false) {
         this.requestsPerSecond = requestsPerSecond
-        this.sendRequest = sendRequest
+        this.requestor = requestor
         this.printRawStats = printRawStats
 
         this.buckets = [new BucketSummary()]
@@ -125,7 +124,7 @@ export default class LoadTester {
 
         // request loop
         setInterval(() => {
-            this.sendRequest(onComplete)
+            this.requestor.request(onComplete)
         }, 1000 / this.requestsPerSecond)
     }
 }
