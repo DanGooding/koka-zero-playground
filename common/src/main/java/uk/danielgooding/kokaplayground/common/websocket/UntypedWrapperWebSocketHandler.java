@@ -60,7 +60,12 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
     }
 
     public void handleTextMessage(@NonNull IWebSocketSession session, @NonNull TextMessage textMessage) throws IOException {
-        TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.get(session.getId());
+        TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState =
+                typedSessions.get(session.getId());
+
+        // if already closed before we processed this message
+        if (sessionAndState == null) return;
+
         InboundMessage message =
                 objectMapper.readValue(textMessage.getPayload(), this.inboundMessageClass);
 
@@ -76,7 +81,9 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
     }
 
     public void afterConnectionClosed(@NonNull IWebSocketSession session, @NonNull CloseStatus status) throws IOException {
-        TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.remove(session.getId());
+        TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState =
+                typedSessions.remove(session.getId());
+        if (sessionAndState == null) return;
 
         sessionAndState.getSession().getOutcomeFuture().whenComplete((ignored, exn) -> {
             if (exn != null) {
