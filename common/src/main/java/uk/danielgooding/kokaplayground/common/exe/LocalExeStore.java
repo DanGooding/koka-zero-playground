@@ -22,7 +22,7 @@ public class LocalExeStore implements ExeStore {
         directory = Files.createTempDirectory(inDirectory, "exe-store");
     }
 
-    private ExeHandle freshHandle() {
+    private synchronized ExeHandle freshHandle() {
         Path path = directory.resolve(String.format("exe-%d", nextId++));
         return new ExeHandle(path.toString());
     }
