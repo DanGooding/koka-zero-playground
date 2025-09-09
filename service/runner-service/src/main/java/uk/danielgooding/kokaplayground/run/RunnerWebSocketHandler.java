@@ -132,4 +132,9 @@ public class RunnerWebSocketHandler
             TypedWebSocketSession<RunStream.Outbound.Message, Void> session,
             RunnerSessionState sessionState, Throwable exception) {
     }
+
+    @Override
+    public boolean isServer() {
+        return true;
+    }
 }

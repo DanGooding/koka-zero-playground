@@ -28,6 +28,8 @@ public interface TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionS
             CloseStatus status
     ) throws IOException;
 
+    boolean isServer();
+
     void handleTransportError(
             TypedWebSocketSession<OutboundMessage, Outcome> session,
             SessionState sessionState,

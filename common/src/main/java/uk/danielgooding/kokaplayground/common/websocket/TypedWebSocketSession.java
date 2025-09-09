@@ -16,6 +16,7 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
     private final SessionId id;
     private final IWebSocketSession session;
     private final ObjectMapper objectMapper;
+    private final Class<?> handlerClass;
     private final CompletableFuture<Outcome> outcomeFuture;
     private boolean closedByThisSide = false;
 
@@ -23,11 +24,13 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
 
     public TypedWebSocketSession(
             IWebSocketSession session,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            Class<?> handlerClass) {
         this.session = session;
         this.id = new SessionId(session.getId());
         this.objectMapper = objectMapper;
         outcomeFuture = new CompletableFuture<>();
+        this.handlerClass = handlerClass;
     }
 
     public SessionId getId() {
@@ -71,5 +74,10 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
 
     public boolean wasClosedByThisSide() {
         return closedByThisSide;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s[%s]", handlerClass.getSimpleName(), session.getId());
     }
 }

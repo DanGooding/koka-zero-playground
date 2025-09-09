@@ -26,6 +26,7 @@ public abstract class Workdir {
     @PostConstruct
     void init() throws IOException {
         path = Files.createTempDirectory("workdir");
+        logger.trace("created workdir {}", path);
     }
 
     public Path freshPath(String prefix) throws IOException {
@@ -34,6 +35,8 @@ public abstract class Workdir {
 
     @PreDestroy
     void cleanup() throws IOException {
+        logger.trace("destroy workdir {}", path);
+
         // recursively delete all
         Files.walkFileTree(path, new SimpleFileVisitor<>() {
             @Override
@@ -58,7 +61,8 @@ public abstract class Workdir {
     public static class RequestScoped extends Workdir {
     }
 
+    @Scope(scopeName = "websocket-server-session", proxyMode = ScopedProxyMode.TARGET_CLASS)
     @Component
-    public static class SingletonScoped extends Workdir {
+    public static class WebsocketServerSessionScoped extends Workdir {
     }
 }

@@ -85,4 +85,9 @@ public class TestCompileAndRunClientWebSocketHandler
             Throwable exception) throws IOException {
 
     }
+
+    @Override
+    public boolean isServer() {
+        return false;
+    }
 }

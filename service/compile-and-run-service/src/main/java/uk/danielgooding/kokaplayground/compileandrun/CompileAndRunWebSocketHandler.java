@@ -154,4 +154,9 @@ public class CompileAndRunWebSocketHandler
             CompileAndRunSessionState compileAndRunSessionState,
             Throwable exception) {
     }
+
+    @Override
+    public boolean isServer() {
+        return true;
+    }
 }
