@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.lang.NonNull;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -51,8 +52,8 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
 
     void closeUserExn(TypedWebSocketSession<OutboundMessage, Outcome> session, Throwable exn) throws IOException {
         session.closeExn(
-                String.format("exception in websocket handler %s for session %s",
-                        typedWebSocketHandler.getClass(),
+                String.format("exception in websocket handler %s[%s]",
+                        typedWebSocketHandler.getClass().getSimpleName(),
                         session.getId()),
                 exn);
     }
@@ -62,11 +63,11 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
         InboundMessage message =
                 objectMapper.readValue(textMessage.getPayload(), this.inboundMessageClass);
 
-        logger.debug("{} received {} (session {})", typedWebSocketHandler.getClass(), message, session.getId());
+        logger.debug("{}[{}] received {}", typedWebSocketHandler.getClass(), session.getId(), message);
 
         try {
             typedWebSocketHandler.handleMessage(sessionAndState.getSession(), sessionAndState.getState(), message);
-        } catch (IOException e) {
+        } catch (Throwable e) {
             closeUserExn(sessionAndState.getSession(), e);
         }
     }
@@ -76,7 +77,8 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
 
         sessionAndState.getSession().getOutcomeFuture().whenComplete((ignored, exn) -> {
             if (exn != null) {
-                logger.error("{} websocket closed with error", typedWebSocketHandler.getClass(), exn);
+                logger.error("websocket closed with error {}[{}]",
+                        typedWebSocketHandler.getClass().getSimpleName(), session.getId(), exn);
             }
         });
 
@@ -94,7 +96,7 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
                 typedWebSocketHandler.afterConnectionClosedErroneously(
                         sessionAndState.getSession(), sessionAndState.getState(), status);
                 sessionAndState.getSession().closeErrorStatus(
-                        String.format("websocket connection %s closed with error", session.getId()),
+                        String.format("[%s] connection closed with error", session.getId()),
                         status);
             } catch (Throwable e) {
                 closeUserExn(sessionAndState.getSession(), e);
