@@ -93,4 +93,9 @@ public class ProxyingRunnerClientWebSocketHandler
             Void ignored,
             Throwable exception) {
     }
+
+    @Override
+    public boolean isServer() {
+        return false;
+    }
 }
