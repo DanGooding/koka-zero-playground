@@ -2,6 +2,10 @@ package uk.danielgooding.kokaplayground.common;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
@@ -13,11 +17,11 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-@RequestScope
-@Component
-public class Workdir {
+public abstract class Workdir {
     private Path path;
     private int uniqueCounter = 0;
+
+    private static final Logger logger = LoggerFactory.getLogger(Workdir.class);
 
     @PostConstruct
     void init() throws IOException {
@@ -47,5 +51,14 @@ public class Workdir {
                 return FileVisitResult.CONTINUE;
             }
         });
+    }
+
+    @RequestScope
+    @Component
+    public static class RequestScoped extends Workdir {
+    }
+
+    @Component
+    public static class SingletonScoped extends Workdir {
     }
 }

@@ -22,18 +22,6 @@ import java.util.concurrent.CompletableFuture;
 public class TestConfig {
 
     @Bean
-    @Qualifier("runner-workdir")
-    Workdir runnerWorkdir() {
-        return new Workdir();
-    }
-
-    @Bean
-    @Qualifier("compiler-workdir")
-    Workdir compilerWorkdir() {
-        return new Workdir();
-    }
-
-    @Bean
     WebSocketClient nullWebSocketClient() {
         return new WebSocketClient() {
             @Override
