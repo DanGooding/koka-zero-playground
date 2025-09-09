@@ -1,4 +1,4 @@
-import type { RequestDetails, RequestEvent, RequestOutcome } from './outcomes.js'
+import type { RequestDetails, RequestOutcome } from './outcomes.js'
 import stats from 'stats-lite'
 
 type Requestor = (onComplete: (summary: RequestDetails) => void) => void
@@ -6,7 +6,7 @@ type Requestor = (onComplete: (summary: RequestDetails) => void) => void
 class BucketSummary {
     totalCount = 0
     outcomeCounts = new Map<RequestOutcome, number>()
-    eachOkEventLatencySeconds: Map<RequestEvent, Array<number>> = new Map<RequestEvent, Array<number>>()
+    eachOkEventLatencySeconds: Map<string, Array<number>> = new Map<string, Array<number>>()
 
     addSummary(summary: RequestDetails) {
         this.outcomeCounts.set(summary.outcome,
@@ -94,7 +94,7 @@ export default class LoadTester {
         const concurrency = totalOkLatencySeconds / windowSeconds
 
         const medianOkLatencyByEvent =
-            new Map<RequestEvent, string>(
+            new Map<string, string>(
             Array.from(windowBucket.eachOkEventLatencySeconds)
                 .map(([event, latencies]) =>
                     [event, stats.median(latencies).toFixed(3)]))

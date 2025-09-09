@@ -1,5 +1,5 @@
 import commandLineArgs from 'command-line-args'
-import {sendRequest} from './requestor.js'
+import {sendCompileAndRunRequest} from './requestor.js'
 import LoadTester from './loadtester.js'
 import type {RequestDetails} from './outcomes.js'
 
@@ -11,7 +11,7 @@ type cli_params = {
 
 function main(options: cli_params) {
     const requestor =
-        (onOutcome: (summary: RequestDetails) => void) => sendRequest(options.url, onOutcome)
+        (onOutcome: (summary: RequestDetails) => void) => sendCompileAndRunRequest(options.url, onOutcome)
 
     const loadTester = new LoadTester(options.requestsPerSecond, requestor, options.printRawStats)
     loadTester.run()
