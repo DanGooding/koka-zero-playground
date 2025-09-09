@@ -15,12 +15,11 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 public class RunnerService {
-    private ExeStore exeStore;
+    private final ExeStore exeStore;
 
-    private SandboxedExeRunner exeRunner;
+    private final SandboxedExeRunner exeRunner;
 
-    @Qualifier("runner-workdir")
-    private Workdir workdir;
+    private final Workdir workdir;
 
     public RunnerService(
             @Autowired
@@ -29,9 +28,9 @@ public class RunnerService {
             @Autowired
             SandboxedExeRunner exeRunner,
 
+            // TODO: this is undesirable
             @Autowired
-            @Qualifier("runner-workdir")
-            Workdir workdir) {
+            Workdir.SingletonScoped workdir) {
         this.exeStore = exeStore;
         this.exeRunner = exeRunner;
         this.workdir = workdir;

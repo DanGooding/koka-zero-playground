@@ -72,6 +72,7 @@ public class CompileAndRunStream {
         @JsonSubTypes({
                 @JsonSubTypes.Type(value = AnotherRequestInProgress.class, name = "another-request-in-progress"),
                 @JsonSubTypes.Type(value = StartingCompilation.class, name = "starting-compilation"),
+                @JsonSubTypes.Type(value = StartingRun.class, name = "starting-run"),
                 @JsonSubTypes.Type(value = Running.class, name = "running"),
                 @JsonSubTypes.Type(value = Error.class, name = "error"),
                 @JsonSubTypes.Type(value = Stdout.class, name = "stdout"),
