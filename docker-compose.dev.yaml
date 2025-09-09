@@ -1,3 +1,7 @@
+x-common-env-vars: &common-env-vars
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,env"
+  MANAGEMENT_ENDPOINT_ENV_SHOW_VALUES: "always"
+
 services:
   compile-service:
     build:
@@ -8,6 +12,8 @@ services:
         # use a locally built version of this image for local development
         # since the published registry version is amd64 only
         RUN_COMPILER_IMAGE: run-koka-compiler:latest
+    environment:
+      <<: *common-env-vars
 
   runner-service:
     build:
@@ -16,6 +22,9 @@ services:
       target: koka-playground-runner-service
       args:
         RUN_COMPILER_IMAGE: run-koka-compiler:latest
+
+    environment:
+      <<: *common-env-vars
 
     security_opt:
       - seccomp:seccomp/bwrap-seccomp-profile.json
@@ -27,6 +36,7 @@ services:
       target: koka-playground-compile-and-run-service
     environment:
       COMPILE_AND_RUN_SERVICE_ALLOWED_WS_ORIGIN: "http://localhost"
+      <<: *common-env-vars
     ports:
       - "80:80"
 
