@@ -85,14 +85,20 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
 
         sessionAndState.getSession().getOutcomeFuture().whenComplete((ignored, exn) -> {
             if (exn != null) {
-                logger.error("websocket closed with error {}", session.getId(), exn);
+                logger.error("[{}]{} websocket closed with error",
+                        typedWebSocketHandler.getClass().getSimpleName(), sessionAndState.getSession(), exn);
             }
         });
 
+        // If the user initiated the close, don't call their afterConnectionClosed handlers.
+        // They will have already completed the outcome future.
         if (!sessionAndState.getSession().wasClosedByThisSide()) {
-            // don't call the user afterConnectionClosed handlers if the user initiated the close
+            // close was driven by the transport layer, or the peer.
 
-            if (status.equalsCode(CloseStatus.NORMAL)) {
+            // The server doesn't consider a client disconnect as an error.
+            // A client however expects the server to cleanly close the connection
+            // (unless the client closes itself first).
+            if (typedWebSocketHandler.isServer() || status.equalsCode(CloseStatus.NORMAL)) {
                 try {
                     Outcome outcome = runUserCode(sessionAndState.getSession(), () ->
                             typedWebSocketHandler.afterConnectionClosedOk(
@@ -107,6 +113,7 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
                     runUserCode(sessionAndState.getSession(), () ->
                             typedWebSocketHandler.afterConnectionClosedErroneously(
                                     sessionAndState.getSession(), sessionAndState.getState(), status));
+
                     sessionAndState.getSession().closeErrorStatus(
                             String.format("[%s] connection closed with error", session.getId()),
                             status);
@@ -119,6 +126,7 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
 
     public void handleTransportError(@NonNull IWebSocketSession session, @NonNull Throwable exception) throws IOException {
         TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> sessionAndState = typedSessions.get(session.getId());
+        if (sessionAndState == null) return;
 
         try {
             typedWebSocketHandler.handleTransportError(
