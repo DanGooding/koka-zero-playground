@@ -1,14 +1,22 @@
+x-common-env-vars: &common-env-vars
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,prometheus"
+
 services:
   compile-service:
     image: ghcr.io/dangooding/koka-playground-compile-service:main
+  environment:
+    <<: *common-env-vars
 
   runner-service:
     image: ghcr.io/dangooding/koka-playground-runner-service:main
+    environment:
+      <<: *common-env-vars
 
   compile-and-run-service:
     image: ghcr.io/dangooding/koka-playground-compile-and-run-service:main
     environment:
       COMPILE_AND_RUN_SERVICE_ALLOWED_WS_ORIGIN: "https://koka-zero.danielgooding.uk"
+      <<: *common-env-vars
 
   proxy:
     image: ghcr.io/dangooding/koka-playground-proxy:main
@@ -26,9 +34,18 @@ services:
       - "80:80"
       - "443:443"
 
+  prometheus:
+    configs:
+      - source: prometheus
+        target: /etc/prometheus/prometheus.yml
+
 networks:
   common:
     driver: overlay
 
 volumes:
   nginx_secrets:
+
+configs:
+  prometheus:
+    file: ./metrics/prometheus.yml

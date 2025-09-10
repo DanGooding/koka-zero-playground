@@ -41,36 +41,13 @@ services:
       - "80:80"
 
   prometheus:
-    image:
-      prom/prometheus:v3.4.2
     volumes:
-      - prometheus-data:/prometheus
       - ./metrics/prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      monitoring:
 
   grafana:
-    image:
-      grafana/grafana-oss:12.1.1
-    volumes:
-      - grafana-storage:/var/lib/grafana
-    secrets:
-      - grafana-admin-password
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD__FILE: "/run/secrets/grafana-admin-password"
-    networks:
-      monitoring:
     ports:
       - "3000:3000"
-
-volumes:
-  prometheus-data:
-  grafana-storage:
 
 networks:
   common:
     driver: bridge
-
-secrets:
-  grafana-admin-password:
-    file: metrics/grafana-admin-password.txt
