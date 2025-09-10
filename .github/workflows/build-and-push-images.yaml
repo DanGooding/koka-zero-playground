@@ -25,6 +25,7 @@ jobs:
           - koka-playground-runner-service
           - koka-playground-compile-and-run-service
           - koka-playground-proxy
+          - koka-playground-prometheus
 
     steps:
       - name: Checkout repository
