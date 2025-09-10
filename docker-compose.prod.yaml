@@ -27,6 +27,9 @@ services:
       DEBUG: 1
     volumes:
       - nginx_secrets:/etc/letsencrypt
+    configs:
+      - source: nginx
+        target: /etc/nginx/user_conf.d/nginx.conf
     healthcheck:
       # check whether 'GET /' succeeds, don't download the page
       test: [ "CMD", "wget", "--no-check-certificate", "--spider", "https://localhost" ]
@@ -49,3 +52,5 @@ volumes:
 configs:
   prometheus:
     file: ./metrics/prometheus.yml
+  nginx:
+    file: client/nginx.conf
