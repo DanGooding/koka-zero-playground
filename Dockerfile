@@ -77,7 +77,7 @@ RUN npm run build
 
 FROM $NGINX_IMAGE AS koka-playground-proxy
 
-COPY client/nginx.conf /etc/nginx/user_conf.d/
+COPY client/*.conf /etc/nginx/user_conf.d/
 COPY --from=frontend-build /build/dist /data/www
 
 FROM $PROMETHEUS_IMAGE AS koka-playground-prometheus
