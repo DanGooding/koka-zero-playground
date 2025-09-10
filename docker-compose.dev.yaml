@@ -41,6 +41,10 @@ services:
       - "80:80"
 
   prometheus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: koka-playground-prometheus
     volumes:
       - ./metrics/prometheus.yml:/etc/prometheus/prometheus.yml
 

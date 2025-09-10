@@ -56,8 +56,6 @@ services:
     healthcheck: *healthcheck
 
   prometheus:
-    image:
-      prom/prometheus:v3.4.2
     volumes:
       - prometheus-data:/prometheus
 

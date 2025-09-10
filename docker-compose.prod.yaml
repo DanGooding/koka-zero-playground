@@ -35,9 +35,7 @@ services:
       - "443:443"
 
   prometheus:
-    configs:
-      - source: prometheus
-        target: /etc/prometheus/prometheus.yml
+    image: ghcr.io/dangooding/koka-playground-prometheus
 
 networks:
   common:
@@ -45,7 +43,3 @@ networks:
 
 volumes:
   nginx_secrets:
-
-configs:
-  prometheus:
-    file: ./metrics/prometheus.yml
