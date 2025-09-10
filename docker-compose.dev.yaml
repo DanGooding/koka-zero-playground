@@ -1,5 +1,5 @@
 x-common-env-vars: &common-env-vars
-  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,env"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,env,prometheus"
   MANAGEMENT_ENDPOINT_ENV_SHOW_VALUES: "always"
 
 services:
@@ -39,6 +39,29 @@ services:
       <<: *common-env-vars
     ports:
       - "80:80"
+
+  prometheus:
+    image:
+      prom/prometheus:v3.4.2
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      monitoring:
+
+  grafana:
+    image:
+      grafana/grafana:12.2.0-17436375126
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      monitoring:
+    ports:
+      - "3000:3000"
+
+volumes:
+  prometheus-data:
+  grafana-storage:
 
 networks:
   common:

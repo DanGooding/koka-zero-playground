@@ -22,6 +22,7 @@ services:
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
     networks:
       common:
+      monitoring:
     healthcheck: *healthcheck
 
   runner-service:
@@ -41,6 +42,7 @@ services:
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
     networks:
       common:
+      monitoring:
     healthcheck: *healthcheck
 
   compile-and-run-service:
@@ -50,7 +52,11 @@ services:
       RUNNER_SERVICE_HOSTNAME: "runner-service"
     networks:
       common:
+      monitoring:
     healthcheck: *healthcheck
 
 volumes:
   exe-store:
+
+networks:
+  monitoring:
