@@ -22,6 +22,7 @@ services:
     image: ghcr.io/dangooding/koka-playground-proxy:main
     networks:
       common:
+      monitoring:
     environment:
       CERTBOT_EMAIL: "dan.gooding2000@gmail.com"
       DEBUG: 1
@@ -35,7 +36,12 @@ services:
       - "443:443"
 
   prometheus:
-    image: ghcr.io/dangooding/koka-playground-prometheus
+    image: ghcr.io/dangooding/koka-playground-prometheus:main
+
+  grafana:
+    environment:
+      GF_SERVER_ROOT_URL: "https://koka-zero.danielgooding.uk/metrics"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
 
 networks:
   common:
