@@ -4,8 +4,8 @@ x-common-env-vars: &common-env-vars
 services:
   compile-service:
     image: ghcr.io/dangooding/koka-playground-compile-service:main
-  environment:
-    <<: *common-env-vars
+    environment:
+      <<: *common-env-vars
 
   runner-service:
     image: ghcr.io/dangooding/koka-playground-runner-service:main
