@@ -1,5 +1,7 @@
 package uk.danielgooding.kokaplayground.run;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
@@ -20,6 +22,9 @@ public class RunnerWebSocketHandler
     @Autowired
     RunnerService runnerService;
 
+    @Autowired
+    MeterRegistry meterRegistry;
+
     @Value("${runner.max-buffered-stdin-items}")
     int maxBufferedStdinItems;
 
@@ -28,7 +33,8 @@ public class RunnerWebSocketHandler
 
     @Override
     public RunnerSessionState handleConnectionEstablished(TypedWebSocketSession<RunStream.Outbound.Message, Void> session) {
-        return new RunnerSessionState(maxBufferedStdinItems);
+        Timer.Sample sessionSample = Timer.start(meterRegistry);
+        return new RunnerSessionState(maxBufferedStdinItems, sessionSample);
     }
 
     public void handleRunMessage(
@@ -55,7 +61,7 @@ public class RunnerWebSocketHandler
                                 sessionState.getStdinBuffer(),
                                 onStart,
                                 onStdout)
-                        .thenAccept(error -> {
+                        .thenApply(error -> {
                             try {
                                 session.sendMessage(
                                         switch (error) {
@@ -68,12 +74,14 @@ public class RunnerWebSocketHandler
                                                 yield new RunStream.Outbound.Error(message);
                                             }
                                         });
+                                return error;
                             } catch (IOException e) {
                                 // next block will handle
                                 throw new UncheckedIOException(e);
                             }
                         })
-                        .whenComplete((error, exn) -> {
+                        .whenComplete((result, exn) -> {
+                            stopSessionTimer(sessionState, result, exn);
                             try {
                                 if (exn != null) {
                                     session.closeExn("failure in Runner service", exn);
@@ -125,6 +133,24 @@ public class RunnerWebSocketHandler
             CloseStatus status) {
 
         sessionState.cancelCurrentRun();
+    }
+
+    public void stopSessionTimer(RunnerSessionState state, OrCancelled<OrError<Void>> result, Throwable exn) {
+        String outcome =
+                exn != null ? "server-error" : switch (result) {
+                    case OrCancelled.Cancelled<?> cancelled -> "ok";
+                    case OrCancelled.Ok<OrError<Void>> orError -> switch (orError.getResult()) {
+                        case Ok<Void> ignored -> "ok";
+                        case Failed<?> clientError -> "client-error";
+                    };
+                };
+
+        Timer timer = Timer.builder("request.session")
+                .publishPercentileHistogram()
+                .tags("outcome", outcome)
+                .register(meterRegistry);
+
+        state.getSessionSample().stop(timer);
     }
 
     @Override

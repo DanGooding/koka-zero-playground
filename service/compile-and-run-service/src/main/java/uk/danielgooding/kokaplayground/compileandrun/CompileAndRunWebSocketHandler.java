@@ -91,7 +91,7 @@ public class CompileAndRunWebSocketHandler
                         });
 
         requestOutcomeFuture.whenComplete((result, exn) -> {
-            stopSessionTimer(state.getSessionTimerSample(), result, exn);
+            stopSessionTimer(state, result, exn);
 
             if (exn != null) {
                 // server error
@@ -120,19 +120,19 @@ public class CompileAndRunWebSocketHandler
     }
 
     /// one of result/exn is not null
-    void stopSessionTimer(Timer.Sample sessionTimerSample, OrError<Void> result, Throwable exn) {
+    void stopSessionTimer(CompileAndRunSessionState state, OrError<Void> result, Throwable exn) {
         String outcome =
                 exn != null ? "server-error" : switch (result) {
                     case Ok<Void> ignored -> "ok";
                     case Failed<?> clientError -> "client-error";
                 };
 
-        Timer timer = Timer.builder("compile_and_run.session")
+        Timer timer = Timer.builder("request.session")
                 .publishPercentileHistogram()
                 .tags("outcome", outcome)
                 .register(meterRegistry);
 
-        sessionTimerSample.stop(timer);
+        state.getSessionTimerSample().stop(timer);
     }
 
     void handleStdin(
