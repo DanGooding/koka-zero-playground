@@ -1,5 +1,8 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +36,13 @@ public class CompileAndRunWebSocketHandler
     @Autowired
     ProxyingRunnerWebSocketClient proxyingRunnerWebSocketClient;
 
+    @Autowired
+    MeterRegistry meterRegistry;
+
     @Override
     public CompileAndRunSessionState handleConnectionEstablished(TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session) {
-        return new CompileAndRunSessionState();
+        Timer.Sample sessionSample = Timer.start(meterRegistry);
+        return new CompileAndRunSessionState(sessionSample);
     }
 
     void compileAndRun(
@@ -85,6 +92,8 @@ public class CompileAndRunWebSocketHandler
                         });
 
         requestOutcomeFuture.whenComplete((result, exn) -> {
+            stopSessionTimer(state.getSessionTimerSample(), result, exn);
+
             if (exn != null) {
                 // server error
 
@@ -109,6 +118,19 @@ public class CompileAndRunWebSocketHandler
                 }
             }
         });
+    }
+
+    /// one of result/exn is not null
+    void stopSessionTimer(Timer.Sample sessionTimerSample, OrError<Void> result, Throwable exn) {
+        String outcome =
+                exn != null ? "server-error" : switch (result) {
+                    case Ok<Void> ignored -> "ok";
+                    case Failed<?> clientError -> "client-error";
+                };
+
+        sessionTimerSample.stop(meterRegistry.timer(
+                "compile_and_run.session",
+                "outcome", outcome));
     }
 
     void handleStdin(
