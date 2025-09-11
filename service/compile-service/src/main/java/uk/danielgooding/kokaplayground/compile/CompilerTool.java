@@ -1,14 +1,12 @@
 package uk.danielgooding.kokaplayground.compile;
 
+import io.micrometer.core.annotation.Timed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +39,7 @@ public class CompilerTool {
         return runCompiler(List.of("check", "/dev/stdin"), sourceCode.getCode());
     }
 
+    @Timed(value = "compile.tool.compile")
     public CompletableFuture<OrError<Path>> compile(KokaSourceCode sourceCode, boolean optimise) {
 
 

@@ -85,11 +85,17 @@
             <artifactId>jackson-databind</artifactId>
             <version>2.19.2</version>
         </dependency>
-        
+
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.5.18</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <version>1.15.2</version>
         </dependency>
     </dependencies>
 

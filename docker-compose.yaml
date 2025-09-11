@@ -11,6 +11,7 @@ x-logging-env-vars: &logging-env-vars
   DEBUG: "false"
   ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "WARN"
   LOGGING_LEVEL_ROOT: "warn"
+  MANAGEMENT_OBSERVATIONS_ANNOTATIONS_ENABLED: "true"
 
 services:
   compile-service:
