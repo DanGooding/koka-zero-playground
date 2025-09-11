@@ -1,7 +1,6 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,9 +127,12 @@ public class CompileAndRunWebSocketHandler
                     case Failed<?> clientError -> "client-error";
                 };
 
-        sessionTimerSample.stop(meterRegistry.timer(
-                "compile_and_run.session",
-                "outcome", outcome));
+        Timer timer = Timer.builder("compile_and_run.session")
+                .publishPercentileHistogram()
+                .tags("outcome", outcome)
+                .register(meterRegistry);
+
+        sessionTimerSample.stop(timer);
     }
 
     void handleStdin(
