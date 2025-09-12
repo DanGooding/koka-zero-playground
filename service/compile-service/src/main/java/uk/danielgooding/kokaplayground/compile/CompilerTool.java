@@ -39,7 +39,7 @@ public class CompilerTool {
         return runCompiler(List.of("check", "/dev/stdin"), sourceCode.getCode());
     }
 
-    @Timed(value = "compile.tool.compile")
+    @Timed(value = "compile.tool.compile", percentiles = {0.9, 0.99})
     public CompletableFuture<OrError<Path>> compile(KokaSourceCode sourceCode, boolean optimise) {
 
 
