@@ -1,5 +1,6 @@
 package uk.danielgooding.kokaplayground;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,6 +51,9 @@ public class CompileAndRunTest {
 
     @MockitoBean
     SandboxedExeRunner exeRunnerMock;
+
+    @MockitoBean
+    MeterRegistry meterRegistry;
 
     // unused - mocked to avoid creating a real instance:
     @MockitoBean

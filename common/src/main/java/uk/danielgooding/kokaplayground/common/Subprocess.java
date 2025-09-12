@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 public class Subprocess {
@@ -65,7 +66,8 @@ public class Subprocess {
             List<String> args,
             BlockingQueue<String> stdinBuffer,
             Callback<Void> onStart,
-            Callback<String> onStdout) {
+            Callback<String> onStdout,
+            Executor executor) {
 
         List<String> commandAndArgs = new ArrayList<>();
         commandAndArgs.add(command.toString());
@@ -103,7 +105,7 @@ public class Subprocess {
                         // this simply means the process didn't eat all of toStdin
                         canceler.cancel();
                     }
-                });
+                }, executor);
 
                 InputStream stdout = process.getInputStream();
 
@@ -126,7 +128,7 @@ public class Subprocess {
             } catch (CancelledException e) {
                 return OrCancelled.cancelled();
             }
-        });
+        }, executor);
 
     }
 

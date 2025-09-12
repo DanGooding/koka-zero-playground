@@ -1,5 +1,7 @@
 package uk.danielgooding.kokaplayground;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +16,8 @@ import uk.danielgooding.kokaplayground.common.Workdir;
 
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 
 @SpringBootConfiguration
 @ComponentScan(basePackages = {
@@ -34,5 +38,15 @@ public class TestConfig {
                 throw new UnsupportedOperationException("execute in test bean");
             }
         };
+    }
+
+    @Bean
+    MeterRegistry meterRegistry() {
+        return new SimpleMeterRegistry();
+    }
+
+    @Bean
+    Executor executor() {
+        return ForkJoinPool.commonPool();
     }
 }

@@ -1,5 +1,6 @@
 package uk.danielgooding.kokaplayground;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.runner.RunWith;
@@ -26,9 +27,7 @@ import uk.danielgooding.kokaplayground.run.RunnerWebSocketHandler;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -46,7 +45,6 @@ import static org.junit.Assert.assertThrows;
         "runner.max-buffered-stdin-items=10",
         "runner.max-stderr-bytes=100"})
 public class CompileAndRunWebSocketTest {
-
     // mocked services
     @MockitoBean
     RunnerService runnerServiceMock;
@@ -76,6 +74,9 @@ public class CompileAndRunWebSocketTest {
 
     @Autowired
     TestCompileAndRunClientWebSocketHandler compileAndRunClientWebSocketHandler;
+
+    @Autowired
+    Executor executor;
 
     TestWebSocketConnection<
             RunStream.Inbound.Message,
@@ -155,7 +156,7 @@ public class CompileAndRunWebSocketTest {
                         }
 
                         return OrCancelled.ok(OrError.ok(null));
-                    });
+                    }, executor);
                 });
 
         // act
@@ -232,7 +233,7 @@ public class CompileAndRunWebSocketTest {
                         }
 
                         return OrCancelled.ok(OrError.ok(null));
-                    });
+                    }, executor);
                 });
 
         // act
@@ -295,7 +296,7 @@ public class CompileAndRunWebSocketTest {
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
-                    });
+                    }, executor);
                 });
 
         // act
@@ -356,7 +357,7 @@ public class CompileAndRunWebSocketTest {
                         }
 
                         return OrCancelled.ok(OrError.error("your code was bad"));
-                    });
+                    }, executor);
                 });
 
         // act

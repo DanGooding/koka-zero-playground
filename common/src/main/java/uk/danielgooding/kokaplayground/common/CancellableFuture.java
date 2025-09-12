@@ -1,6 +1,7 @@
 package uk.danielgooding.kokaplayground.common;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -35,10 +36,10 @@ public class CancellableFuture<T> {
 
     /// acts like `CompletableFuture.supplyAsync(run)` but `run` receives a canceller
     /// which it is expected to populate
-    public static <T> CancellableFuture<T> supplyAsync(Function<Canceler, OrCancelled<T>> run) {
+    public static <T> CancellableFuture<T> supplyAsync(Function<Canceler, OrCancelled<T>> run, Executor executor) {
         Canceler canceler = new Canceler();
         CompletableFuture<OrCancelled<T>> result = CompletableFuture.supplyAsync(() ->
-                canceler.wrapIfCancelled(run.apply(canceler)));
+                canceler.wrapIfCancelled(run.apply(canceler)), executor);
         return new CancellableFuture<>(result, canceler);
     }
 
