@@ -22,6 +22,7 @@ import java.util.function.Supplier;
 public class ExeRunner implements IExeRunner {
     // TODO: note we have to be careful - there is a potential deadlock when the thread pool is bounded
     //  and no task has started both the threads it needs
+    //  - the solution is to have two executors for the two different threads needed
     @Autowired
     Executor executor;
 
