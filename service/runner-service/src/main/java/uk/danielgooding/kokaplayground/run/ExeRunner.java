@@ -1,6 +1,7 @@
 package uk.danielgooding.kokaplayground.run;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.Callback;
 import uk.danielgooding.kokaplayground.common.CancellableFuture;
@@ -16,11 +17,13 @@ import java.util.function.Supplier;
 
 @Service
 public class ExeRunner implements IExeRunner {
-    // TODO: note we have to be careful - there is a potential deadlock when the thread pool is bounded
-    //  and no task has started both the threads it needs
-    //  - the solution is to have two executors for the two different threads needed
     @Autowired
-    Executor executor;
+    @Qualifier("stdin-writer")
+    Executor stdinWriterExecutor;
+
+    @Autowired
+    @Qualifier("stdout-reader")
+    Executor stdoutReaderExecutor;
 
     private <T> OrError<T> resultForOutput(Subprocess.Output output, Supplier<T> getOkResult) {
         if (output.isExitSuccess()) {
@@ -43,7 +46,8 @@ public class ExeRunner implements IExeRunner {
             Callback<Void> onStart,
             Callback<String> onStdout) {
 
-        return Subprocess.runStreamingStdinAndStdout(exe, args, stdinBuffer, onStart, onStdout, executor)
+        return Subprocess.runStreamingStdinAndStdout(
+                        exe, args, stdinBuffer, onStart, onStdout, stdoutReaderExecutor, stdinWriterExecutor)
                 .thenApply(output -> resultForOutput(output, () -> null));
     }
 }

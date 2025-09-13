@@ -75,9 +75,6 @@ public class CompileAndRunWebSocketTest {
     @Autowired
     TestCompileAndRunClientWebSocketHandler compileAndRunClientWebSocketHandler;
 
-    @Autowired
-    Executor executor;
-
     TestWebSocketConnection<
             RunStream.Inbound.Message,
             RunStream.Outbound.Message,
@@ -156,7 +153,7 @@ public class CompileAndRunWebSocketTest {
                         }
 
                         return OrCancelled.ok(OrError.ok(null));
-                    }, executor);
+                    }, ForkJoinPool.commonPool());
                 });
 
         // act
@@ -233,7 +230,7 @@ public class CompileAndRunWebSocketTest {
                         }
 
                         return OrCancelled.ok(OrError.ok(null));
-                    }, executor);
+                    }, ForkJoinPool.commonPool());
                 });
 
         // act
@@ -296,7 +293,7 @@ public class CompileAndRunWebSocketTest {
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
-                    }, executor);
+                    }, ForkJoinPool.commonPool());
                 });
 
         // act
@@ -357,7 +354,7 @@ public class CompileAndRunWebSocketTest {
                         }
 
                         return OrCancelled.ok(OrError.error("your code was bad"));
-                    }, executor);
+                    }, ForkJoinPool.commonPool());
                 });
 
         // act
