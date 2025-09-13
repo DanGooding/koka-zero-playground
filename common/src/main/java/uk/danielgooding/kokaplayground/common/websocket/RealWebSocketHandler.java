@@ -39,13 +39,13 @@ public class RealWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) throws Exception {
-        IWebSocketSession decoratedSession = decoratedSessions.get(session.getId());
+        IWebSocketSession decoratedSession = decoratedSessions.remove(session.getId());
         handler.afterConnectionClosed(decoratedSession, status);
     }
 
     @Override
     public void handleTransportError(@NonNull WebSocketSession session, @NonNull Throwable exception) throws Exception {
         IWebSocketSession decoratedSession = decoratedSessions.get(session.getId());
-        handler.handleTransportError(decoratedSession, exception);
+        if (decoratedSession != null) handler.handleTransportError(decoratedSession, exception);
     }
 }
