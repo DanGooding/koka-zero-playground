@@ -42,6 +42,7 @@ public class ProxyingRunnerClientWebSocketHandler
                         .sendMessage(new CompileAndRunStream.Outbound.AnotherRequestInProgress());
             }
             case RunStream.Outbound.Starting starting -> {
+                downstreamSessionAndState.getState().setState(CompileAndRunSessionState.StateTag.RUNNING);
                 downstreamSessionAndState.getSession()
                         .sendMessage(new CompileAndRunStream.Outbound.Running());
             }
@@ -80,7 +81,7 @@ public class ProxyingRunnerClientWebSocketHandler
             CloseStatus closeStatus) throws IOException {
 
         downstreamSessionAndState.getSession().closeErrorStatus(
-                String.format("websocket connection closed with error %s", this.getClass()), closeStatus);
+                String.format("websocket connection closed with error %s", this.getClass().getSimpleName()), closeStatus);
     }
 
     @Override

@@ -67,11 +67,11 @@ public class CompileAndRunWebSocketHandler
             session.closeErrorStatus("another request in progress", CloseStatus.POLICY_VIOLATION);
             return;
         }
-        state.setState(CompileAndRunSessionState.StateTag.AWAITING_COMPILE);
+        state.setState(CompileAndRunSessionState.StateTag.COMPILING);
         logger.info("compiling: {}", session.getId());
         session.sendMessage(new CompileAndRunStream.Outbound.StartingCompilation());
 
-        CompletableFuture<OrError<Void>> requestOutcomeFuture =
+        CompletableFuture<OrError<Void>> connectToUpstreamOutcome =
                 OrError.thenComposeFuture(
                         // failed is a server error, OrError.error is a client error
                         compileServiceAPIClient.compile(compileAndRun.getSourceCode()),
@@ -85,31 +85,33 @@ public class CompileAndRunWebSocketHandler
                             ProxyingRunnerClientState context =
                                     new ProxyingRunnerClientState(session, state);
                             logger.info("will request run: {}", session.getId());
-                            state.setState(CompileAndRunSessionState.StateTag.AWAITING_RUN);
-                            return proxyingRunnerWebSocketClient.execute(context).thenCompose(upstreamSession -> {
-                                logger.info("began running: {}", session.getId());
-                                state.setState(CompileAndRunSessionState.StateTag.RUNNING);
-                                try {
-                                    state.onUpstreamConnectionEstablished(upstreamSession);
-                                    state.sendUpstream(new RunStream.Inbound.Run(exeHandle));
+                            state.setState(CompileAndRunSessionState.StateTag.CONNECTING_TO_RUNNER);
 
-                                    OrError<Void> result = OrError.ok(null);
-                                    return CompletableFuture.completedFuture(result);
+                            return proxyingRunnerWebSocketClient.execute(context).thenCompose(
+                                    upstreamSession -> {
+                                        logger.info("began running: {}", session.getId());
+                                        state.setState(CompileAndRunSessionState.StateTag.AWAITING_RUN);
+                                        try {
+                                            state.onUpstreamConnectionEstablished(upstreamSession);
+                                            state.sendUpstream(new RunStream.Inbound.Run(exeHandle));
 
-                                } catch (IOException e) {
-                                    // failure to send upstream is a server error
-                                    return CompletableFuture.failedFuture(e);
-                                }
-                            });
+                                            // We intentionally don't wait for the upstream request to complete here.
+                                            // The proxying client will handle the outcome of the session once it's setup.
+                                            OrError<Void> result = OrError.ok(null);
+                                            return CompletableFuture.completedFuture(result);
+
+                                        } catch (IOException e) {
+                                            // failure to send upstream is a server error
+                                            return CompletableFuture.failedFuture(e);
+                                        }
+                                    });
                         });
 
-        requestOutcomeFuture.whenComplete((result, exn) -> {
-            stopSessionTimer(state, result, exn);
-            state.setState(CompileAndRunSessionState.StateTag.COMPLETE);
-
+        // Error handling specifically for compilation, and sending the initial request to the runner.
+        // Once we're connected to the runner, all subsequent handling is done by the proxying client.
+        connectToUpstreamOutcome.whenComplete((result, exn) -> {
             if (exn != null) {
                 // server error
-
                 try {
                     session.closeExn("failure in CompileAndRun handler", exn);
                 } catch (Exception e) {
@@ -131,15 +133,16 @@ public class CompileAndRunWebSocketHandler
                 }
             }
         });
+
+        // Overall outcome of this session - when the run completes or fails.
+        session.getOutcomeFuture().whenComplete((result, exn) -> {
+            stopSessionTimer(state, exn);
+            state.setState(CompileAndRunSessionState.StateTag.COMPLETE);
+        });
     }
 
-    /// one of result/exn is not null
-    void stopSessionTimer(CompileAndRunSessionState state, OrError<Void> result, Throwable exn) {
-        String outcome =
-                exn != null ? "server-error" : switch (result) {
-                    case Ok<Void> ignored -> "ok";
-                    case Failed<?> ignored -> "client-error";
-                };
+    void stopSessionTimer(CompileAndRunSessionState state, Throwable exn) {
+        String outcome = exn != null ? "server-error" : "ok";
 
         Timer timer = timerProvider.withTags("outcome", outcome);
         state.getSessionTimerSample().stop(timer);

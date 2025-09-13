@@ -27,7 +27,8 @@ public class CompileAndRunSessionState
 
     public enum StateTag {
         AWAITING_REQUEST,
-        AWAITING_COMPILE,
+        COMPILING,
+        CONNECTING_TO_RUNNER,
         AWAITING_RUN,
         RUNNING,
         COMPLETE
