@@ -74,6 +74,7 @@ services:
       - grafana-admin-password
     environment:
       GF_SECURITY_ADMIN_PASSWORD__FILE: "/run/secrets/grafana-admin-password"
+      GF_LOG_LEVEL: "warn"
     networks:
       monitoring:
 
