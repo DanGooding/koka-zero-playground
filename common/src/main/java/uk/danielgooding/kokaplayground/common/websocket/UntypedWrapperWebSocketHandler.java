@@ -1,6 +1,9 @@
 package uk.danielgooding.kokaplayground.common.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -26,13 +29,22 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
     public UntypedWrapperWebSocketHandler(
             TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> typedWebSocketHandler,
             Class<InboundMessage> inboundMessageClass,
-            Jackson2ObjectMapperBuilder objectMapperBuilder
-
+            Jackson2ObjectMapperBuilder objectMapperBuilder,
+            MeterRegistry meterRegistry
     ) {
         objectMapper = objectMapperBuilder.build();
         typedSessions = new Hashtable<>();
         this.typedWebSocketHandler = typedWebSocketHandler;
         this.inboundMessageClass = inboundMessageClass;
+
+        if (typedWebSocketHandler.isServer()) {
+            // TypedWebSocketClient allows creating a new handler instance for each request.
+            // So the map here would only contain one session. Therefore, don't report client sessions for now.
+            Gauge.builder("websocket_sessions", this, UntypedWrapperWebSocketHandler::getSessionCount)
+                    .tag("handler", typedWebSocketHandler.getClass().getSimpleName())
+                    .tag("role", typedWebSocketHandler.isServer() ? "server" : "client")
+                    .register(meterRegistry);
+        }
     }
 
     TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome> getSessionAndState(WebSocketSession session) {
@@ -161,6 +173,10 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
             userCode.run();
             return null;
         });
+    }
+
+    private double getSessionCount() {
+        return typedSessions.size();
     }
 
     @FunctionalInterface

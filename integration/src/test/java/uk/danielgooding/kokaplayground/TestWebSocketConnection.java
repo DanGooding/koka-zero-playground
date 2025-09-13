@@ -1,5 +1,7 @@
 package uk.danielgooding.kokaplayground;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -66,10 +68,12 @@ class TestWebSocketConnection<Inbound, Outbound, ClientState, ServerState, Clien
             Class<Inbound> inboundClass, Class<Outbound> outboundClass,
             SessionId sessionId) {
         Jackson2ObjectMapperBuilder objectMapperBuilder = new Jackson2ObjectMapperBuilder();
+        
+        MeterRegistry meterRegistry = new SimpleMeterRegistry();
         this.serverHandler = new UntypedWrapperWebSocketHandler<>(
-                serverHandler, inboundClass, objectMapperBuilder);
+                serverHandler, inboundClass, objectMapperBuilder, meterRegistry);
         this.clientHandler = new UntypedWrapperWebSocketHandler<>(
-                clientHandler, outboundClass, objectMapperBuilder);
+                clientHandler, outboundClass, objectMapperBuilder, meterRegistry);
         this.sessionId = sessionId;
     }
 

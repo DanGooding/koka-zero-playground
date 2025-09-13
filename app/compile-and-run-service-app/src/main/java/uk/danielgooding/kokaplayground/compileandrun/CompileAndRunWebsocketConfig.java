@@ -1,5 +1,6 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +33,9 @@ public class CompileAndRunWebsocketConfig implements WebSocketConfigurer {
     @Value("${compile-and-run-service.allowed-ws-origin}")
     String allowedOrigin;
 
+    @Autowired
+    MeterRegistry meterRegistry;
+
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         RealWebSocketHandler realHandler =
@@ -39,7 +43,8 @@ public class CompileAndRunWebsocketConfig implements WebSocketConfigurer {
                         new UntypedWrapperWebSocketHandler<>(
                                 compileAndRunWebSocketHandler,
                                 CompileAndRunStream.Inbound.Message.class,
-                                objectMapperBuilder),
+                                objectMapperBuilder,
+                                meterRegistry),
                         concurrentWebSocketWriteLimits);
 
         WebSocketHandler handler = new LoggingWebSocketHandlerDecorator(

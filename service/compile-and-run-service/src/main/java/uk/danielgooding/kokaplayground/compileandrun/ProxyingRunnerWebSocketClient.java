@@ -1,5 +1,6 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,8 @@ public class ProxyingRunnerWebSocketClient {
             @Value("${runner-service-hostname}") URI host,
             @Autowired ProxyingRunnerClientWebSocketHandlerFactory handlerFactory,
             @Autowired Jackson2ObjectMapperBuilder objectMapperBuilder,
-            @Autowired ConcurrentWebSocketWriteLimits writeLimits) {
+            @Autowired ConcurrentWebSocketWriteLimits writeLimits,
+            @Autowired MeterRegistry meterRegistry) {
 
         Function<
                 ProxyingRunnerClientState,
@@ -48,7 +50,12 @@ public class ProxyingRunnerWebSocketClient {
                 };
 
         this.client = new TypedWebSocketClient<>(
-                webSocketClient, handlerBuilder, RunStream.Outbound.Message.class, objectMapperBuilder, writeLimits);
+                webSocketClient,
+                handlerBuilder,
+                RunStream.Outbound.Message.class,
+                objectMapperBuilder,
+                writeLimits,
+                meterRegistry);
         this.uri = String.format("ws://%s/ws/run", host);
     }
 

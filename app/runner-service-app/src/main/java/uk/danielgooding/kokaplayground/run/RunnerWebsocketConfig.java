@@ -1,5 +1,6 @@
 package uk.danielgooding.kokaplayground.run;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.CustomScopeConfigurer;
 import org.springframework.context.annotation.Configuration;
@@ -29,13 +30,18 @@ public class RunnerWebsocketConfig implements WebSocketConfigurer {
     @Autowired
     ConcurrentWebSocketWriteLimits concurrentWebSocketWriteLimits;
 
+    @Autowired
+    MeterRegistry meterRegistry;
+
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         RealWebSocketHandler realHandler =
-                new RealWebSocketHandler(new UntypedWrapperWebSocketHandler<>(
-                        runnerWebSocketHandler,
-                        RunStream.Inbound.Message.class,
-                        objectMapperBuilder),
+                new RealWebSocketHandler(
+                        new UntypedWrapperWebSocketHandler<>(
+                                runnerWebSocketHandler,
+                                RunStream.Inbound.Message.class,
+                                objectMapperBuilder,
+                                meterRegistry),
                         concurrentWebSocketWriteLimits);
 
         WebSocketHandler handler = new LoggingWebSocketHandlerDecorator(
