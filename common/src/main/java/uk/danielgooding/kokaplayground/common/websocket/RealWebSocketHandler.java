@@ -12,11 +12,11 @@ import java.util.Hashtable;
 /// which simply wraps the WebSocketSession objects such that they fit the IWebSocketSession interface.
 /// this runs in prod, but not in tests, since tests provide mock implementations fitting that interface
 public class RealWebSocketHandler extends TextWebSocketHandler {
-    private final UntypedWrapperWebSocketHandler<?, ?, ?, ?> handler;
+    private final UntypedWrapperWebSocketHandler<?, ?, ?, ?, ?> handler;
     private final ConcurrentWebSocketWriteLimits writeLimits;
     private final Hashtable<String, IWebSocketSession> decoratedSessions;
 
-    public RealWebSocketHandler(UntypedWrapperWebSocketHandler<?, ?, ?, ?> handler, ConcurrentWebSocketWriteLimits writeLimits) {
+    public RealWebSocketHandler(UntypedWrapperWebSocketHandler<?, ?, ?, ?, ?> handler, ConcurrentWebSocketWriteLimits writeLimits) {
         this.handler = handler;
         this.writeLimits = writeLimits;
         decoratedSessions = new Hashtable<>();

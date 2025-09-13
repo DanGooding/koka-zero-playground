@@ -15,10 +15,16 @@ import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.List;
 
 @Controller
 public class RunnerWebSocketHandler
-        implements TypedWebSocketHandler<RunStream.Inbound.Message, RunStream.Outbound.Message, RunnerSessionState, Void> {
+        implements TypedWebSocketHandler<
+        RunStream.Inbound.Message,
+        RunStream.Outbound.Message,
+        RunnerSessionState,
+        RunnerSessionState.StateTag,
+        Void> {
 
     private final RunnerService runnerService;
     private final MeterRegistry meterRegistry;
@@ -58,6 +64,7 @@ public class RunnerWebSocketHandler
         }
 
         Callback<Void> onStart = (ignored) -> {
+            sessionState.setState(RunnerSessionState.StateTag.RUNNING);
             session.sendMessage(new RunStream.Outbound.Starting());
         };
 
@@ -65,6 +72,7 @@ public class RunnerWebSocketHandler
             session.sendMessage(new RunStream.Outbound.Stdout(chunk));
         };
 
+        sessionState.setState(RunnerSessionState.StateTag.AWAITING_RUN);
         sessionState.setRunning(
                 runnerService.runStreamingStdinAndStdout(
                                 run.getExeHandle(),
@@ -92,6 +100,7 @@ public class RunnerWebSocketHandler
                         })
                         .whenComplete((result, exn) -> {
                             stopSessionTimer(sessionState, result, exn);
+                            sessionState.setState(RunnerSessionState.StateTag.COMPLETE);
                             try {
                                 if (exn != null) {
                                     session.closeExn("failure in Runner service", exn);
@@ -168,5 +177,10 @@ public class RunnerWebSocketHandler
     @Override
     public boolean isServer() {
         return true;
+    }
+
+    @Override
+    public Iterable<RunnerSessionState.StateTag> allSessionStateTags() {
+        return List.of(RunnerSessionState.StateTag.values());
     }
 }

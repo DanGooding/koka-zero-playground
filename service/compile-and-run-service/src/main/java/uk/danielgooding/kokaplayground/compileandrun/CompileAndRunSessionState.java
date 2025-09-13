@@ -2,6 +2,7 @@ package uk.danielgooding.kokaplayground.compileandrun;
 
 import io.micrometer.core.instrument.Timer;
 import org.springframework.lang.Nullable;
+import uk.danielgooding.kokaplayground.common.websocket.ISessionState;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
@@ -9,7 +10,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CompileAndRunSessionState {
+public class CompileAndRunSessionState
+        implements ISessionState<CompileAndRunSessionState.StateTag> {
     /// upstreamSessionAndState will be populated once the connection is established
     private @Nullable
     TypedWebSocketSession<RunStream.Inbound.Message, Void>
@@ -19,9 +21,17 @@ public class CompileAndRunSessionState {
     private @Nullable boolean bufferedCloseUpstream = false;
     private final List<RunStream.Inbound.Message> bufferedInbound;
 
-    private boolean receivedRequest = false;
+    private StateTag state = StateTag.AWAITING_REQUEST;
 
     private final Timer.Sample sessionTimerSample;
+
+    public enum StateTag {
+        AWAITING_REQUEST,
+        AWAITING_COMPILE,
+        AWAITING_RUN,
+        RUNNING,
+        COMPLETE
+    }
 
     public CompileAndRunSessionState(Timer.Sample sessionTimerSample) {
         this.bufferedInbound = new ArrayList<>();
@@ -72,15 +82,16 @@ public class CompileAndRunSessionState {
         }
     }
 
-    public boolean isFirstRequest() {
-        return !receivedRequest;
-    }
-
-    public void setReceivedRequest() {
-        receivedRequest = true;
-    }
-
     public Timer.Sample getSessionTimerSample() {
         return sessionTimerSample;
+    }
+
+    public void setState(StateTag state) {
+        this.state = state;
+    }
+
+    @Override
+    public StateTag getStateTag() {
+        return state;
     }
 }

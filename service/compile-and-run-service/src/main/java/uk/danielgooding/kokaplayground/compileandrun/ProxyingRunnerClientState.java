@@ -5,9 +5,12 @@ import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAnd
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 
 /// a type alias for convenience
-public class ProxyingRunnerClientState extends TypedWebSocketSessionAndState<CompileAndRunStream.Outbound.Message, CompileAndRunSessionState, Void> {
+public class ProxyingRunnerClientState
+        extends TypedWebSocketSessionAndState<CompileAndRunStream.Outbound.Message, CompileAndRunSessionState, Void> {
 
-    public ProxyingRunnerClientState(TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session, CompileAndRunSessionState compileAndRunSessionState) {
+    public ProxyingRunnerClientState(
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
+            CompileAndRunSessionState compileAndRunSessionState) {
         super(session, compileAndRunSessionState);
     }
 }

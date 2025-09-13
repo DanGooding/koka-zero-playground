@@ -11,10 +11,11 @@ import uk.danielgooding.kokaplayground.common.websocket.*;
 
 import java.io.IOException;
 
-class TestSession<Inbound, Outbound, State, Outcome> implements IWebSocketSession {
+class TestSession<Inbound, Outbound, State extends ISessionState<StateTag>, StateTag, Outcome>
+        implements IWebSocketSession {
     private final SessionId sessionId;
     private boolean isClosed = false;
-    private UntypedWrapperWebSocketHandler<Inbound, Outbound, State, Outcome> myHandler;
+    private UntypedWrapperWebSocketHandler<Inbound, Outbound, State, StateTag, Outcome> myHandler;
     private Callback<WebSocketMessage<?>> peerHandleMessage;
     private Callback<CloseStatus> peerClose;
 
@@ -22,7 +23,7 @@ class TestSession<Inbound, Outbound, State, Outcome> implements IWebSocketSessio
         this.sessionId = sessionId;
     }
 
-    public void init(UntypedWrapperWebSocketHandler<Inbound, Outbound, State, Outcome> myHandler,
+    public void init(UntypedWrapperWebSocketHandler<Inbound, Outbound, State, StateTag, Outcome> myHandler,
                      Callback<WebSocketMessage<?>> peerHandleMessage,
                      Callback<CloseStatus> peerClose) {
         this.myHandler = myHandler;
@@ -55,20 +56,27 @@ class TestSession<Inbound, Outbound, State, Outcome> implements IWebSocketSessio
 }
 
 /// for now this class mocks a single websocket connection
-class TestWebSocketConnection<Inbound, Outbound, ClientState, ServerState, ClientOutcome> {
+class TestWebSocketConnection<
+        Inbound,
+        Outbound,
+        ClientState extends ISessionState<ClientStateTag>, ClientStateTag,
+        ServerState extends ISessionState<ServerStateTag>, ServerStateTag,
+        ClientOutcome> {
 
-    private final UntypedWrapperWebSocketHandler<Inbound, Outbound, ServerState, Void> serverHandler;
-    private final UntypedWrapperWebSocketHandler<Outbound, Inbound, ClientState, ClientOutcome> clientHandler;
+    private final UntypedWrapperWebSocketHandler<Inbound, Outbound, ServerState, ServerStateTag, Void>
+            serverHandler;
+    private final UntypedWrapperWebSocketHandler<Outbound, Inbound, ClientState, ClientStateTag, ClientOutcome>
+            clientHandler;
 
     private final SessionId sessionId;
 
     TestWebSocketConnection(
-            TypedWebSocketHandler<Inbound, Outbound, ServerState, Void> serverHandler,
-            TypedWebSocketHandler<Outbound, Inbound, ClientState, ClientOutcome> clientHandler,
+            TypedWebSocketHandler<Inbound, Outbound, ServerState, ServerStateTag, Void> serverHandler,
+            TypedWebSocketHandler<Outbound, Inbound, ClientState, ClientStateTag, ClientOutcome> clientHandler,
             Class<Inbound> inboundClass, Class<Outbound> outboundClass,
             SessionId sessionId) {
         Jackson2ObjectMapperBuilder objectMapperBuilder = new Jackson2ObjectMapperBuilder();
-        
+
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         this.serverHandler = new UntypedWrapperWebSocketHandler<>(
                 serverHandler, inboundClass, objectMapperBuilder, meterRegistry);
@@ -78,10 +86,10 @@ class TestWebSocketConnection<Inbound, Outbound, ClientState, ServerState, Clien
     }
 
     public void establishConnection() throws IOException {
-        TestSession<Inbound, Outbound, ServerState, Void> serverSession =
+        TestSession<Inbound, Outbound, ServerState, ServerStateTag, Void> serverSession =
                 new TestSession<>(sessionId);
 
-        TestSession<Outbound, Inbound, ClientState, ClientOutcome> clientSession =
+        TestSession<Outbound, Inbound, ClientState, ClientStateTag, ClientOutcome> clientSession =
                 new TestSession<>(sessionId);
 
         serverHandler.afterConnectionEstablished(serverSession);

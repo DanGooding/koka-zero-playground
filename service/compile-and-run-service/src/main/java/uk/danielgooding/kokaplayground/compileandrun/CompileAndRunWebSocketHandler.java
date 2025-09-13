@@ -18,6 +18,7 @@ import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Controller
@@ -26,6 +27,7 @@ public class CompileAndRunWebSocketHandler
         CompileAndRunStream.Inbound.Message,
         CompileAndRunStream.Outbound.Message,
         CompileAndRunSessionState,
+        CompileAndRunSessionState.StateTag,
         Void> {
 
     private static final Logger logger = LoggerFactory.getLogger(CompileAndRunWebSocketHandler.class);
@@ -60,16 +62,14 @@ public class CompileAndRunWebSocketHandler
             TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
             CompileAndRunSessionState state) throws IOException {
 
-        if (!state.isFirstRequest()) {
+        if (state.getStateTag() != CompileAndRunSessionState.StateTag.AWAITING_REQUEST) {
             session.sendMessage(new CompileAndRunStream.Outbound.AnotherRequestInProgress());
             session.closeErrorStatus("another request in progress", CloseStatus.POLICY_VIOLATION);
             return;
         }
-        state.setReceivedRequest();
-
-        session.sendMessage(new CompileAndRunStream.Outbound.StartingCompilation());
-
+        state.setState(CompileAndRunSessionState.StateTag.AWAITING_COMPILE);
         logger.info("compiling: {}", session.getId());
+        session.sendMessage(new CompileAndRunStream.Outbound.StartingCompilation());
 
         CompletableFuture<OrError<Void>> requestOutcomeFuture =
                 OrError.thenComposeFuture(
@@ -85,8 +85,10 @@ public class CompileAndRunWebSocketHandler
                             ProxyingRunnerClientState context =
                                     new ProxyingRunnerClientState(session, state);
                             logger.info("will request run: {}", session.getId());
+                            state.setState(CompileAndRunSessionState.StateTag.AWAITING_RUN);
                             return proxyingRunnerWebSocketClient.execute(context).thenCompose(upstreamSession -> {
                                 logger.info("began running: {}", session.getId());
+                                state.setState(CompileAndRunSessionState.StateTag.RUNNING);
                                 try {
                                     state.onUpstreamConnectionEstablished(upstreamSession);
                                     state.sendUpstream(new RunStream.Inbound.Run(exeHandle));
@@ -103,6 +105,7 @@ public class CompileAndRunWebSocketHandler
 
         requestOutcomeFuture.whenComplete((result, exn) -> {
             stopSessionTimer(state, result, exn);
+            state.setState(CompileAndRunSessionState.StateTag.COMPLETE);
 
             if (exn != null) {
                 // server error
@@ -189,5 +192,10 @@ public class CompileAndRunWebSocketHandler
     @Override
     public boolean isServer() {
         return true;
+    }
+
+    @Override
+    public Iterable<CompileAndRunSessionState.StateTag> allSessionStateTags() {
+        return List.of(CompileAndRunSessionState.StateTag.values());
     }
 }

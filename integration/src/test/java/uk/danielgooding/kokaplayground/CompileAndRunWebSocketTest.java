@@ -16,6 +16,7 @@ import uk.danielgooding.kokaplayground.common.*;
 import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
 import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import uk.danielgooding.kokaplayground.common.websocket.SessionId;
+import uk.danielgooding.kokaplayground.common.websocket.StatelessTypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
 import uk.danielgooding.kokaplayground.compileandrun.*;
@@ -78,8 +79,10 @@ public class CompileAndRunWebSocketTest {
     TestWebSocketConnection<
             RunStream.Inbound.Message,
             RunStream.Outbound.Message,
+            StatelessTypedWebSocketHandler.EmptyState,
             Void,
             RunnerSessionState,
+            RunnerSessionState.StateTag,
             Void>
     createRunnerConnection(ProxyingRunnerClientState proxyingRunnerClientState) {
         runnerClientWebSocketHandlerFactory.setDownstreamSessionAndState(proxyingRunnerClientState);
@@ -87,7 +90,7 @@ public class CompileAndRunWebSocketTest {
 
         return new TestWebSocketConnection<>(
                 runnerWebSocketHandler,
-                runnerClientWebSocketHandler,
+                new StatelessTypedWebSocketHandler<>(runnerClientWebSocketHandler),
                 RunStream.Inbound.Message.class,
                 RunStream.Outbound.Message.class,
                 new SessionId("compile-and-run->run"));
@@ -97,7 +100,9 @@ public class CompileAndRunWebSocketTest {
             CompileAndRunStream.Inbound.Message,
             CompileAndRunStream.Outbound.Message,
             TestCompileAndRunClientWebSocketHandler.State,
+            Void,
             CompileAndRunSessionState,
+            CompileAndRunSessionState.StateTag,
             OrError<String>>
     createCompileAndRunConnection() {
         return new TestWebSocketConnection<>(

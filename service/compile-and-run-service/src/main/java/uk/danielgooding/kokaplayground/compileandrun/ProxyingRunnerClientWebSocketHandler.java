@@ -4,9 +4,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.web.socket.CloseStatus;
+import uk.danielgooding.kokaplayground.common.websocket.IStatelessTypedWebSocketHandler;
+import uk.danielgooding.kokaplayground.common.websocket.StatelessTypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
@@ -14,10 +14,9 @@ import java.io.IOException;
 
 
 public class ProxyingRunnerClientWebSocketHandler
-        implements TypedWebSocketHandler<
+        implements IStatelessTypedWebSocketHandler<
         RunStream.Outbound.Message,
         RunStream.Inbound.Message,
-        Void,
         Void> {
 
     private final ProxyingRunnerClientState downstreamSessionAndState;
@@ -28,15 +27,13 @@ public class ProxyingRunnerClientWebSocketHandler
     }
 
     @Override
-    public Void
+    public void
     handleConnectionEstablished(TypedWebSocketSession<RunStream.Inbound.Message, Void> session) {
-        return null;
     }
 
     @Override
     public void handleMessage(
             TypedWebSocketSession<RunStream.Inbound.Message, Void> session,
-            Void ignored,
             @NonNull RunStream.Outbound.Message outbound
     ) throws IOException {
         switch (outbound) {
@@ -71,7 +68,7 @@ public class ProxyingRunnerClientWebSocketHandler
 
     @Override
     public Void afterConnectionClosedOk(
-            TypedWebSocketSession<RunStream.Inbound.Message, Void> session, Void ignored) throws IOException {
+            TypedWebSocketSession<RunStream.Inbound.Message, Void> session) throws IOException {
 
         downstreamSessionAndState.getSession().closeOk(null);
         return null;
@@ -80,7 +77,6 @@ public class ProxyingRunnerClientWebSocketHandler
     @Override
     public void afterConnectionClosedErroneously(
             TypedWebSocketSession<RunStream.Inbound.Message, Void> session,
-            Void ignored,
             CloseStatus closeStatus) throws IOException {
 
         downstreamSessionAndState.getSession().closeErrorStatus(
@@ -90,7 +86,6 @@ public class ProxyingRunnerClientWebSocketHandler
     @Override
     public void handleTransportError(
             TypedWebSocketSession<RunStream.Inbound.Message, Void> session,
-            Void ignored,
             Throwable exception) {
     }
 
