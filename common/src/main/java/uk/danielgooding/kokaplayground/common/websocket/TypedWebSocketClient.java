@@ -1,5 +1,6 @@
 package uk.danielgooding.kokaplayground.common.websocket;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.client.WebSocketClient;
@@ -20,7 +21,8 @@ public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState,
             Function<Context, TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome>> handlerFactory,
             Class<InboundMessage> inboundMessageClass,
             Jackson2ObjectMapperBuilder objectMapperBuilder,
-            ConcurrentWebSocketWriteLimits writeLimits
+            ConcurrentWebSocketWriteLimits writeLimits,
+            MeterRegistry meterRegistry
     ) {
         this.webSocketClient = webSocketClient;
 
@@ -28,7 +30,8 @@ public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState,
                 new UntypedWrapperWebSocketHandler<>(
                         handlerFactory.apply(context),
                         inboundMessageClass,
-                        objectMapperBuilder);
+                        objectMapperBuilder,
+                        meterRegistry);
 
         this.writeLimits = writeLimits;
     }
