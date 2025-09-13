@@ -1,5 +1,6 @@
 package uk.danielgooding.kokaplayground.run;
 
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,17 +20,26 @@ import java.io.UncheckedIOException;
 public class RunnerWebSocketHandler
         implements TypedWebSocketHandler<RunStream.Inbound.Message, RunStream.Outbound.Message, RunnerSessionState, Void> {
 
-    @Autowired
-    RunnerService runnerService;
+    private final RunnerService runnerService;
+    private final MeterRegistry meterRegistry;
+    private final int maxBufferedStdinItems;
+    private final int maxErrorBytes;
+    private final Meter.MeterProvider<Timer> timerProvider;
 
-    @Autowired
-    MeterRegistry meterRegistry;
+    public RunnerWebSocketHandler(
+            @Autowired RunnerService runnerService,
+            @Autowired MeterRegistry meterRegistry,
+            @Value("${runner.max-buffered-stdin-items}") int maxBufferedStdinItems,
+            @Value("${runner.max-stderr-bytes}") int maxErrorBytes) {
+        this.runnerService = runnerService;
+        this.meterRegistry = meterRegistry;
+        this.maxBufferedStdinItems = maxBufferedStdinItems;
+        this.maxErrorBytes = maxErrorBytes;
 
-    @Value("${runner.max-buffered-stdin-items}")
-    int maxBufferedStdinItems;
-
-    @Value("${runner.max-stderr-bytes}")
-    int maxErrorBytes;
+        timerProvider = Timer.builder("request.session")
+                .publishPercentileHistogram()
+                .withRegistry(meterRegistry);
+    }
 
     @Override
     public RunnerSessionState handleConnectionEstablished(TypedWebSocketSession<RunStream.Outbound.Message, Void> session) {
@@ -145,11 +155,7 @@ public class RunnerWebSocketHandler
                     };
                 };
 
-        Timer timer = Timer.builder("request.session")
-                .publishPercentileHistogram()
-                .tags("outcome", outcome)
-                .register(meterRegistry);
-
+        Timer timer = timerProvider.withTags("outcome", outcome);
         state.getSessionSample().stop(timer);
     }
 
