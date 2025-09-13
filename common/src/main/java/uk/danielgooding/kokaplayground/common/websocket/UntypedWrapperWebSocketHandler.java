@@ -2,7 +2,6 @@ package uk.danielgooding.kokaplayground.common.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,19 +14,27 @@ import org.springframework.web.socket.WebSocketSession;
 import java.io.IOException;
 import java.util.Hashtable;
 
-public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> {
+public class UntypedWrapperWebSocketHandler<
+        InboundMessage,
+        OutboundMessage,
+        SessionState extends ISessionState<SessionStateTag>,
+        SessionStateTag,
+        Outcome> {
 
-    private final Hashtable<String, TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome>> typedSessions;
+    private final Hashtable<String, TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome>>
+            typedSessions;
     private final ObjectMapper objectMapper;
 
-    private final TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> typedWebSocketHandler;
+    private final TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, SessionStateTag, Outcome>
+            typedWebSocketHandler;
 
     private final Class<InboundMessage> inboundMessageClass;
 
     private static final Logger logger = LoggerFactory.getLogger(UntypedWrapperWebSocketHandler.class);
 
     public UntypedWrapperWebSocketHandler(
-            TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome> typedWebSocketHandler,
+            TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, SessionStateTag, Outcome>
+                    typedWebSocketHandler,
             Class<InboundMessage> inboundMessageClass,
             Jackson2ObjectMapperBuilder objectMapperBuilder,
             MeterRegistry meterRegistry
@@ -38,12 +45,17 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
         this.inboundMessageClass = inboundMessageClass;
 
         if (typedWebSocketHandler.isServer()) {
-            // TypedWebSocketClient allows creating a new handler instance for each request.
-            // So the map here would only contain one session. Therefore, don't report client sessions for now.
-            Gauge.builder("websocket_sessions", this, UntypedWrapperWebSocketHandler::getSessionCount)
-                    .tag("handler", typedWebSocketHandler.getClass().getSimpleName())
-                    .tag("role", typedWebSocketHandler.isServer() ? "server" : "client")
-                    .register(meterRegistry);
+            for (SessionStateTag stateTag : typedWebSocketHandler.allSessionStateTags()) {
+                // TypedWebSocketClient allows creating a new handler instance for each request.
+                // So the map here would only contain one session. Therefore, don't report client sessions for now.
+                Gauge.builder("websocket_sessions",
+                                this,
+                                h -> h.getSessionCount(stateTag))
+                        .tag("handler", typedWebSocketHandler.getClass().getSimpleName())
+                        .tag("role", typedWebSocketHandler.isServer() ? "server" : "client")
+                        .tag("state", stateTag.toString())
+                        .register(meterRegistry);
+            }
         }
     }
 
@@ -175,8 +187,14 @@ public class UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, Ses
         });
     }
 
-    private double getSessionCount() {
-        return typedSessions.size();
+    private double getSessionCount(SessionStateTag stateTag) {
+        int count = 0;
+        for (var sessionAndState : typedSessions.values()) {
+            if (sessionAndState.getState().getStateTag() == stateTag) {
+                count++;
+            }
+        }
+        return count;
     }
 
     @FunctionalInterface

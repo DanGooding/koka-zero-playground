@@ -5,33 +5,22 @@ import org.springframework.web.socket.CloseStatus;
 
 import java.io.IOException;
 
-public interface TypedWebSocketHandler<
-        InboundMessage,
-        OutboundMessage,
-        SessionState extends ISessionState<SessionStateTag>,
-        SessionStateTag,
-        Outcome> {
-
-    SessionState handleConnectionEstablished(
+public interface IStatelessTypedWebSocketHandler<InboundMessage, OutboundMessage, Outcome> {
+    void handleConnectionEstablished(
             TypedWebSocketSession<OutboundMessage, Outcome> session
     ) throws IOException;
 
     void handleMessage(
             TypedWebSocketSession<OutboundMessage, Outcome> session,
-            SessionState sessionState,
             @NonNull InboundMessage inbound
     ) throws IOException;
 
-    Iterable<SessionStateTag> allSessionStateTags();
-
     Outcome afterConnectionClosedOk(
-            TypedWebSocketSession<OutboundMessage, Outcome> session,
-            SessionState sessionState
+            TypedWebSocketSession<OutboundMessage, Outcome> session
     ) throws IOException;
 
     void afterConnectionClosedErroneously(
             TypedWebSocketSession<OutboundMessage, Outcome> session,
-            SessionState sessionState,
             CloseStatus status
     ) throws IOException;
 
@@ -39,7 +28,6 @@ public interface TypedWebSocketHandler<
 
     void handleTransportError(
             TypedWebSocketSession<OutboundMessage, Outcome> session,
-            SessionState sessionState,
             Throwable exception
     ) throws IOException;
 }

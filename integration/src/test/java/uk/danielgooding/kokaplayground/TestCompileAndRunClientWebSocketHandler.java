@@ -5,11 +5,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import uk.danielgooding.kokaplayground.common.OrError;
+import uk.danielgooding.kokaplayground.common.websocket.ISessionState;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 
 import java.io.IOException;
+import java.util.List;
 
 
 @Service
@@ -18,9 +20,10 @@ public class TestCompileAndRunClientWebSocketHandler
         CompileAndRunStream.Outbound.Message,
         CompileAndRunStream.Inbound.Message,
         TestCompileAndRunClientWebSocketHandler.State,
+        Void,
         OrError<String>> {
 
-    public static class State {
+    public static class State implements ISessionState<Void> {
         private final StringBuilder stdoutBuilder;
         private String maybeError;
 
@@ -42,6 +45,11 @@ public class TestCompileAndRunClientWebSocketHandler
             } else {
                 return OrError.error(maybeError);
             }
+        }
+
+        @Override
+        public Void getStateTag() {
+            return null;
         }
     }
 
@@ -89,5 +97,10 @@ public class TestCompileAndRunClientWebSocketHandler
     @Override
     public boolean isServer() {
         return false;
+    }
+
+    @Override
+    public Iterable<Void> allSessionStateTags() {
+        return List.of();
     }
 }

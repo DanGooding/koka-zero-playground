@@ -9,16 +9,24 @@ import org.springframework.web.socket.handler.LoggingWebSocketHandlerDecorator;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState, Context, Outcome> {
+public class TypedWebSocketClient<
+        InboundMessage,
+        OutboundMessage,
+        SessionState extends ISessionState<SessionStateTag>,
+        SessionStateTag,
+        Context,
+        Outcome> {
     private final WebSocketClient webSocketClient;
     private final Function<
             Context,
-            UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome>> handlerFactory;
+            UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, SessionStateTag, Outcome>>
+            handlerFactory;
     private final ConcurrentWebSocketWriteLimits writeLimits;
 
     public TypedWebSocketClient(
             WebSocketClient webSocketClient,
-            Function<Context, TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome>> handlerFactory,
+            Function<Context, TypedWebSocketHandler<InboundMessage, OutboundMessage, SessionState, SessionStateTag, Outcome>>
+                    handlerFactory,
             Class<InboundMessage> inboundMessageClass,
             Jackson2ObjectMapperBuilder objectMapperBuilder,
             ConcurrentWebSocketWriteLimits writeLimits,
@@ -41,7 +49,7 @@ public class TypedWebSocketClient<InboundMessage, OutboundMessage, SessionState,
     }
 
     public CompletableFuture<TypedWebSocketSession<OutboundMessage, Outcome>> execute(String uri, Context context) {
-        UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, Outcome>
+        UntypedWrapperWebSocketHandler<InboundMessage, OutboundMessage, SessionState, SessionStateTag, Outcome>
                 handler = handlerFactory.apply(context);
         RealWebSocketHandler realHandler = new RealWebSocketHandler(handler, writeLimits);
         WebSocketHandler decoratedHandler = decorateHandler(realHandler);

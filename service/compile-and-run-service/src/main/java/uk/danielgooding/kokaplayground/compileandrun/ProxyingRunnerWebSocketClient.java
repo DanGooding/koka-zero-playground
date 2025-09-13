@@ -22,6 +22,7 @@ public class ProxyingRunnerWebSocketClient {
     private final TypedWebSocketClient<
             RunStream.Outbound.Message,
             RunStream.Inbound.Message,
+            StatelessTypedWebSocketHandler.EmptyState,
             Void,
             ProxyingRunnerClientState,
             Void> client;
@@ -41,12 +42,13 @@ public class ProxyingRunnerWebSocketClient {
                 TypedWebSocketHandler<
                         RunStream.Outbound.Message,
                         RunStream.Inbound.Message,
+                        StatelessTypedWebSocketHandler.EmptyState,
                         Void,
                         Void>
                 > handlerBuilder =
                 (ProxyingRunnerClientState downstreamSessionAndState) -> {
                     handlerFactory.setDownstreamSessionAndState(downstreamSessionAndState);
-                    return handlerFactory.getObject();
+                    return new StatelessTypedWebSocketHandler<>(handlerFactory.getObject());
                 };
 
         this.client = new TypedWebSocketClient<>(
