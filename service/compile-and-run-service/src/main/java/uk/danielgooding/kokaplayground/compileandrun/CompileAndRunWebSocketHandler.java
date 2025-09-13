@@ -1,5 +1,6 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
@@ -29,14 +30,24 @@ public class CompileAndRunWebSocketHandler
 
     private static final Logger logger = LoggerFactory.getLogger(CompileAndRunWebSocketHandler.class);
 
-    @Autowired
-    CompileServiceAPIClient compileServiceAPIClient;
+    private final CompileServiceAPIClient compileServiceAPIClient;
+    private final ProxyingRunnerWebSocketClient proxyingRunnerWebSocketClient;
+    private final MeterRegistry meterRegistry;
+    private final Meter.MeterProvider<Timer> timerProvider;
 
-    @Autowired
-    ProxyingRunnerWebSocketClient proxyingRunnerWebSocketClient;
+    public CompileAndRunWebSocketHandler(
+            @Autowired CompileServiceAPIClient compileServiceAPIClient,
+            @Autowired ProxyingRunnerWebSocketClient proxyingRunnerWebSocketClient,
+            @Autowired MeterRegistry meterRegistry) {
 
-    @Autowired
-    MeterRegistry meterRegistry;
+        this.compileServiceAPIClient = compileServiceAPIClient;
+        this.proxyingRunnerWebSocketClient = proxyingRunnerWebSocketClient;
+        this.meterRegistry = meterRegistry;
+
+        timerProvider = Timer.builder("request.session")
+                .publishPercentileHistogram()
+                .withRegistry(meterRegistry);
+    }
 
     @Override
     public CompileAndRunSessionState handleConnectionEstablished(TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session) {
@@ -124,15 +135,10 @@ public class CompileAndRunWebSocketHandler
         String outcome =
                 exn != null ? "server-error" : switch (result) {
                     case Ok<Void> ignored -> "ok";
-                    case Failed<?> clientError -> "client-error";
+                    case Failed<?> ignored -> "client-error";
                 };
 
-        // TODO: use meter-provider for this https://docs.micrometer.io/micrometer/reference/concepts/meter-provider.html
-        Timer timer = Timer.builder("request.session")
-                .publishPercentileHistogram()
-                .tags("outcome", outcome)
-                .register(meterRegistry);
-
+        Timer timer = timerProvider.withTags("outcome", outcome);
         state.getSessionTimerSample().stop(timer);
     }
 
