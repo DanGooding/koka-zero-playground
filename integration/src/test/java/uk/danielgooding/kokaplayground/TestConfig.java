@@ -45,8 +45,13 @@ public class TestConfig {
         return new SimpleMeterRegistry();
     }
 
-    @Bean
-    Executor executor() {
+    @Bean(name = "stdin-writer")
+    Executor stdinWriterExecutor() {
+        return ForkJoinPool.commonPool();
+    }
+
+    @Bean(name = "stdout-reader")
+    Executor stdoutReaderExecutor() {
         return ForkJoinPool.commonPool();
     }
 }

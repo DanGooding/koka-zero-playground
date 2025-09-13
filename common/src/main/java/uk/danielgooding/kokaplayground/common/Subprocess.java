@@ -55,19 +55,24 @@ public class Subprocess {
         }
     }
 
-    /// runs a command, providing it stdin and exposing its stdout in a streaming fashion
-    /// onStart will be called once the process is spawned
-    /// elements will be pulled from toStdin and written to the process
-    /// onStdout will be called with chunks of stdout
-    /// then the future will resolve, and onStdout will not be called any further
-    /// Output will have stdout=null
+    /// Runs a command, providing it stdin and exposing its stdout in a streaming fashion.
+    /// - onStart will be called once the process is spawned
+    /// - elements will be pulled from toStdin and written to the process
+    /// - onStdout will be called with chunks of stdout
+    /// - then the future will resolve, and onStdout will not be called any further
+    /// - the returned Output will have stdout=null
+    ///
+    /// This spawns two java threads alongside the subprocess - one to read its stdout,
+    /// and one to write stdin to it. To avoid deadlocks in limited-pool executors, callers
+    /// can provide two separate executors for these jobs to be run in.
     public static CancellableFuture<Output> runStreamingStdinAndStdout(
             Path command,
             List<String> args,
             BlockingQueue<String> stdinBuffer,
             Callback<Void> onStart,
             Callback<String> onStdout,
-            Executor executor) {
+            Executor stdoutReaderExecutor,
+            Executor stdinWriterExecutor) {
 
         List<String> commandAndArgs = new ArrayList<>();
         commandAndArgs.add(command.toString());
@@ -105,7 +110,7 @@ public class Subprocess {
                         // this simply means the process didn't eat all of toStdin
                         canceler.cancel();
                     }
-                }, executor);
+                }, stdinWriterExecutor);
 
                 InputStream stdout = process.getInputStream();
 
@@ -128,7 +133,7 @@ public class Subprocess {
             } catch (CancelledException e) {
                 return OrCancelled.cancelled();
             }
-        }, executor);
+        }, stdoutReaderExecutor);
 
     }
 

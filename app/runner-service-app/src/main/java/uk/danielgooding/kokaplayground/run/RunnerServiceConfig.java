@@ -21,13 +21,23 @@ public class RunnerServiceConfig {
         return configurer;
     }
 
-    @Bean
-    public Executor executor(MeterRegistry meterRegistry, Environment environment) {
+    @Bean(name = "stdin-writer")
+    public Executor stdinWriterExecutor(MeterRegistry meterRegistry, Environment environment) {
         return MonitoredThreadPoolExecutor.create(
                 meterRegistry,
-                "completableFutureExecutor",
-                "future-",
-                "runner.completable_future_executor",
+                "stdinWriterExecutor",
+                "stdin-writer-",
+                "runner.stdin_writer_executor",
+                environment);
+    }
+
+    @Bean(name = "stdout-reader")
+    public Executor stdoutReaderExecutor(MeterRegistry meterRegistry, Environment environment) {
+        return MonitoredThreadPoolExecutor.create(
+                meterRegistry,
+                "stdoutReaderExecutor",
+                "stdout-reader-",
+                "runner.stdout_reader_executor",
                 environment);
     }
 }
