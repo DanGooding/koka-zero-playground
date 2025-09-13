@@ -7,15 +7,11 @@ import uk.danielgooding.kokaplayground.common.CancellableFuture;
 import uk.danielgooding.kokaplayground.common.OrError;
 import uk.danielgooding.kokaplayground.common.Subprocess;
 
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Service
@@ -37,9 +33,7 @@ public class ExeRunner implements IExeRunner {
     }
 
     public CompletableFuture<OrError<String>> runThenGetStdout(Path exe, List<String> args, String stdin) {
-        return Subprocess.runThenGetStdout(exe, args, stdin).thenApply(output -> {
-            return resultForOutput(output, output::stdout);
-        });
+        return Subprocess.runThenGetStdout(exe, args, stdin).thenApply(output -> resultForOutput(output, output::stdout));
     }
 
     public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
