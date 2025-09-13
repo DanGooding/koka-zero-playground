@@ -12,7 +12,9 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
-import java.util.Hashtable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class UntypedWrapperWebSocketHandler<
         InboundMessage,
@@ -21,7 +23,7 @@ public class UntypedWrapperWebSocketHandler<
         SessionStateTag,
         Outcome> {
 
-    private final Hashtable<String, TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome>>
+    private final ConcurrentHashMap<String, TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome>>
             typedSessions;
     private final ObjectMapper objectMapper;
 
@@ -40,7 +42,7 @@ public class UntypedWrapperWebSocketHandler<
             MeterRegistry meterRegistry
     ) {
         objectMapper = objectMapperBuilder.build();
-        typedSessions = new Hashtable<>();
+        typedSessions = new ConcurrentHashMap<>();
         this.typedWebSocketHandler = typedWebSocketHandler;
         this.inboundMessageClass = inboundMessageClass;
 
@@ -188,8 +190,13 @@ public class UntypedWrapperWebSocketHandler<
     }
 
     private double getSessionCount(SessionStateTag stateTag) {
+
+        // snapshot to avoid concurrent modification
+        List<TypedWebSocketSessionAndState<OutboundMessage, SessionState, Outcome>> sessionAndStatesSnapshot =
+                new ArrayList<>(typedSessions.values());
+
         int count = 0;
-        for (var sessionAndState : typedSessions.values()) {
+        for (var sessionAndState : sessionAndStatesSnapshot) {
             if (sessionAndState.getState().getStateTag() == stateTag) {
                 count++;
             }
