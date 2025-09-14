@@ -18,6 +18,8 @@ import java.util.function.Supplier;
 
 @Service
 public class ExeRunner implements IExeRunner {
+    private static final Logger logger = LoggerFactory.getLogger(ExeRunner.class);
+
     @Autowired
     @Qualifier("stdin-writer")
     Executor stdinWriterExecutor;
@@ -28,6 +30,9 @@ public class ExeRunner implements IExeRunner {
 
     private <T> OrError<T> resultForOutput(Subprocess.Output output, Supplier<T> getOkResult) {
         if (output.isExitSuccess()) {
+            if (!output.stderr().isBlank()) {
+                logger.warn("exe exited ok but with stderr: '{}'", output.stderr());
+            }
             return OrError.ok(getOkResult.get());
         } else if (output.stderr().isBlank()) {
             return OrError.error(output.exitCode().errorMessage());
