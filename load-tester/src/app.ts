@@ -19,7 +19,8 @@ function cli() {
         { name: 'url', type: (url: string) => new URL(url) },
         { name: 'rps', type: Number, defaultValue: 1 },
         { name: 'print-raw-stats', type: Boolean, defaultValue: false },
-        { name: 'service', type: String }
+        { name: 'service', type: String },
+        { name: 'request-variant', type: String },
     ]
 
     const options = commandLineArgs(optionDefinitions)
@@ -27,10 +28,10 @@ function cli() {
     let requestor: Requestor;
     switch (options.service) {
         case 'compile-and-run':
-            requestor = new CompileAndRunRequestor(options.url)
+            requestor = new CompileAndRunRequestor(options.url, options['request-variant'])
             break
         case 'compile':
-            requestor = new CompileRequestor(options.url)
+            requestor = new CompileRequestor(options.url, options['request-variant'])
             break
         default:
             throw new Error(`Unsupported service: ${options.service}`)

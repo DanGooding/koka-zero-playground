@@ -15,12 +15,47 @@ export abstract class Requestor {
     abstract request(onComplete: (summary: RequestDetails) => void): void
 }
 
+const compileAndRunRequestVariants = ['trivial', 'high-cpu'] as const
+type CompileAndRunRequestVariant = typeof compileAndRunRequestVariants[number]
+
 export class CompileAndRunRequestor extends Requestor {
-    constructor(url: URL) {
+    readonly requestVariant: CompileAndRunRequestVariant
+
+    constructor(url: URL, requestVariant: string) {
         super(url)
+
+        const variant =
+            compileAndRunRequestVariants.find(v => v === requestVariant)
+
+        if (variant) {
+            this.requestVariant = variant
+        }else {
+            throw new Error(`Unsupported request variant: ${requestVariant}`)
+        }
     }
 
-    request(onComplete: (summary: RequestDetails) => void) {
+    payloadCode(): string {
+        switch (this.requestVariant) {
+            case 'trivial':
+                return 'fun main() { println-int(3 * 4); }'
+            case 'high-cpu':
+                return `
+fun fib(n) {
+  if n == 0
+  then 0
+  else if n == 1
+  then 1
+  else fib(n - 1) + fib(n - 2);
+};
+
+fun main() {
+  fib(40).print-int();
+};
+`
+        }
+    }
+
+    request(onComplete: (summary: RequestDetails) => void): void {
         const ws = new WebSocket(this.url);
 
         const openTime = Date.now()
@@ -30,7 +65,7 @@ export class CompileAndRunRequestor extends Requestor {
             toEventSeconds.set('opened', secondsSince(openTime))
             ws.send(JSON.stringify({
                 '@type': 'compile-and-run',
-                'code': 'fun main() { println-int(3 * 4); }'
+                'code': this.payloadCode()
             }));
         }
 
@@ -66,8 +101,12 @@ export class CompileAndRunRequestor extends Requestor {
 }
 
 export class CompileRequestor extends Requestor {
-    constructor(url: URL) {
+    constructor(url: URL, requestVariant: string) {
         super(url);
+
+        if (requestVariant !== 'default') {
+            throw new Error(`Unsupported request variant: ${requestVariant}`)
+        }
     }
 
     request(onComplete: (summary: RequestDetails) => void) {
