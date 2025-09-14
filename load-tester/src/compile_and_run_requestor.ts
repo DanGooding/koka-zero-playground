@@ -78,8 +78,10 @@ fun main() {
                 onClose('client error')
             }else if (message['@type'] === 'starting-run') {
                 toEventSeconds.set('requested-run', secondsToNow)
+                onStateChange(id, 'requested-run')
             }else if (message['@type'] === 'running') {
                 toEventSeconds.set('running', secondsToNow)
+                onStateChange(id, 'running')
             }
         }
 
