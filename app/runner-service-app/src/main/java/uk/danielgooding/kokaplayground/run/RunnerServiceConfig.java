@@ -27,7 +27,7 @@ public class RunnerServiceConfig {
                 meterRegistry,
                 "stdinWriterExecutor",
                 "stdin-writer-",
-                "runner.stdin_writer_executor",
+                "runner.stdin-writer-executor",
                 environment);
     }
 
@@ -37,7 +37,7 @@ public class RunnerServiceConfig {
                 meterRegistry,
                 "stdoutReaderExecutor",
                 "stdout-reader-",
-                "runner.stdout_reader_executor",
+                "runner.stdout-reader-executor",
                 environment);
     }
 }

@@ -18,16 +18,16 @@ public class MonitoredThreadPoolExecutor {
             Environment environment) {
 
         int queueCapacity =
-                environment.getProperty(propertyPath + ".task_queue.capacity", Integer.class, -1);
+                environment.getProperty(propertyPath + ".task-queue.capacity", Integer.class, -1);
         BlockingQueue<Runnable> workQueue =
                 queueCapacity == -1 ?
                         new LinkedBlockingQueue<>() :
                         new ArrayBlockingQueue<>(queueCapacity);
 
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
-                environment.getProperty(propertyPath + ".pool.core_size", Integer.class, 1),
-                environment.getProperty(propertyPath + ".pool.max_size", Integer.class, Integer.MAX_VALUE),
-                environment.getProperty(propertyPath + ".pool.keep_alive_seconds", Integer.class, 60),
+                environment.getProperty(propertyPath + ".pool.core-size", Integer.class, 1),
+                environment.getProperty(propertyPath + ".pool.max-size", Integer.class, Integer.MAX_VALUE),
+                environment.getProperty(propertyPath + ".pool.keep-alive-seconds", Integer.class, 60),
                 TimeUnit.SECONDS,
                 workQueue);
 
