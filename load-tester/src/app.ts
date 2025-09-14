@@ -1,5 +1,7 @@
 import commandLineArgs from 'command-line-args'
-import { CompileRequestor, CompileAndRunRequestor, Requestor } from './requestor.js'
+import Requestor from './requestor.js'
+import CompileRequestor from './compile_requestor.js'
+import CompileAndRunRequestor from './compile_and_run_requestor.js'
 import LoadTester from './loadtester.js'
 
 type cli_params = {
