@@ -1,4 +1,4 @@
-import type { RequestDetails, RequestOutcome, RequestEvent } from './outcomes.js'
+import type { RequestDetails, RequestOutcome, RequestEvent, RequestId, RequestState } from './outcomes.js'
 import http from 'http'
 
 function secondsSince(then: number): number {
@@ -12,7 +12,10 @@ export abstract class Requestor {
         this.url = url
     }
 
-    abstract request(onComplete: (summary: RequestDetails) => void): void
+    abstract request(
+        id: RequestId,
+        onStateChange: (id: RequestId, newState: RequestState) => void,
+        onComplete: (id: RequestId, summary: RequestDetails) => void): RequestState
 }
 
 const compileAndRunRequestVariants = ['trivial', 'high-cpu'] as const
@@ -55,7 +58,10 @@ fun main() {
         }
     }
 
-    request(onComplete: (summary: RequestDetails) => void): void {
+    request(
+        id: RequestId,
+        onStateChange: (id: RequestId, newState: RequestState) => void,
+        onComplete: (id: RequestId, summary: RequestDetails) => void): RequestState {
         const ws = new WebSocket(this.url);
 
         const openTime = Date.now()
@@ -63,6 +69,7 @@ fun main() {
 
         ws.onopen = () => {
             toEventSeconds.set('opened', secondsSince(openTime))
+            onStateChange(id, 'opened')
             ws.send(JSON.stringify({
                 '@type': 'compile-and-run',
                 'code': this.payloadCode()
@@ -73,13 +80,15 @@ fun main() {
             if (toEventSeconds.has('closed')) return;
 
             toEventSeconds.set('closed', secondsSince(openTime))
-            onComplete({ toEventSeconds, outcome });
+            onStateChange(id, 'closed')
+            onComplete(id, { toEventSeconds, outcome });
         }
 
         ws.onmessage = (e) => {
             const secondsToNow = secondsSince(openTime)
             if (!toEventSeconds.has('first-response')) {
                 toEventSeconds.set('first-response', secondsToNow)
+                onStateChange(id, 'first-response')
             }
             const message = JSON.parse(e.data);
             if (message['@type'] === 'error') {
@@ -96,6 +105,8 @@ fun main() {
             const closeOk = e.code == 1000 || e.code == 1001;
             onClose(closeOk ? 'ok' : 'server error');
         }
+
+        return 'connecting'
     }
 
 }
@@ -109,7 +120,10 @@ export class CompileRequestor extends Requestor {
         }
     }
 
-    request(onComplete: (summary: RequestDetails) => void) {
+    request(
+        id: RequestId,
+        onStateChange: (id: RequestId, newState: RequestState) => void,
+        onComplete: (id: RequestId, summary: RequestDetails) => void): RequestState {
         const postData = JSON.stringify({code: 'fun main() { println-int(5 * 6); }'})
 
         if (this.url.search) {
@@ -153,13 +167,15 @@ export class CompileRequestor extends Requestor {
 
         req.on('socket', () => {
             toEventSeconds.set('connected', secondsSince(openTime))
+            onStateChange(id, 'connected')
         })
         req.on('error', () => {
             outcome = 'transport error';
         })
         req.on('close', () => {
             toEventSeconds.set('closed', secondsSince(openTime))
-            onComplete({
+            onStateChange(id, 'closed')
+            onComplete(id, {
                 outcome: outcome ?? 'server error',
                 toEventSeconds
             })
@@ -167,5 +183,6 @@ export class CompileRequestor extends Requestor {
 
         req.write(postData);
         req.end();
+        return 'sent-request'
     }
 }

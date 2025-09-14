@@ -1,4 +1,4 @@
-import type { RequestDetails, RequestOutcome } from './outcomes.js'
+import type { RequestDetails, RequestOutcome, RequestId, RequestState } from './outcomes.js'
 import { Requestor } from './requestor.js'
 import stats from 'stats-lite'
 
@@ -67,12 +67,15 @@ export default class LoadTester {
     // so it shouldn't be used in calculations
     buckets: BucketSummary[]
 
+    inFlightRequestStates: Map<RequestId, RequestState>
+
     constructor(requestsPerSecond: number, requestor: Requestor, printRawStats: boolean = false) {
         this.requestsPerSecond = requestsPerSecond
         this.requestor = requestor
         this.printRawStats = printRawStats
 
         this.buckets = [new BucketSummary()]
+        this.inFlightRequestStates = new Map<RequestId, RequestState>()
     }
 
     printSummary() {
@@ -98,17 +101,27 @@ export default class LoadTester {
                 .map(([event, latencies]) =>
                     [event, stats.median(latencies).toFixed(3)]))
 
+        const inFlightRequests = new Map<RequestState, number>();
+        for (const state of this.inFlightRequestStates.values()) {
+            inFlightRequests.set(state, (inFlightRequests.get(state) ?? 0) + 1)
+        }
+        
         console.log({
             outcomePercentages,
             effectiveRPS: effectiveRPS.toFixed(0),
             concurrency: concurrency.toFixed(1),
             medianOkLatencyByEvent,
+            inFlightRequests,
         })
     }
 
     run(): void {
-        const onComplete = (details: RequestDetails) => {
+        const onComplete = (id: RequestId, details: RequestDetails) => {
             this.buckets[this.buckets.length - 1].addSummary(details)
+            this.inFlightRequestStates.delete(id)
+        }
+        const onStateChange = (id: RequestId, newState: RequestState) => {
+            this.inFlightRequestStates.set(id, newState)
         }
 
         // window shift loop
@@ -122,9 +135,12 @@ export default class LoadTester {
 
         }, 1000 * this.windowSeconds / this.bucketsPerWindow)
 
+        let nextId: RequestId = 0
         // request loop
         setInterval(() => {
-            this.requestor.request(onComplete)
+            const id = nextId++
+            const initialState = this.requestor.request(id, onStateChange, onComplete);
+            this.inFlightRequestStates.set(id, initialState)
         }, 1000 / this.requestsPerSecond)
     }
 }
