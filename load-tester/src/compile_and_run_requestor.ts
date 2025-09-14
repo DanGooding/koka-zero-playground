@@ -1,8 +1,13 @@
 import type {RequestDetails, RequestEvent, RequestId, RequestOutcome, RequestState} from './outcomes.js';
 import Requestor, {secondsSince} from './requestor.js';
 
-const compileAndRunRequestVariants = ['trivial', 'high-cpu'] as const
+const compileAndRunRequestVariants = ['trivial', 'high-cpu', 'long-blocking'] as const
 type CompileAndRunRequestVariant = typeof compileAndRunRequestVariants[number]
+
+type RequestPayload = {
+    code: string,
+    stdin?: { sleepMS: number, write: string }
+}
 
 export default class CompileAndRunRequestor extends Requestor {
     readonly requestVariant: CompileAndRunRequestVariant
@@ -20,12 +25,14 @@ export default class CompileAndRunRequestor extends Requestor {
         }
     }
 
-    payloadCode(): string {
+    requestPayload(): RequestPayload {
         switch (this.requestVariant) {
-            case 'trivial':
-                return 'fun main() { println-int(3 * 4); }'
-            case 'high-cpu':
-                return `
+            case 'trivial': {
+                const code = 'fun main() { println-int(3 * 4); }'
+                return { code }
+            }
+            case 'high-cpu': {
+                const code = `
 fun fib(n) {
   if n == 0
   then 0
@@ -38,6 +45,13 @@ fun main() {
   fib(40).print-int();
 };
 `
+                return { code }
+            }
+            case 'long-blocking': {
+                const code = 'fun main() { println-int(read-int(())); }'
+                const stdin = {sleepMS: 100, write: '5\n'}
+                return {code, stdin}
+            }
         }
     }
 
@@ -50,12 +64,14 @@ fun main() {
         const openTime = Date.now()
         const toEventSeconds = new Map<(RequestEvent | 'first-response' | 'requested-run' | 'running'), number>()
 
+        const {code, stdin} = this.requestPayload()
+
         ws.onopen = () => {
             toEventSeconds.set('opened', secondsSince(openTime))
             onStateChange(id, 'opened')
             ws.send(JSON.stringify({
                 '@type': 'compile-and-run',
-                'code': this.payloadCode()
+                'code': code
             }));
         }
 
@@ -82,6 +98,17 @@ fun main() {
             }else if (message['@type'] === 'running') {
                 toEventSeconds.set('running', secondsToNow)
                 onStateChange(id, 'running')
+
+                if (stdin != null) {
+                    const {sleepMS, write} = stdin
+                    setTimeout(() => {
+                            ws.send(JSON.stringify({
+                                '@type': 'stdin',
+                                'content': write
+                            }))
+                        },
+                        sleepMS)
+                }
             }
         }
 
