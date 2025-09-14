@@ -6,17 +6,21 @@ import uk.danielgooding.kokaplayground.common.OrError;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Queue;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
 public interface IExeRunner {
-
-    CompletableFuture<OrError<String>> runThenGetStdout(Path exe, List<String> args, String stdin);
+    CompletableFuture<OrError<String>> runThenGetStdout(
+            Path exe,
+            List<String> args,
+            Map<String, String> environment,
+            String stdin);
 
     CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
             Path exe,
             List<String> args,
+            Map<String, String> environment,
             BlockingQueue<String> stdinBuffer,
             Callback<Void> onStart,
             Callback<String> onStdout);

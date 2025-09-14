@@ -10,6 +10,7 @@ import uk.danielgooding.kokaplayground.common.OrError;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
@@ -21,7 +22,7 @@ public class SandboxedExeRunner implements IExeRunner {
     @Autowired
     ExeRunner exeRunner;
 
-    private List<String> addBubblewrapArgs(Path exe, List<String> exeArgs) {
+    private List<String> addBubblewrapArgs(Path exe, List<String> exeArgs, Map<String, String> environment) {
         List<String> args = new ArrayList<>(List.of(
                 "--ro-bind", exe.toString(), exe.toString(),
                 // for dynamic linking - could maybe limit to just a specific lib
@@ -38,6 +39,10 @@ public class SandboxedExeRunner implements IExeRunner {
                 "--die-with-parent"
         ));
 
+        for (Map.Entry<String, String> binding : environment.entrySet()) {
+            args.addAll(List.of("--setenv", binding.getKey(), binding.getValue()));
+        }
+
         args.add("--");
         args.add(exe.toString());
         args.addAll(exeArgs);
@@ -45,15 +50,20 @@ public class SandboxedExeRunner implements IExeRunner {
         return args;
     }
 
-    @Override
-    public CompletableFuture<OrError<String>> runThenGetStdout(Path exe, List<String> exeArgs, String stdin) {
-        List<String> args = addBubblewrapArgs(exe, exeArgs);
-        return exeRunner.runThenGetStdout(bubblewrapPath, args, stdin);
+    public CompletableFuture<OrError<String>> runThenGetStdout(Path exe, List<String> exeArgs, Map<String, String> environement, String stdin) {
+        List<String> args = addBubblewrapArgs(exe, exeArgs, environement);
+        return exeRunner.runThenGetStdout(bubblewrapPath, args, Map.of(), stdin);
     }
 
-    @Override
-    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(Path exe, List<String> exeArgs, BlockingQueue<String> stdinBuffer, Callback<Void> onStart, Callback<String> onStdout) {
-        List<String> args = addBubblewrapArgs(exe, exeArgs);
-        return exeRunner.runStreamingStdinAndStdout(bubblewrapPath, args, stdinBuffer, onStart, onStdout);
+    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
+            Path exe,
+            List<String> exeArgs,
+            Map<String, String> environment,
+            BlockingQueue<String> stdinBuffer,
+            Callback<Void> onStart,
+            Callback<String> onStdout
+    ) {
+        List<String> args = addBubblewrapArgs(exe, exeArgs, environment);
+        return exeRunner.runStreamingStdinAndStdout(bubblewrapPath, args, Map.of(), stdinBuffer, onStart, onStdout);
     }
 }

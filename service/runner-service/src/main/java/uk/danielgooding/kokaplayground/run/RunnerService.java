@@ -9,6 +9,7 @@ import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
@@ -47,7 +48,7 @@ public class RunnerService {
             }
 
             CompletableFuture<OrError<String>> stdout =
-                    exeRunner.runThenGetStdout(exe, List.of(), "");
+                    exeRunner.runThenGetStdout(exe, List.of(), Map.of(), "");
 
             exeStore.deleteExe(handle);
 
@@ -72,7 +73,7 @@ public class RunnerService {
             }
 
             return exeRunner
-                    .runStreamingStdinAndStdout(exe, List.of(), stdinBuffer, onStart, onStdout)
+                    .runStreamingStdinAndStdout(exe, List.of(), Map.of(), stdinBuffer, onStart, onStdout)
                     .whenComplete((ignored, exn) -> {
                         try {
                             exeStore.deleteExe(handle);
