@@ -26,7 +26,7 @@ resource "digitalocean_droplet" "main" {
   image    = data.digitalocean_image.nixos_vm_image.id
   name     = "main"
   region   = var.region
-  size     = "s-1vcpu-1gb"
+  size     = "s-2vcpu-2gb"
   ssh_keys = [for key in digitalocean_ssh_key.keys : key.id]
 }
 
@@ -35,5 +35,5 @@ resource "digitalocean_project" "koka_zero_playground" {
   description = "Online environment for running Koka Zero code"
   purpose     = "Web Application"
   environment = "Production"
-  resources   = [digitalocean_droplet.main.urn]
+  resources = [digitalocean_droplet.main.urn]
 }
