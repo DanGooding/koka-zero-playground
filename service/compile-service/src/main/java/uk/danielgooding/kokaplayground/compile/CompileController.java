@@ -22,6 +22,6 @@ public class CompileController {
 
     @PostMapping(value = "/compile")
     public CompletableFuture<OrError<ExeHandle>> compile(@RequestBody KokaSourceCode sourceCode) {
-        return compileService.compile(sourceCode, true);
+        return compileService.compile(sourceCode);
     }
 }

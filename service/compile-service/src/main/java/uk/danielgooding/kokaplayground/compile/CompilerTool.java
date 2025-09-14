@@ -21,6 +21,9 @@ public class CompilerTool {
     @Value("${compiler.koka-zero-config-path}")
     private Path kokaZeroConfigPath;
 
+    @Value("${compiler.args.optimise}")
+    private boolean shouldOptimise;
+
     @Autowired
     private Workdir.RequestScoped workdir;
 
@@ -41,7 +44,7 @@ public class CompilerTool {
     }
 
     @Timed(value = "compile.tool.compile", percentiles = {0.9, 0.99})
-    public CompletableFuture<OrError<Path>> compile(KokaSourceCode sourceCode, boolean optimise) {
+    public CompletableFuture<OrError<Path>> compile(KokaSourceCode sourceCode) {
 
 
         Path outputExe;
@@ -59,7 +62,7 @@ public class CompilerTool {
                 "-save-temps-with", "output"
         ));
 
-        if (optimise) {
+        if (shouldOptimise) {
             args.add("-optimise");
         }
 
