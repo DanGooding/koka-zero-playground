@@ -34,7 +34,7 @@ public class RealWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) throws Exception {
         IWebSocketSession decoratedSession = decoratedSessions.get(session.getId());
-        handler.handleTextMessage(decoratedSession, message);
+        if (decoratedSession != null) handler.handleTextMessage(decoratedSession, message);
     }
 
     @Override
