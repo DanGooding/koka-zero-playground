@@ -1,5 +1,5 @@
 import type { RequestId } from './outcomes.js'
-import { Requestor } from './requestor.js'
+import Requestor from './requestor.js'
 import Aggregator from './aggregator.js'
 
 export default class LoadTester {
