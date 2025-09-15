@@ -1,5 +1,6 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.springframework.lang.Nullable;
 import uk.danielgooding.kokaplayground.common.websocket.ISessionState;
@@ -7,6 +8,7 @@ import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +26,7 @@ public class CompileAndRunSessionState
     private StateTag state = StateTag.AWAITING_REQUEST;
 
     private final Timer.Sample sessionTimerSample;
+    private final long startTime;
 
     public enum StateTag {
         AWAITING_REQUEST,
@@ -34,9 +37,10 @@ public class CompileAndRunSessionState
         COMPLETE
     }
 
-    public CompileAndRunSessionState(Timer.Sample sessionTimerSample) {
+    public CompileAndRunSessionState(MeterRegistry meterRegistry) {
         this.bufferedInbound = new ArrayList<>();
-        this.sessionTimerSample = sessionTimerSample;
+        this.sessionTimerSample = Timer.start(meterRegistry);
+        this.startTime = System.nanoTime();
     }
 
     public void sendUpstream(RunStream.Inbound.Message message) throws IOException {
@@ -85,6 +89,10 @@ public class CompileAndRunSessionState
 
     public Timer.Sample getSessionTimerSample() {
         return sessionTimerSample;
+    }
+
+    public Duration getDuration() {
+        return Duration.ofNanos(System.nanoTime() - startTime);
     }
 
     public void setState(StateTag state) {

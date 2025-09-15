@@ -61,9 +61,10 @@ class TestWebSocketConnection<
         Outbound,
         ClientState extends ISessionState<ClientStateTag>, ClientStateTag,
         ServerState extends ISessionState<ServerStateTag>, ServerStateTag,
-        ClientOutcome> {
+        ClientOutcome,
+        ServerOutcome> {
 
-    private final UntypedWrapperWebSocketHandler<Inbound, Outbound, ServerState, ServerStateTag, Void>
+    private final UntypedWrapperWebSocketHandler<Inbound, Outbound, ServerState, ServerStateTag, ServerOutcome>
             serverHandler;
     private final UntypedWrapperWebSocketHandler<Outbound, Inbound, ClientState, ClientStateTag, ClientOutcome>
             clientHandler;
@@ -71,7 +72,7 @@ class TestWebSocketConnection<
     private final SessionId sessionId;
 
     TestWebSocketConnection(
-            TypedWebSocketHandler<Inbound, Outbound, ServerState, ServerStateTag, Void> serverHandler,
+            TypedWebSocketHandler<Inbound, Outbound, ServerState, ServerStateTag, ServerOutcome> serverHandler,
             TypedWebSocketHandler<Outbound, Inbound, ClientState, ClientStateTag, ClientOutcome> clientHandler,
             Class<Inbound> inboundClass, Class<Outbound> outboundClass,
             SessionId sessionId) {
@@ -86,7 +87,7 @@ class TestWebSocketConnection<
     }
 
     public void establishConnection() throws IOException {
-        TestSession<Inbound, Outbound, ServerState, ServerStateTag, Void> serverSession =
+        TestSession<Inbound, Outbound, ServerState, ServerStateTag, ServerOutcome> serverSession =
                 new TestSession<>(sessionId);
 
         TestSession<Outbound, Inbound, ClientState, ClientStateTag, ClientOutcome> clientSession =
@@ -122,7 +123,7 @@ class TestWebSocketConnection<
         return clientHandler.getSessionAndState(sessionId);
     }
 
-    public TypedWebSocketSessionAndState<Outbound, ServerState, Void> getServerSessionAndState() {
+    public TypedWebSocketSessionAndState<Outbound, ServerState, ServerOutcome> getServerSessionAndState() {
         return serverHandler.getSessionAndState(sessionId);
     }
 

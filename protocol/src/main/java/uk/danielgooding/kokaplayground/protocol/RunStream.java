@@ -1,10 +1,9 @@
 package uk.danielgooding.kokaplayground.protocol;
 
 import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
+
+import java.time.Duration;
 
 public class RunStream {
 
@@ -155,13 +154,21 @@ public class RunStream {
 
         @JsonTypeName("done")
         public static final class Done extends Message {
+            private final Duration userWorkDuration;
+
             @JsonCreator
-            public Done() {
+            public Done(@JsonProperty("userWorkDuration") Duration userWorkDuration) {
+                this.userWorkDuration = userWorkDuration;
+            }
+
+            @JsonGetter
+            public Duration getUserWorkDuration() {
+                return userWorkDuration;
             }
 
             @Override
             public String toString() {
-                return "Done";
+                return String.format("Done{userWorkDuration=%,d}", userWorkDuration.toMillis());
             }
         }
 

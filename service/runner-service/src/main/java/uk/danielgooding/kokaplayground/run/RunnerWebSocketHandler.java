@@ -17,6 +17,7 @@ import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.Duration;
 import java.util.List;
 
 @Controller
@@ -91,7 +92,10 @@ public class RunnerWebSocketHandler
                             try {
                                 session.sendMessage(
                                         switch (error) {
-                                            case Ok<RunStats> ok -> new RunStream.Outbound.Done();
+                                            case Ok<RunStats> runStatsOk -> {
+                                                RunStats runStats = runStatsOk.getValue();
+                                                yield new RunStream.Outbound.Done(runStats.userWorkDuration());
+                                            }
                                             case Failed<?> failed -> {
                                                 String message = failed.getMessage();
                                                 if (message.length() > maxErrorBytes) {

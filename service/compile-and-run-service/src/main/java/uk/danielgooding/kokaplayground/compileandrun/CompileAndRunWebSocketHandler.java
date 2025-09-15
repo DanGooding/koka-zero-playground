@@ -18,6 +18,7 @@ import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -28,7 +29,7 @@ public class CompileAndRunWebSocketHandler
         CompileAndRunStream.Outbound.Message,
         CompileAndRunSessionState,
         CompileAndRunSessionState.StateTag,
-        Void> {
+        OrError<UserWorkStats>> {
 
     private static final Logger logger = LoggerFactory.getLogger(CompileAndRunWebSocketHandler.class);
 
@@ -36,6 +37,7 @@ public class CompileAndRunWebSocketHandler
     private final ProxyingRunnerWebSocketClient proxyingRunnerWebSocketClient;
     private final MeterRegistry meterRegistry;
     private final Meter.MeterProvider<Timer> timerProvider;
+    private final Timer nonUserWorkTimer;
 
     public CompileAndRunWebSocketHandler(
             @Autowired CompileServiceAPIClient compileServiceAPIClient,
@@ -49,17 +51,22 @@ public class CompileAndRunWebSocketHandler
         timerProvider = Timer.builder("request.session")
                 .publishPercentileHistogram()
                 .withRegistry(meterRegistry);
+
+        nonUserWorkTimer = Timer.builder("request.session.non_user_work")
+                .publishPercentileHistogram()
+                .register(meterRegistry);
     }
 
     @Override
-    public CompileAndRunSessionState handleConnectionEstablished(TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session) {
-        Timer.Sample sessionSample = Timer.start(meterRegistry);
-        return new CompileAndRunSessionState(sessionSample);
+    public CompileAndRunSessionState handleConnectionEstablished(
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, OrError<UserWorkStats>> session) {
+
+        return new CompileAndRunSessionState(meterRegistry);
     }
 
     void compileAndRun(
             CompileAndRunStream.Inbound.CompileAndRun compileAndRun,
-            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, OrError<UserWorkStats>> session,
             CompileAndRunSessionState state) throws IOException {
 
         if (state.getStateTag() != CompileAndRunSessionState.StateTag.AWAITING_REQUEST) {
@@ -136,28 +143,42 @@ public class CompileAndRunWebSocketHandler
 
         // Overall outcome of this session - when the run completes or fails.
         session.getOutcomeFuture().whenComplete((result, exn) -> {
-            stopSessionTimer(state, exn);
+            stopSessionTimer(state, result, exn);
             state.setState(CompileAndRunSessionState.StateTag.COMPLETE);
         });
     }
 
-    void stopSessionTimer(CompileAndRunSessionState state, Throwable exn) {
+    void stopSessionTimer(
+            CompileAndRunSessionState state,
+            OrError<UserWorkStats> result,
+            Throwable exn
+    ) {
         String outcome = exn != null ? "server-error" : "ok";
 
         Timer timer = timerProvider.withTags("outcome", outcome);
         state.getSessionTimerSample().stop(timer);
+
+        if (result instanceof Ok<UserWorkStats> userWorkStatsOk) {
+            UserWorkStats userWorkStats = userWorkStatsOk.getValue();
+            if (userWorkStats != null) {
+                Duration duration = state.getDuration();
+                Duration nonUserWorkDuration = duration.minus(userWorkStats.getUserWorkDuration());
+
+                nonUserWorkTimer.record(nonUserWorkDuration);
+            }
+        }
     }
 
     void handleStdin(
             CompileAndRunStream.Inbound.Stdin stdin,
-            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, OrError<UserWorkStats>> session,
             CompileAndRunSessionState state) throws IOException {
         state.sendUpstream(new RunStream.Inbound.Stdin(stdin.getContent()));
     }
 
     @Override
     public void handleMessage(
-            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, OrError<UserWorkStats>> session,
             CompileAndRunSessionState state,
             @NonNull CompileAndRunStream.Inbound.Message inbound) throws IOException {
         switch (inbound) {
@@ -168,17 +189,17 @@ public class CompileAndRunWebSocketHandler
     }
 
     @Override
-    public Void afterConnectionClosedOk(
-            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
+    public OrError<UserWorkStats> afterConnectionClosedOk(
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, OrError<UserWorkStats>> session,
             CompileAndRunSessionState state) throws IOException {
 
         state.closeUpstream();
-        return null;
+        return OrError.ok(null);
     }
 
     @Override
     public void afterConnectionClosedErroneously(
-            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, OrError<UserWorkStats>> session,
             CompileAndRunSessionState state,
             CloseStatus status) throws IOException {
 
@@ -187,7 +208,7 @@ public class CompileAndRunWebSocketHandler
 
     @Override
     public void handleTransportError(
-            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, Void> session,
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, OrError<UserWorkStats>> session,
             CompileAndRunSessionState compileAndRunSessionState,
             Throwable exception) {
     }
