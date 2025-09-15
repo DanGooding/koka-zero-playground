@@ -1,5 +1,6 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
+import com.netflix.concurrency.limits.Limiter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -143,12 +144,13 @@ public class CompileAndRunWebSocketHandler
 
         // Overall outcome of this session - when the run completes or fails.
         session.getOutcomeFuture().whenComplete((result, exn) -> {
-            stopSessionTimer(state, result, exn);
+            stopSessionTimer(session, state, result, exn);
             state.setState(CompileAndRunSessionState.StateTag.COMPLETE);
         });
     }
 
     void stopSessionTimer(
+            TypedWebSocketSession<CompileAndRunStream.Outbound.Message, OrError<UserWorkStats>> session,
             CompileAndRunSessionState state,
             OrError<UserWorkStats> result,
             Throwable exn
@@ -158,13 +160,28 @@ public class CompileAndRunWebSocketHandler
         Timer timer = timerProvider.withTags("outcome", outcome);
         state.getSessionTimerSample().stop(timer);
 
+        Duration nonUserWorkDuration = null;
         if (result instanceof Ok<UserWorkStats> userWorkStatsOk) {
             UserWorkStats userWorkStats = userWorkStatsOk.getValue();
             if (userWorkStats != null) {
                 Duration duration = state.getDuration();
-                Duration nonUserWorkDuration = duration.minus(userWorkStats.getUserWorkDuration());
+                nonUserWorkDuration = duration.minus(userWorkStats.getUserWorkDuration());
 
                 nonUserWorkTimer.record(nonUserWorkDuration);
+            }
+        }
+
+        Object maybeListener = session.getAttributes().get(ConcurrencyLimitingInterceptor.listenerAttributeName);
+        if (maybeListener instanceof Limiter.Listener listener) {
+
+            if (exn != null) {
+                listener.onIgnore();
+            } else {
+                switch (result) {
+                    // TODO: need to subtract the user duration :(
+                    case Ok<?> ok -> listener.onSuccess();
+                    case Failed<?> failed -> listener.onIgnore();
+                }
             }
         }
     }

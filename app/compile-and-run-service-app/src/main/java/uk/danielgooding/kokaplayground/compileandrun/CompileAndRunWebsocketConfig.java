@@ -52,6 +52,7 @@ public class CompileAndRunWebsocketConfig implements WebSocketConfigurer {
 
         registry.addHandler(handler, "/ws/compile-and-run")
                 .setAllowedOrigins(allowedOrigin)
-                .addInterceptors(new HttpSessionHandshakeInterceptor());
+                .addInterceptors(new HttpSessionHandshakeInterceptor())
+                .addInterceptors(new ConcurrencyLimitingInterceptor());
     }
 }

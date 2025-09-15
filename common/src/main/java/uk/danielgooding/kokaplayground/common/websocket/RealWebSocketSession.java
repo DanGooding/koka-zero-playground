@@ -6,6 +6,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class RealWebSocketSession implements IWebSocketSession {
     private final WebSocketSession webSocketSession;
@@ -19,6 +20,11 @@ public class RealWebSocketSession implements IWebSocketSession {
     @Override
     public String getId() {
         return webSocketSession.getId();
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return webSocketSession.getAttributes();
     }
 
     @Override

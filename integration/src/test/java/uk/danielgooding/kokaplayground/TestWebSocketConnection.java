@@ -10,6 +10,7 @@ import uk.danielgooding.kokaplayground.common.Callback;
 import uk.danielgooding.kokaplayground.common.websocket.*;
 
 import java.io.IOException;
+import java.util.Map;
 
 class TestSession<Inbound, Outbound, State extends ISessionState<StateTag>, StateTag, Outcome>
         implements IWebSocketSession {
@@ -35,6 +36,11 @@ class TestSession<Inbound, Outbound, State extends ISessionState<StateTag>, Stat
     @Override
     public String getId() {
         return this.sessionId.toString();
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return Map.of();
     }
 
     @Override
