@@ -111,6 +111,7 @@ public class RunnerWebSocketHandler
                             sessionState.setState(RunnerSessionState.StateTag.COMPLETE);
                             try {
                                 if (exn != null) {
+                                    logger.error("failure in runner service", exn);
                                     session.closeExn("failure in Runner service", exn);
                                 } else {
                                     session.closeOk(null);

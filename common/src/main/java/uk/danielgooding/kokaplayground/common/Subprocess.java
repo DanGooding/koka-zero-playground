@@ -134,6 +134,9 @@ public class Subprocess {
                 return OrCancelled.ok(new Output(new ExitCode(exitCode), null, stderr));
 
             } catch (InterruptedException | IOException e) {
+                // when we cancel and kill the subprocess, we'll get IOException when trying to write to a closed stream
+                if (canceler.isCancelled()) return OrCancelled.cancelled();
+                
                 canceler.cancel();
                 throw new RuntimeException(e);
             } catch (CancelledException e) {

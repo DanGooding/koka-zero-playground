@@ -26,7 +26,7 @@ public class Canceler {
         }
         this.onCancel = cancel;
     }
-    
+
     public synchronized <T> OrCancelled<T> wrapIfCancelled(OrCancelled<T> result) {
         if (result instanceof OrCancelled.Ok<T> && isCancelled) {
             // must have already run onCancel if it was set
@@ -34,5 +34,9 @@ public class Canceler {
             return OrCancelled.cancelled();
         }
         return result;
+    }
+
+    public boolean isCancelled() {
+        return isCancelled;
     }
 }
