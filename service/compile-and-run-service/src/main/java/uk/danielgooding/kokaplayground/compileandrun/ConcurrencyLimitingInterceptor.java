@@ -1,6 +1,7 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
 import com.netflix.concurrency.limits.Limiter;
+import com.netflix.concurrency.limits.limit.VegasLimit;
 import com.netflix.concurrency.limits.limiter.SimpleLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +22,12 @@ public class ConcurrencyLimitingInterceptor implements HandshakeInterceptor {
     private final Limiter<Void> limiter;
 
     public ConcurrencyLimitingInterceptor() {
-        // TODO: set initial permits?
-        limiter = SimpleLimiter.newBuilder().build();
-        logger.info("created limiter {}", limiter);
+        limiter = SimpleLimiter.newBuilder().limit(
+                VegasLimit.newBuilder()
+                        .initialLimit(10)
+                        .maxConcurrency(40)
+                        .build()
+        ).build();
     }
 
     @Override
