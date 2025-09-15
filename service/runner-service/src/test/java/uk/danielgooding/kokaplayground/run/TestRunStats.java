@@ -17,6 +17,6 @@ public class TestRunStats {
         RunStats runStats = RunStats.parseString(runStatsJson, mapper);
 
         assertThat(runStats.toString())
-                .isEqualTo("RunStats{userTimeNS=583136000, sysTimeNS=1044000, stdinWaitTimeNS=6447684545}");
+                .isEqualTo("RunStats{userTimeNS=583,136,000, sysTimeNS=1,044,000, stdinWaitTimeNS=6,447,684,545}");
     }
 }

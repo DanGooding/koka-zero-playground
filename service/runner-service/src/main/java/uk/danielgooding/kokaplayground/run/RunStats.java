@@ -45,10 +45,8 @@ public class RunStats {
 
     @Override
     public String toString() {
-        return "RunStats{" +
-                "userTimeNS=" + userTimeNS +
-                ", sysTimeNS=" + sysTimeNS +
-                ", stdinWaitTimeNS=" + stdinWaitTimeNS +
-                '}';
+        return String.format(
+                "RunStats{userTimeNS=%,d, sysTimeNS=%,d, stdinWaitTimeNS=%,d}",
+                userTimeNS, sysTimeNS, stdinWaitTimeNS);
     }
 }
