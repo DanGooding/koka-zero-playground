@@ -24,6 +24,9 @@ public class CompilerTool {
     @Value("${compiler.args.optimise}")
     private boolean shouldOptimise;
 
+    @Value("${compiler.args.enable-run-stats}")
+    private boolean enableRunStats;
+
     @Autowired
     private Workdir.RequestScoped workdir;
 
@@ -64,6 +67,9 @@ public class CompilerTool {
 
         if (shouldOptimise) {
             args.add("-optimise");
+        }
+        if (enableRunStats) {
+            args.add("-enable-run-stats");
         }
 
         return runCompiler(args, sourceCode.getCode())

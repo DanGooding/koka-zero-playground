@@ -22,7 +22,13 @@ public class SandboxedExeRunner implements IExeRunner {
     @Autowired
     ExeRunner exeRunner;
 
-    private List<String> addBubblewrapArgs(Path exe, List<String> exeArgs, Map<String, String> environment) {
+    private List<String> addBubblewrapArgs(
+            Path exe,
+            List<String> exeArgs,
+            Map<String, String> environment,
+            List<Path> bindAdditionalReadOnly,
+            List<Path> bindAdditionalReadWrite
+    ) {
         List<String> args = new ArrayList<>(List.of(
                 "--ro-bind", exe.toString(), exe.toString(),
                 // for dynamic linking - could maybe limit to just a specific lib
@@ -43,6 +49,13 @@ public class SandboxedExeRunner implements IExeRunner {
             args.addAll(List.of("--setenv", binding.getKey(), binding.getValue()));
         }
 
+        for (Path path : bindAdditionalReadOnly) {
+            args.addAll(List.of("--ro-bind", path.toString(), path.toString()));
+        }
+        for (Path path : bindAdditionalReadWrite) {
+            args.addAll(List.of("--bind", path.toString(), path.toString()));
+        }
+
         args.add("--");
         args.add(exe.toString());
         args.addAll(exeArgs);
@@ -50,20 +63,58 @@ public class SandboxedExeRunner implements IExeRunner {
         return args;
     }
 
-    public CompletableFuture<OrError<String>> runThenGetStdout(Path exe, List<String> exeArgs, Map<String, String> environement, String stdin) {
-        List<String> args = addBubblewrapArgs(exe, exeArgs, environement);
+    @Override
+    public CompletableFuture<OrError<String>> runThenGetStdout(
+            Path exe,
+            List<String> exeArgs,
+            Map<String, String> environment,
+            String stdin) {
+        return runThenGetStdout(exe, exeArgs, environment, stdin, List.of(), List.of());
+    }
+
+    public CompletableFuture<OrError<String>> runThenGetStdout(
+            Path exe,
+            List<String> exeArgs,
+            Map<String, String> environment,
+            String stdin,
+            List<Path> bindAdditionalReadOnly,
+            List<Path> bindAdditionalReadWrite) {
+        List<String> args = addBubblewrapArgs(
+                exe, exeArgs, environment, bindAdditionalReadOnly, bindAdditionalReadWrite);
         return exeRunner.runThenGetStdout(bubblewrapPath, args, Map.of(), stdin);
     }
 
+    @Override
     public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
             Path exe,
             List<String> exeArgs,
             Map<String, String> environment,
             BlockingQueue<String> stdinBuffer,
             Callback<Void> onStart,
-            Callback<String> onStdout
+            Callback<String> onStdout) {
+        return runStreamingStdinAndStdout(
+                exe,
+                exeArgs,
+                environment,
+                stdinBuffer,
+                onStart,
+                onStdout,
+                List.of(),
+                List.of());
+    }
+    
+    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
+            Path exe,
+            List<String> exeArgs,
+            Map<String, String> environment,
+            BlockingQueue<String> stdinBuffer,
+            Callback<Void> onStart,
+            Callback<String> onStdout,
+            List<Path> bindAdditionalReadOnly,
+            List<Path> bindAdditionalReadWrite
     ) {
-        List<String> args = addBubblewrapArgs(exe, exeArgs, environment);
+        List<String> args = addBubblewrapArgs(
+                exe, exeArgs, environment, bindAdditionalReadOnly, bindAdditionalReadWrite);
         return exeRunner.runStreamingStdinAndStdout(bubblewrapPath, args, Map.of(), stdinBuffer, onStart, onStdout);
     }
 }
