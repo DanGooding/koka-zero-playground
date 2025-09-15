@@ -31,7 +31,7 @@ public class RunnerService {
         this.workdir = workdir;
     }
 
-    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
+    public CancellableFuture<OrError<RunStats>> runStreamingStdinAndStdout(
             ExeHandle handle, BlockingQueue<String> stdinBuffer, Callback<Void> onStart, Callback<String> onStdout) {
         try {
             Path exe;
@@ -47,17 +47,11 @@ public class RunnerService {
             return exeRunner
                     .runStreamingStdinAndStdout(exe, List.of(), Map.of(), stdinBuffer, onStart, onStdout)
                     .whenComplete((maybeRunStats, exn) -> {
-                        // TODO: stop logging - report a metric instead
-                        logger.error("got runStats {}", maybeRunStats);
                         try {
                             exeStore.deleteExe(handle);
                         } catch (IOException e) {
                             // best effort deletion - we can have some pruning
                         }
-                    })
-                    .thenApply((maybeRunStats) -> switch (maybeRunStats) {
-                        case Failed<?> failed -> failed.castValue();
-                        case Ok<RunStats> ok -> OrError.ok(null);
                     });
 
         } catch (IOException e) {
