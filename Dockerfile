@@ -7,6 +7,7 @@ ARG RUN_COMPILER_IMAGE=ghcr.io/dangooding/koka-zero:$RUN_COMPILER_IMAGE_SHA
 ARG NODE_BUILD_IMAGE=node:22-alpine3.22
 ARG NGINX_IMAGE=jonasal/nginx-certbot:6.0.1-nginx1.29.1-alpine
 ARG PROMETHEUS_IMAGE=prom/prometheus:v3.4.2
+ARG REDIS_IMAGE=redis:8.2.1-alpine3.22
 
 FROM $JAVA_BUILD_IMAGE AS package
 WORKDIR /build
@@ -88,3 +89,9 @@ COPY --from=frontend-build /build/dist /data/www
 FROM $PROMETHEUS_IMAGE AS koka-playground-prometheus
 
 COPY metrics/prometheus.yml /etc/prometheus/
+
+FROM $REDIS_IMAGE as koka-playground-exe-cache
+
+COPY exe-cache/redis.conf /etc/redis/
+
+CMD [ "redis-server", "/etc/redis/redis.conf" ]
