@@ -2,7 +2,8 @@
 
 ARG JAVA_BUILD_IMAGE=maven:3.9.11-eclipse-temurin-21-alpine
 ARG RUN_IMAGE=alpine:3.22
-ARG RUN_COMPILER_IMAGE=ghcr.io/dangooding/koka-zero:main
+ARG RUN_COMPILER_IMAGE_SHA=sha256-5567093600f25501d827f0da68841626f1276fb384f754903259be5880b3f4ee
+ARG RUN_COMPILER_IMAGE=ghcr.io/dangooding/koka-zero:$RUN_COMPILER_IMAGE_SHA
 ARG NODE_BUILD_IMAGE=node:22-alpine3.22
 ARG NGINX_IMAGE=jonasal/nginx-certbot:6.0.1-nginx1.29.1-alpine
 ARG PROMETHEUS_IMAGE=prom/prometheus:v3.4.2
@@ -30,6 +31,10 @@ FROM $RUN_COMPILER_IMAGE AS run-koka-compiler
 
 FROM run-koka-compiler AS koka-playground-compile-service
 WORKDIR /app
+
+# Use the value from the same ARG at the top of the file to set the `compiler.version-hash` property
+ARG RUN_COMPILER_IMAGE_SHA
+ENV COMPILER_VERSION_HASH=${RUN_COMPILER_IMAGE_SHA}
 
 RUN apk add openjdk21-jre-headless
 RUN apk add jq
