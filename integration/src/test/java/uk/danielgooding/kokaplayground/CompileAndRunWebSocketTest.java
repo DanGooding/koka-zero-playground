@@ -9,6 +9,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -19,6 +20,7 @@ import uk.danielgooding.kokaplayground.common.websocket.SessionId;
 import uk.danielgooding.kokaplayground.common.websocket.StatelessTypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
+import uk.danielgooding.kokaplayground.compile.ExeCacheKey;
 import uk.danielgooding.kokaplayground.compileandrun.*;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
@@ -41,6 +43,7 @@ import static org.junit.Assert.assertThrows;
         "local-exe-store.directory=UNUSED",
         "compiler.exe-path=UNUSED",
         "compiler.koka-zero-config-path=UNUSED",
+        "compiler.version-hash=UNUSED",
         "runner.bubblewrap-path=UNUSED",
         "runner-service-hostname=UNUSED",
         "runner.max-buffered-stdin-items=10",
@@ -59,6 +62,10 @@ public class CompileAndRunWebSocketTest {
 
     @MockitoBean
     ExeStore exeStoreMock;
+
+    // unused - mocked to avoid creating a real instance:
+    @MockitoBean("exeCacheRedisTemplate")
+    RedisTemplate<ExeCacheKey, byte[]> exeCacheKeyRedisTemplate;
 
     // test subjects:
     // session -> TestCompileAndRunClientWebSocketHandler
