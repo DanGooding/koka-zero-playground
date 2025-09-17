@@ -35,7 +35,7 @@ public class CompileServiceConfig {
         return new JedisConnectionFactory(config);
     }
 
-    @Bean
+    @Bean("exeCacheRedisTemplate")
     RedisTemplate<ExeCacheKey, byte[]> exeCacheRedisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<ExeCacheKey, byte[]> template = new RedisTemplate<>();
 
