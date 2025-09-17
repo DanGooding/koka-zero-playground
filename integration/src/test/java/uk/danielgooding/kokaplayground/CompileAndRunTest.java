@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -17,6 +18,7 @@ import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import uk.danielgooding.kokaplayground.compile.CompileController;
 import uk.danielgooding.kokaplayground.compile.CompileService;
 import uk.danielgooding.kokaplayground.compile.CompilerTool;
+import uk.danielgooding.kokaplayground.compile.ExeCacheKey;
 import uk.danielgooding.kokaplayground.compileandrun.CompileServiceAPIClient;
 import uk.danielgooding.kokaplayground.run.RunnerService;
 import uk.danielgooding.kokaplayground.run.SandboxedExeRunner;
@@ -32,7 +34,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestPropertySource(properties = {
         "runner-service-hostname=UNUSED",
         "runner.max-buffered-stdin-items=10",
-        "runner.max-stderr-bytes=100"})
+        "runner.max-stderr-bytes=100",
+        "compiler.version-hash=ABCD"})
 public class CompileAndRunTest {
     // mocked services:
     @MockitoBean
@@ -58,6 +61,10 @@ public class CompileAndRunTest {
     // unused - mocked to avoid creating a real instance:
     @MockitoBean
     CompileServiceAPIClient compileServiceAPIClientMock;
+
+    // unused - mocked to avoid creating a real instance:
+    @MockitoBean("exeCacheRedisTemplate")
+    RedisTemplate<ExeCacheKey, byte[]> exeCacheKeyRedisTemplate;
 
     // test subjects:
     @Autowired
