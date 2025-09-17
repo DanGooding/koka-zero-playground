@@ -8,9 +8,9 @@ x-health-check: &healthcheck
   interval: 30s
 
 x-logging-env-vars: &logging-env-vars
-  DEBUG: "false"
-  ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "WARN"
-  LOGGING_LEVEL_ROOT: "warn"
+  DEBUG: "true"
+  ORG_SPRINGFRAMEWORK_WEB_FILTER_COMMONSREQUESTLOGGINGFILTER: "DEBUG"
+  LOGGING_LEVEL_ROOT: "debug"
   MANAGEMENT_OBSERVATIONS_ANNOTATIONS_ENABLED: "true"
   SERVER_TOMCAT_MBEANREGISTRY_ENABLED: "true"
   MANAGEMENT_METRICS_DISTRIBUTION_PERCENTILES_HTTP_SERVER_REQUESTS: "0.9, 0.99"
@@ -31,12 +31,10 @@ services:
     healthcheck: *healthcheck
 
   exe-cache:
-    image:
-      redis:8.2.1-alpine3.22
     networks:
       common:
-    # TODO: add volume at /data
-    # TODO: add config file
+    # intentionally don't mount a persistent /data volume
+    # since we only run redis as a cache.
     healthcheck:
       test: [ "CMD", "redis-cli", "PING" ]
       timeout: 5s

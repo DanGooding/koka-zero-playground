@@ -15,6 +15,12 @@ services:
     environment:
       <<: *common-env-vars
 
+  exe-cache:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: koka-playground-exe-cache
+
   runner-service:
     build:
       context: .
