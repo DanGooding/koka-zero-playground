@@ -23,10 +23,24 @@ services:
       <<: *logging-env-vars
       # binds property local-exe-store.directory
       LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
+      COMPILE_EXE_CACHE_HOSTNAME: "exe-cache"
+      COMPILE_EXE_CACHE_PORT: "6379"
     networks:
       common:
       monitoring:
     healthcheck: *healthcheck
+
+  exe-cache:
+    image:
+      redis:8.2.1-alpine3.22
+    networks:
+      common:
+    # TODO: add volume at /data
+    # TODO: add config file
+    healthcheck:
+      test: [ "CMD", "redis-cli", "PING" ]
+      timeout: 5s
+      interval: 30s
 
   runner-service:
     # bwrap creates zombies, so need an init process to reap them

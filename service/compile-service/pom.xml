@@ -14,4 +14,12 @@
 
     <packaging>jar</packaging>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-redis</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+    </dependencies>
+
 </project>

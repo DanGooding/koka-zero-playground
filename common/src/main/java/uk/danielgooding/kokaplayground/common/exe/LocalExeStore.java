@@ -8,8 +8,9 @@ import uk.danielgooding.kokaplayground.common.OrError;
 import uk.danielgooding.kokaplayground.common.Workdir;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.EnumSet;
 
 @Service
 @Lazy
@@ -28,9 +29,18 @@ public class LocalExeStore implements ExeStore {
     }
 
     @Override
-    public ExeHandle putExe(Path src) throws IOException {
+    public ExeHandle putExe(byte[] exe) throws IOException {
         ExeHandle handle = freshHandle();
-        Files.copy(src, Path.of(handle.getPath()));
+        Path path = Path.of(handle.getPath());
+        Files.write(path, exe,
+                StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+
+        Files.setPosixFilePermissions(path,
+                EnumSet.of(
+                        PosixFilePermission.OWNER_READ,
+                        PosixFilePermission.OWNER_WRITE,
+                        PosixFilePermission.OWNER_EXECUTE));
+
         return handle;
     }
 

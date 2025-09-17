@@ -8,7 +8,7 @@ import java.nio.file.Path;
 
 public interface ExeStore {
 
-    ExeHandle putExe(Path src) throws IOException;
+    ExeHandle putExe(byte[] exe) throws IOException;
 
     OrError<Path> getExe(ExeHandle handle, Workdir workdir) throws IOException;
 
