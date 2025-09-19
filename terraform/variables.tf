@@ -20,3 +20,9 @@ variable "ssh_keys" {
     public_key = string
   }))
 }
+
+variable "alert_email" {
+  description = "Email to surface alerts to"
+  type        = string
+  default     = "dan.gooding2000@gmail.com"
+}
