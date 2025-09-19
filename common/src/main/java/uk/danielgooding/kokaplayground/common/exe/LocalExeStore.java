@@ -1,9 +1,11 @@
 package uk.danielgooding.kokaplayground.common.exe;
 
 
+import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
 import uk.danielgooding.kokaplayground.common.OrError;
 import uk.danielgooding.kokaplayground.common.Workdir;
 
@@ -62,6 +64,11 @@ public class LocalExeStore implements ExeStore {
         Path destination = workdir.freshPath("downloaded");
         Files.copy(Path.of(handle.getPath()), destination);
         return OrError.ok(destination);
+    }
+
+    @PreDestroy
+    public void cleanup() throws IOException {
+        FileSystemUtils.deleteRecursively(directory);
     }
 
 }
