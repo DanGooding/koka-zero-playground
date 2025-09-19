@@ -18,11 +18,11 @@ x-logging-env-vars: &logging-env-vars
 services:
   compile-service:
     volumes:
-      - exe-store:/etc/exe-store
+      - exe-store:/exe-store
     environment:
       <<: *logging-env-vars
       # binds property local-exe-store.directory
-      LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
+      LOCALEXESTORE_DIRECTORY: "/exe-store"
       COMPILE_EXE_CACHE_HOSTNAME: "exe-cache"
       COMPILE_EXE_CACHE_PORT: "6379"
     networks:
@@ -51,10 +51,10 @@ services:
     #    security_opt:
     #      - seccomp:bwrap-seccomp-profi~le.json
     volumes:
-      - exe-store:/etc/exe-store
+      - exe-store:/exe-store
     environment:
       <<: *logging-env-vars
-      LOCALEXESTORE_DIRECTORY: "/etc/exe-store"
+      LOCALEXESTORE_DIRECTORY: "/exe-store"
     networks:
       common:
       monitoring:
