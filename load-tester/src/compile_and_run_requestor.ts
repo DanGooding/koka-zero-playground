@@ -83,6 +83,10 @@ fun main() {
             onComplete(id, { toEventSeconds, outcome });
         }
 
+        ws.onerror = () => {
+            onClose('unknown error');
+        }
+
         ws.onmessage = (e) => {
             const secondsToNow = secondsSince(openTime)
             if (!toEventSeconds.has('first-response')) {

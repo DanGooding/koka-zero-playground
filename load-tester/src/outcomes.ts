@@ -1,4 +1,4 @@
-export type RequestOutcome = 'ok' | 'client error' | 'server error' | 'transport error'
+export type RequestOutcome = 'ok' | 'client error' | 'server error' | 'transport error' | 'unknown error'
 export type RequestEvent = 'opened' | 'closed'
 export type RequestDetails = {
     outcome: RequestOutcome,
