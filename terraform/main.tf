@@ -2,16 +2,6 @@ data "digitalocean_image" "nixos_vm_image" {
   name = var.nixos_vm_image_name
 }
 
-data "digitalocean_ssh_keys" "keys" {
-  filter {
-    key = "name"
-    values = [
-      "NixOS Build Machine",
-      "Ubuntu Inspiron"
-    ]
-  }
-}
-
 resource "digitalocean_ssh_key" "keys" {
   for_each = {
     for key in var.ssh_keys :
