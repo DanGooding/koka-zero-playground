@@ -34,9 +34,9 @@ resource "digitalocean_uptime_check" "koka_zero_playground" {
   regions = ["eu_west"]
 }
 
-resource "digitalocean_uptime_alert" "koka_zero_playground" {
+resource "digitalocean_uptime_alert" "up" {
   check_id   = digitalocean_uptime_check.koka_zero_playground.id
-  name = "koka-zero-playground uptime alert"
+  name = "uptime alert"
   # alert once down for 10 min
   type       = "down"
   period     = "10m"
@@ -46,3 +46,17 @@ resource "digitalocean_uptime_alert" "koka_zero_playground" {
     email = [var.alert_email]
   }
 }
+
+resource "digitalocean_uptime_alert" "ssl_expiry" {
+  check_id   = digitalocean_uptime_check.koka_zero_playground.id
+  name = "ssl expiry alert"
+  # alert once within 20d of expiry
+  type       = "ssl_expiry"
+  period     = "10m"
+  comparison = "less_than"
+  threshold  = 10
+  notifications {
+    email = [var.alert_email]
+  }
+}
+
