@@ -33,8 +33,8 @@ public class ExeCache {
         missCounter = makeOutcomeCounter(meterRegistry, false);
     }
 
-    public Optional<byte[]> getCompiledExe(KokaSourceCode code, boolean optimise) {
-        ExeCacheKey key = ExeCacheKey.forSourceCode(code, optimise, compilerVersionHash);
+    public Optional<byte[]> getCompiledExe(KokaSourceCode code, CompilerArgs compilerArgs) {
+        ExeCacheKey key = ExeCacheKey.forSourceCode(code, compilerArgs, compilerVersionHash);
 
         Optional<byte[]> result = Optional.ofNullable(redisValueOperations.get(key));
 
@@ -43,8 +43,8 @@ public class ExeCache {
         return result;
     }
 
-    public void putCompiledExe(KokaSourceCode code, boolean optimise, byte[] exe) {
-        ExeCacheKey key = ExeCacheKey.forSourceCode(code, optimise, compilerVersionHash);
+    public void putCompiledExe(KokaSourceCode code, CompilerArgs compilerArgs, byte[] exe) {
+        ExeCacheKey key = ExeCacheKey.forSourceCode(code, compilerArgs, compilerVersionHash);
         redisValueOperations.set(key, exe);
     }
 

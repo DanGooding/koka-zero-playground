@@ -20,6 +20,9 @@ public class CompileService {
     private CachedCompilerTool cachedCompilerTool;
 
     @Autowired
+    private CompilerArgs compilerArgs;
+
+    @Autowired
     private ExeStore exeStore;
 
     private static final Logger logger = LoggerFactory.getLogger(CompileService.class);
@@ -28,9 +31,9 @@ public class CompileService {
         return cachedCompilerTool.typecheck(sourceCode);
     }
 
-    public CompletableFuture<OrError<ExeHandle>> compile(KokaSourceCode sourceCode, boolean optimise) {
+    public CompletableFuture<OrError<ExeHandle>> compile(KokaSourceCode sourceCode) {
 
-        return cachedCompilerTool.compile(sourceCode, optimise)
+        return cachedCompilerTool.compile(sourceCode, compilerArgs)
                 .thenCompose(maybeExe -> {
                     switch (maybeExe) {
                         case Failed<?> failed -> {

@@ -15,6 +15,9 @@ public class CompileController {
     @Autowired
     private CompileService compileService;
 
+    @Autowired
+    private CompilerArgs compilerArgs;
+
     @PostMapping(value = "/typecheck")
     public CompletableFuture<OrError<Void>> typecheck(@RequestBody KokaSourceCode sourceCode) {
         return compileService.typecheck(sourceCode);

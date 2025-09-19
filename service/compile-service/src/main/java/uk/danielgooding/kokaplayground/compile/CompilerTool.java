@@ -21,12 +21,6 @@ public class CompilerTool {
     @Value("${compiler.koka-zero-config-path}")
     private Path kokaZeroConfigPath;
 
-    @Value("${compiler.args.optimise}")
-    private boolean shouldOptimise;
-
-    @Value("${compiler.args.enable-run-stats}")
-    private boolean enableRunStats;
-
     @Autowired
     private Workdir.RequestScoped workdir;
 
@@ -47,7 +41,7 @@ public class CompilerTool {
     }
 
     @Timed(value = "compile.tool.compile", percentiles = {0.9, 0.99})
-    public CompletableFuture<OrError<Path>> compile(KokaSourceCode sourceCode) {
+    public CompletableFuture<OrError<Path>> compile(KokaSourceCode sourceCode, CompilerArgs compilerArgs) {
 
 
         Path outputExe;
@@ -65,10 +59,10 @@ public class CompilerTool {
                 "-save-temps-with", "output"
         ));
 
-        if (shouldOptimise) {
+        if (compilerArgs.shouldOptimise()) {
             args.add("-optimise");
         }
-        if (enableRunStats) {
+        if (compilerArgs.enableRunStats()) {
             args.add("-enable-run-stats");
         }
 
