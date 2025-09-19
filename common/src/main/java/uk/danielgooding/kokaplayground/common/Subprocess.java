@@ -19,10 +19,10 @@ public class Subprocess {
 
     private static final Logger logger = LoggerFactory.getLogger(Subprocess.class);
 
-    public record Output(int exitCode, String stdout, String stderr) {
+    public record Output(ExitCode exitCode, String stdout, String stderr) {
 
         public boolean isExitSuccess() {
-            return exitCode == 0;
+            return exitCode.isSuccess();
         }
     }
 
@@ -48,7 +48,7 @@ public class Subprocess {
 
             int exitCode = process.waitFor();
             logger.debug("process exited {} with code {}", command, exitCode);
-            return CompletableFuture.completedFuture(new Output(exitCode, stdout, stderr));
+            return CompletableFuture.completedFuture(new Output(new ExitCode(exitCode), stdout, stderr));
 
         } catch (IOException | InterruptedException e) {
             return CompletableFuture.failedFuture(e);
@@ -125,7 +125,7 @@ public class Subprocess {
                 logger.debug("process {} exited with code {}", command, exitCode);
                 String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
 
-                return OrCancelled.ok(new Output(exitCode, null, stderr));
+                return OrCancelled.ok(new Output(new ExitCode(exitCode), null, stderr));
 
             } catch (InterruptedException | IOException e) {
                 canceler.cancel();

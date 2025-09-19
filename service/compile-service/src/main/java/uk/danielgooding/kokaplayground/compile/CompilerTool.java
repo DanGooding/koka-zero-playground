@@ -25,7 +25,7 @@ public class CompilerTool {
 
     public CompletableFuture<OrError<Void>> runCompiler(List<String> args, String toStdin) {
         return Subprocess.runThenGetStdout(compilerExePath, args, toStdin).thenCompose(output ->
-                switch (output.exitCode()) {
+                switch (output.exitCode().code()) {
                     // success
                     case 0 -> CompletableFuture.completedFuture(OrError.ok(null));
                     // error in user's code
