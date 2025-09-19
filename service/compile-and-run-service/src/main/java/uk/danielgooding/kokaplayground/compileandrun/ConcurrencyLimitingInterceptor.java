@@ -2,7 +2,9 @@ package uk.danielgooding.kokaplayground.compileandrun;
 
 import com.netflix.concurrency.limits.Limiter;
 import com.netflix.concurrency.limits.limit.VegasLimit;
+import com.netflix.concurrency.limits.limiter.AbstractLimiter;
 import com.netflix.concurrency.limits.limiter.SimpleLimiter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -21,13 +23,15 @@ public class ConcurrencyLimitingInterceptor implements HandshakeInterceptor {
 
     private final Limiter<Void> limiter;
 
-    public ConcurrencyLimitingInterceptor() {
-        limiter = SimpleLimiter.newBuilder().limit(
-                VegasLimit.newBuilder()
+    public ConcurrencyLimitingInterceptor(MeterRegistry meterRegistry) {
+        limiter = SimpleLimiter.newBuilder()
+                .limit(VegasLimit.newBuilder()
                         .initialLimit(10)
                         .maxConcurrency(40)
-                        .build()
-        ).build();
+                        .build())
+                .metricRegistry(
+                        new MicrometerMetricRegistry(meterRegistry, "concurrency_limiting_interceptor_"))
+                .build();
     }
 
     @Override
@@ -38,7 +42,6 @@ public class ConcurrencyLimitingInterceptor implements HandshakeInterceptor {
             @NonNull Map<String, Object> attributes
     ) {
         Optional<Limiter.Listener> maybeListener = limiter.acquire(null);
-        // TODO: report the limit as a metric
         if (maybeListener.isEmpty()) {
             response.setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
             return false;
