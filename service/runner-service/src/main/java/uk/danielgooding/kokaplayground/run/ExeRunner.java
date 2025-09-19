@@ -29,7 +29,7 @@ public class ExeRunner implements IExeRunner {
         if (output.isExitSuccess()) {
             return OrError.ok(getOkResult.get());
         } else if (output.stderr().isBlank()) {
-            return OrError.error(String.format("exit %d", output.exitCode()));
+            return OrError.error(output.exitCode().errorMessage());
         } else {
             return OrError.error(output.stderr());
         }
