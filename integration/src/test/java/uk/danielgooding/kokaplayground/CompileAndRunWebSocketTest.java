@@ -75,9 +75,6 @@ public class CompileAndRunWebSocketTest {
     RunnerWebSocketHandler runnerWebSocketHandler;
 
     @Autowired
-    ProxyingRunnerClientWebSocketHandlerFactory runnerClientWebSocketHandlerFactory;
-
-    @Autowired
     CompileAndRunWebSocketHandler compileAndRunWebSocketHandler;
 
     @Autowired
@@ -92,8 +89,7 @@ public class CompileAndRunWebSocketTest {
             RunnerSessionState.StateTag,
             Void>
     createRunnerConnection(ProxyingRunnerClientState proxyingRunnerClientState) {
-        runnerClientWebSocketHandlerFactory.setDownstreamSessionAndState(proxyingRunnerClientState);
-        var runnerClientWebSocketHandler = runnerClientWebSocketHandlerFactory.getObject();
+        var runnerClientWebSocketHandler = new ProxyingRunnerClientWebSocketHandler(proxyingRunnerClientState);
 
         return new TestWebSocketConnection<>(
                 runnerWebSocketHandler,

@@ -32,7 +32,6 @@ public class ProxyingRunnerWebSocketClient {
     public ProxyingRunnerWebSocketClient(
             @Autowired WebSocketClient webSocketClient,
             @Value("${runner-service-hostname}") URI host,
-            @Autowired ProxyingRunnerClientWebSocketHandlerFactory handlerFactory,
             @Autowired Jackson2ObjectMapperBuilder objectMapperBuilder,
             @Autowired ConcurrentWebSocketWriteLimits writeLimits,
             @Autowired MeterRegistry meterRegistry) {
@@ -46,10 +45,9 @@ public class ProxyingRunnerWebSocketClient {
                         Void,
                         Void>
                 > handlerBuilder =
-                (ProxyingRunnerClientState downstreamSessionAndState) -> {
-                    handlerFactory.setDownstreamSessionAndState(downstreamSessionAndState);
-                    return new StatelessTypedWebSocketHandler<>(handlerFactory.getObject());
-                };
+                (ProxyingRunnerClientState downstreamSessionAndState) ->
+                        new StatelessTypedWebSocketHandler<>(
+                                new ProxyingRunnerClientWebSocketHandler(downstreamSessionAndState));
 
         this.client = new TypedWebSocketClient<>(
                 webSocketClient,
