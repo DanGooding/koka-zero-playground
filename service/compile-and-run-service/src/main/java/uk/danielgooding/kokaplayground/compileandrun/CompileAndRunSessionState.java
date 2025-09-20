@@ -15,12 +15,10 @@ import java.util.List;
 public class CompileAndRunSessionState
         implements ISessionState<CompileAndRunSessionState.StateTag> {
     /// upstreamSessionAndState will be populated once the connection is established
-    private @Nullable
-    TypedWebSocketSession<RunStream.Inbound.Message, Void>
-            upstreamSessionAndState = null;
+    private @Nullable TypedWebSocketSession<RunStream.Inbound.Message, Void> upstreamSession = null;
 
-    /// proxied events are buffered until the upstream connection is create
-    private @Nullable boolean bufferedCloseUpstream = false;
+    /// proxied events are buffered until the upstream connection is created
+    private boolean bufferedCloseUpstream = false;
     private final List<RunStream.Inbound.Message> bufferedInbound;
 
     private StateTag state = StateTag.AWAITING_REQUEST;
@@ -44,10 +42,10 @@ public class CompileAndRunSessionState
     }
 
     public void sendUpstream(RunStream.Inbound.Message message) throws IOException {
-        if (upstreamSessionAndState == null) {
+        if (upstreamSession == null) {
             bufferedInbound.add(message);
         } else {
-            upstreamSessionAndState.sendMessage(message);
+            upstreamSession.sendMessage(message);
         }
     }
 
@@ -63,7 +61,7 @@ public class CompileAndRunSessionState
             TypedWebSocketSession<
                     RunStream.Inbound.Message, Void> upstreamSession
     ) throws IOException {
-        this.upstreamSessionAndState = upstreamSession;
+        this.upstreamSession = upstreamSession;
 
         if (bufferedCloseUpstream) {
             // deliver the buffered close
@@ -77,11 +75,10 @@ public class CompileAndRunSessionState
         bufferedInbound.clear();
     }
 
-
     public void closeUpstream() throws IOException {
-        if (upstreamSessionAndState != null) {
+        if (upstreamSession != null) {
             // close unless not yet opened
-            closeUpstreamInternal(upstreamSessionAndState);
+            closeUpstreamInternal(upstreamSession);
         } else {
             bufferedCloseUpstream = true;
         }

@@ -1,19 +1,16 @@
 package uk.danielgooding.kokaplayground.compileandrun;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.web.socket.CloseStatus;
 import uk.danielgooding.kokaplayground.common.OrError;
 import uk.danielgooding.kokaplayground.common.websocket.IStatelessTypedWebSocketHandler;
-import uk.danielgooding.kokaplayground.common.websocket.StatelessTypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.io.IOException;
-import java.util.Optional;
-
 
 public class ProxyingRunnerClientWebSocketHandler
         implements IStatelessTypedWebSocketHandler<
@@ -21,10 +18,10 @@ public class ProxyingRunnerClientWebSocketHandler
         RunStream.Inbound.Message,
         Void> {
 
-    private final ProxyingRunnerClientState downstreamSessionAndState;
-    private static final Log log = LogFactory.getLog(ProxyingRunnerClientWebSocketHandler.class);
+    private final DownstreamSessionAndState downstreamSessionAndState;
+    private static final Logger logger = LoggerFactory.getLogger(ProxyingRunnerClientWebSocketHandler.class);
 
-    public ProxyingRunnerClientWebSocketHandler(ProxyingRunnerClientState state) {
+    public ProxyingRunnerClientWebSocketHandler(DownstreamSessionAndState state) {
         this.downstreamSessionAndState = state;
     }
 
@@ -79,7 +76,11 @@ public class ProxyingRunnerClientWebSocketHandler
     public Void afterConnectionClosedOk(
             TypedWebSocketSession<RunStream.Inbound.Message, Void> session) throws IOException {
 
-        downstreamSessionAndState.getSession().closeOk(null);
+        // This will only trigger a close if we haven't already closed due to a message above.
+        // Such a situation means that upstream closed the connection without sending us everything
+        // we expected, so is an error.
+        downstreamSessionAndState.getSession().closeErrorStatus(
+                "upstream session closed ok but without completing request", CloseStatus.SERVER_ERROR);
         return null;
     }
 

@@ -6,11 +6,11 @@ import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAnd
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 
 /// a type alias for convenience
-public class ProxyingRunnerClientState
+public class DownstreamSessionAndState
         extends TypedWebSocketSessionAndState<
         CompileAndRunStream.Outbound.Message, CompileAndRunSessionState, OrError<UserWorkStats>> {
 
-    public ProxyingRunnerClientState(
+    public DownstreamSessionAndState(
             TypedWebSocketSession<CompileAndRunStream.Outbound.Message, OrError<UserWorkStats>> session,
             CompileAndRunSessionState compileAndRunSessionState) {
         super(session, compileAndRunSessionState);

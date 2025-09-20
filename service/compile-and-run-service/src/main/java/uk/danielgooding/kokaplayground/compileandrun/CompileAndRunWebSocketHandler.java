@@ -90,8 +90,8 @@ public class CompileAndRunWebSocketHandler
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
-                            ProxyingRunnerClientState context =
-                                    new ProxyingRunnerClientState(session, state);
+                            DownstreamSessionAndState context =
+                                    new DownstreamSessionAndState(session, state);
                             logger.info("will request run: {}", session.getId());
                             state.setState(CompileAndRunSessionState.StateTag.CONNECTING_TO_RUNNER);
 

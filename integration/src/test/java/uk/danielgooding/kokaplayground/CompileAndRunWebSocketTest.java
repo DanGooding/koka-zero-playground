@@ -18,7 +18,6 @@ import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import uk.danielgooding.kokaplayground.common.websocket.SessionId;
 import uk.danielgooding.kokaplayground.common.websocket.StatelessTypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
 import uk.danielgooding.kokaplayground.compile.ExeCacheKey;
 import uk.danielgooding.kokaplayground.compileandrun.*;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
@@ -91,8 +90,8 @@ public class CompileAndRunWebSocketTest {
             RunnerSessionState.StateTag,
             Void,
             Void>
-    createRunnerConnection(ProxyingRunnerClientState proxyingRunnerClientState) {
-        var runnerClientWebSocketHandler = new ProxyingRunnerClientWebSocketHandler(proxyingRunnerClientState);
+    createRunnerConnection(DownstreamSessionAndState downstreamSessionAndState) {
+        var runnerClientWebSocketHandler = new ProxyingRunnerClientWebSocketHandler(downstreamSessionAndState);
 
         return new TestWebSocketConnection<>(
                 runnerWebSocketHandler,
@@ -128,9 +127,9 @@ public class CompileAndRunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute(ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    ProxyingRunnerClientState proxyingRunnerClientState = invocation.getArgument(0);
+                    DownstreamSessionAndState downstreamSessionAndState = invocation.getArgument(0);
 
-                    var runnerConnection = createRunnerConnection(proxyingRunnerClientState);
+                    var runnerConnection = createRunnerConnection(downstreamSessionAndState);
                     runnerConnection.establishConnection();
 
                     return CompletableFuture.completedFuture(runnerConnection.getClientSessionAndState().getSession());
@@ -195,9 +194,9 @@ public class CompileAndRunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute(ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    ProxyingRunnerClientState proxyingRunnerClientState = invocation.getArgument(0);
+                    DownstreamSessionAndState downstreamSessionAndState = invocation.getArgument(0);
 
-                    var runnerConnection = createRunnerConnection(proxyingRunnerClientState);
+                    var runnerConnection = createRunnerConnection(downstreamSessionAndState);
                     runnerConnection.establishConnection();
                     breakRunnerConnection.set(() ->
                     {
@@ -271,9 +270,9 @@ public class CompileAndRunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute(ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    ProxyingRunnerClientState proxyingRunnerClientState = invocation.getArgument(0);
+                    DownstreamSessionAndState downstreamSessionAndState = invocation.getArgument(0);
 
-                    var runnerConnection = createRunnerConnection(proxyingRunnerClientState);
+                    var runnerConnection = createRunnerConnection(downstreamSessionAndState);
                     runnerConnection.establishConnection();
 
                     return CompletableFuture.completedFuture(runnerConnection.getClientSessionAndState().getSession());
@@ -331,9 +330,9 @@ public class CompileAndRunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute(ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    ProxyingRunnerClientState proxyingRunnerClientState = invocation.getArgument(0);
+                    DownstreamSessionAndState downstreamSessionAndState = invocation.getArgument(0);
 
-                    var runnerConnection = createRunnerConnection(proxyingRunnerClientState);
+                    var runnerConnection = createRunnerConnection(downstreamSessionAndState);
                     runnerConnection.establishConnection();
 
                     return CompletableFuture.completedFuture(runnerConnection.getClientSessionAndState().getSession());
@@ -392,9 +391,9 @@ public class CompileAndRunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute(ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    ProxyingRunnerClientState proxyingRunnerClientState = invocation.getArgument(0);
+                    DownstreamSessionAndState downstreamSessionAndState = invocation.getArgument(0);
 
-                    var runnerConnection = createRunnerConnection(proxyingRunnerClientState);
+                    var runnerConnection = createRunnerConnection(downstreamSessionAndState);
                     runnerConnection.establishConnection();
 
                     return CompletableFuture.completedFuture(runnerConnection.getClientSessionAndState().getSession());

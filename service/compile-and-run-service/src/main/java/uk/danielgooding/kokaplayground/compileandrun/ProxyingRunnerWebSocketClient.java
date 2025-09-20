@@ -24,7 +24,7 @@ public class ProxyingRunnerWebSocketClient {
             RunStream.Inbound.Message,
             StatelessTypedWebSocketHandler.EmptyState,
             Void,
-            ProxyingRunnerClientState,
+            DownstreamSessionAndState,
             Void> client;
 
     private static final Logger logger = LoggerFactory.getLogger(ProxyingRunnerWebSocketClient.class);
@@ -37,7 +37,7 @@ public class ProxyingRunnerWebSocketClient {
             @Autowired MeterRegistry meterRegistry) {
 
         Function<
-                ProxyingRunnerClientState,
+                DownstreamSessionAndState,
                 TypedWebSocketHandler<
                         RunStream.Outbound.Message,
                         RunStream.Inbound.Message,
@@ -45,7 +45,7 @@ public class ProxyingRunnerWebSocketClient {
                         Void,
                         Void>
                 > handlerBuilder =
-                (ProxyingRunnerClientState downstreamSessionAndState) ->
+                (DownstreamSessionAndState downstreamSessionAndState) ->
                         new StatelessTypedWebSocketHandler<>(
                                 new ProxyingRunnerClientWebSocketHandler(downstreamSessionAndState));
 
@@ -60,7 +60,7 @@ public class ProxyingRunnerWebSocketClient {
     }
 
     public CompletableFuture<TypedWebSocketSession<RunStream.Inbound.Message, Void>>
-    execute(ProxyingRunnerClientState downstreamSessionAndState) {
+    execute(DownstreamSessionAndState downstreamSessionAndState) {
         logger.info("connecting to Runner service {} from downstream {}", uri, downstreamSessionAndState.getSession());
         return client.execute(uri, downstreamSessionAndState);
     }
