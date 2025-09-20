@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -30,13 +31,16 @@ public class Subprocess {
     /// does a blocking write with the contents of `toStdin`
     /// then a blocking read of stdout then stdin
     /// collecting these into Output
-    public static CompletableFuture<Output> runThenGetStdout(Path command, List<String> args, String toStdin) {
+    public static CompletableFuture<Output> runThenGetStdout(
+            Path command, List<String> args, Map<String, String> environment, String toStdin) {
         try {
             List<String> commandAndArgs = new ArrayList<>();
             commandAndArgs.add(command.toString());
             commandAndArgs.addAll(args);
 
             ProcessBuilder processBuilder = new ProcessBuilder(commandAndArgs);
+            processBuilder.environment().putAll(environment);
+
             Process process = processBuilder.start();
             OutputStream stdin = process.getOutputStream();
 
@@ -68,6 +72,7 @@ public class Subprocess {
     public static CancellableFuture<Output> runStreamingStdinAndStdout(
             Path command,
             List<String> args,
+            Map<String, String> environment,
             BlockingQueue<String> stdinBuffer,
             Callback<Void> onStart,
             Callback<String> onStdout,
@@ -79,6 +84,7 @@ public class Subprocess {
         commandAndArgs.addAll(args);
 
         ProcessBuilder processBuilder = new ProcessBuilder(commandAndArgs);
+        processBuilder.environment().putAll(environment);
 
 
         return CancellableFuture.supplyAsync(canceler -> {
@@ -128,6 +134,9 @@ public class Subprocess {
                 return OrCancelled.ok(new Output(new ExitCode(exitCode), null, stderr));
 
             } catch (InterruptedException | IOException e) {
+                // when we cancel and kill the subprocess, we'll get IOException when trying to write to a closed stream
+                if (canceler.isCancelled()) return OrCancelled.cancelled();
+                
                 canceler.cancel();
                 throw new RuntimeException(e);
             } catch (CancelledException e) {

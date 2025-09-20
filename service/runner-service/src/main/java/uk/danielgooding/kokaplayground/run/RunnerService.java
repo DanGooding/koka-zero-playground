@@ -1,5 +1,7 @@
 package uk.danielgooding.kokaplayground.run;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.*;
@@ -9,56 +11,27 @@ import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 public class RunnerService {
+    private static final Logger logger = LoggerFactory.getLogger(RunnerService.class);
+
     private final ExeStore exeStore;
-
-    private final SandboxedExeRunner exeRunner;
-
+    private final RunStatsMonitoringExeRunner exeRunner;
     private final Workdir workdir;
 
     public RunnerService(
-            @Autowired
-            ExeStore exeStore,
-
-            @Autowired
-            SandboxedExeRunner exeRunner,
-
-            @Autowired
-            Workdir.WebsocketServerSessionScoped workdir) {
+            @Autowired ExeStore exeStore,
+            @Autowired SandboxedExeRunner exeRunner,
+            @Autowired Workdir.WebsocketServerSessionScoped workdir) {
         this.exeStore = exeStore;
-        this.exeRunner = exeRunner;
+        this.exeRunner = new RunStatsMonitoringExeRunner(exeRunner, workdir);
         this.workdir = workdir;
     }
 
-    public CompletableFuture<OrError<String>> runWithoutStdin(ExeHandle handle) {
-        try {
-            Path exe;
-            switch (exeStore.getExe(handle, workdir)) {
-                case Failed<?> failed -> {
-                    return CompletableFuture.completedFuture(failed.castValue());
-                }
-                case Ok<Path> okExe -> {
-                    exe = okExe.getValue();
-                }
-            }
-
-            CompletableFuture<OrError<String>> stdout =
-                    exeRunner.runThenGetStdout(exe, List.of(), "");
-
-            exeStore.deleteExe(handle);
-
-            return stdout;
-
-        } catch (IOException e) {
-            return CompletableFuture.failedFuture(e);
-        }
-    }
-
-    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
+    public CancellableFuture<OrError<RunStats>> runStreamingStdinAndStdout(
             ExeHandle handle, BlockingQueue<String> stdinBuffer, Callback<Void> onStart, Callback<String> onStdout) {
         try {
             Path exe;
@@ -72,8 +45,8 @@ public class RunnerService {
             }
 
             return exeRunner
-                    .runStreamingStdinAndStdout(exe, List.of(), stdinBuffer, onStart, onStdout)
-                    .whenComplete((ignored, exn) -> {
+                    .runStreamingStdinAndStdout(exe, List.of(), Map.of(), stdinBuffer, onStart, onStdout)
+                    .whenComplete((maybeRunStats, exn) -> {
                         try {
                             exeStore.deleteExe(handle);
                         } catch (IOException e) {

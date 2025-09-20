@@ -29,14 +29,14 @@ public class CachedCompilerTool {
         return compilerTool.typecheck(sourceCode);
     }
 
-    public CompletableFuture<OrError<byte[]>> compile(KokaSourceCode sourceCode, boolean optimise) {
+    public CompletableFuture<OrError<byte[]>> compile(KokaSourceCode sourceCode, CompilerArgs compilerArgs) {
 
-        Optional<byte[]> compiledExe = exeCache.getCompiledExe(sourceCode, optimise);
+        Optional<byte[]> compiledExe = exeCache.getCompiledExe(sourceCode, compilerArgs);
 
         if (compiledExe.isEmpty()) {
             logger.info("exe not found in cache, compiling");
 
-            CompletableFuture<OrError<Path>> result = compilerTool.compile(sourceCode, optimise);
+            CompletableFuture<OrError<Path>> result = compilerTool.compile(sourceCode, compilerArgs);
 
             return result.thenCompose(
                     (maybeLocalExe) -> {
@@ -48,7 +48,7 @@ public class CachedCompilerTool {
                             case Ok<Path> localExe -> {
                                 try {
                                     byte[] exe = Files.readAllBytes(localExe.getValue());
-                                    exeCache.putCompiledExe(sourceCode, optimise, exe);
+                                    exeCache.putCompiledExe(sourceCode, compilerArgs, exe);
 
                                     return CompletableFuture.completedFuture(OrError.ok(exe));
                                 } catch (IOException e) {

@@ -7,6 +7,7 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /// this manages a websocket session lifecycle
@@ -37,6 +38,10 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
         return this.id;
     }
 
+    public Map<String, Object> getAttributes() {
+        return session.getAttributes();
+    }
+
     public void sendMessage(OutboundMessage messageObject) throws IOException {
         logger.debug("sending {} (session {}", messageObject, session.getId());
         TextMessage reply = new TextMessage(objectMapper.writeValueAsBytes(messageObject));
@@ -57,7 +62,7 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
 
     public void closeExn(String message, Throwable exn) throws IOException {
         closedByThisSide = true;
-        outcomeFuture.completeExceptionally(exn);
+        outcomeFuture.completeExceptionally(new Exception(message, exn));
         session.close(CloseStatus.SERVER_ERROR);
     }
 

@@ -3,6 +3,8 @@ package uk.danielgooding.kokaplayground.run;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
@@ -15,6 +17,7 @@ import uk.danielgooding.kokaplayground.protocol.RunStream;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.Duration;
 import java.util.List;
 
 @Controller
@@ -31,6 +34,9 @@ public class RunnerWebSocketHandler
     private final int maxBufferedStdinItems;
     private final int maxErrorBytes;
     private final Meter.MeterProvider<Timer> timerProvider;
+    private final Timer userWorkTimer;
+
+    private static final Logger logger = LoggerFactory.getLogger(RunnerWebSocketHandler.class);
 
     public RunnerWebSocketHandler(
             @Autowired RunnerService runnerService,
@@ -45,6 +51,9 @@ public class RunnerWebSocketHandler
         timerProvider = Timer.builder("request.session")
                 .publishPercentileHistogram()
                 .withRegistry(meterRegistry);
+        userWorkTimer = Timer.builder("request.session.user_work")
+                .publishPercentileHistogram()
+                .register(meterRegistry);
     }
 
     @Override
@@ -83,7 +92,10 @@ public class RunnerWebSocketHandler
                             try {
                                 session.sendMessage(
                                         switch (error) {
-                                            case Ok<Void> ok -> new RunStream.Outbound.Done();
+                                            case Ok<RunStats> runStatsOk -> {
+                                                RunStats runStats = runStatsOk.getValue();
+                                                yield new RunStream.Outbound.Done(runStats.userWorkDuration());
+                                            }
                                             case Failed<?> failed -> {
                                                 String message = failed.getMessage();
                                                 if (message.length() > maxErrorBytes) {
@@ -103,6 +115,7 @@ public class RunnerWebSocketHandler
                             sessionState.setState(RunnerSessionState.StateTag.COMPLETE);
                             try {
                                 if (exn != null) {
+                                    logger.error("failure in runner service", exn);
                                     session.closeExn("failure in Runner service", exn);
                                 } else {
                                     session.closeOk(null);
@@ -154,18 +167,25 @@ public class RunnerWebSocketHandler
         sessionState.cancelCurrentRun();
     }
 
-    public void stopSessionTimer(RunnerSessionState state, OrCancelled<OrError<Void>> result, Throwable exn) {
+    public void stopSessionTimer(RunnerSessionState state, OrCancelled<OrError<RunStats>> result, Throwable exn) {
         String outcome =
                 exn != null ? "server-error" : switch (result) {
                     case OrCancelled.Cancelled<?> cancelled -> "ok";
-                    case OrCancelled.Ok<OrError<Void>> orError -> switch (orError.getResult()) {
-                        case Ok<Void> ignored -> "ok";
+                    case OrCancelled.Ok<OrError<RunStats>> orError -> switch (orError.getResult()) {
+                        case Ok<RunStats> ignored -> "ok";
                         case Failed<?> clientError -> "client-error";
                     };
                 };
 
         Timer timer = timerProvider.withTags("outcome", outcome);
         state.getSessionSample().stop(timer);
+
+        if (exn == null && result instanceof OrCancelled.Ok<OrError<RunStats>> notCancelled) {
+            if (notCancelled.getResult() instanceof Ok<RunStats> runStatsOk) {
+                RunStats runStats = runStatsOk.getValue();
+                userWorkTimer.record(runStats.userWorkDuration());
+            }
+        }
     }
 
     @Override

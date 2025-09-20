@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -24,7 +25,7 @@ public class CompilerTool {
     private Workdir.RequestScoped workdir;
 
     public CompletableFuture<OrError<Void>> runCompiler(List<String> args, String toStdin) {
-        return Subprocess.runThenGetStdout(compilerExePath, args, toStdin).thenCompose(output ->
+        return Subprocess.runThenGetStdout(compilerExePath, args, Map.of(), toStdin).thenCompose(output ->
                 switch (output.exitCode().code()) {
                     // success
                     case 0 -> CompletableFuture.completedFuture(OrError.ok(null));
@@ -40,7 +41,7 @@ public class CompilerTool {
     }
 
     @Timed(value = "compile.tool.compile", percentiles = {0.9, 0.99})
-    public CompletableFuture<OrError<Path>> compile(KokaSourceCode sourceCode, boolean optimise) {
+    public CompletableFuture<OrError<Path>> compile(KokaSourceCode sourceCode, CompilerArgs compilerArgs) {
 
 
         Path outputExe;
@@ -58,8 +59,11 @@ public class CompilerTool {
                 "-save-temps-with", "output"
         ));
 
-        if (optimise) {
+        if (compilerArgs.shouldOptimise()) {
             args.add("-optimise");
+        }
+        if (compilerArgs.enableRunStats()) {
+            args.add("-enable-run-stats");
         }
 
         return runCompiler(args, sourceCode.getCode())

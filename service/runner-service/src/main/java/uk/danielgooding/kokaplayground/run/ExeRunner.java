@@ -1,5 +1,7 @@
 package uk.danielgooding.kokaplayground.run;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -10,6 +12,7 @@ import uk.danielgooding.kokaplayground.common.Subprocess;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -17,6 +20,8 @@ import java.util.function.Supplier;
 
 @Service
 public class ExeRunner implements IExeRunner {
+    private static final Logger logger = LoggerFactory.getLogger(ExeRunner.class);
+
     @Autowired
     @Qualifier("stdin-writer")
     Executor stdinWriterExecutor;
@@ -27,6 +32,9 @@ public class ExeRunner implements IExeRunner {
 
     private <T> OrError<T> resultForOutput(Subprocess.Output output, Supplier<T> getOkResult) {
         if (output.isExitSuccess()) {
+            if (!output.stderr().isBlank()) {
+                logger.warn("exe exited ok but with stderr: '{}'", output.stderr());
+            }
             return OrError.ok(getOkResult.get());
         } else if (output.stderr().isBlank()) {
             return OrError.error(output.exitCode().errorMessage());
@@ -35,19 +43,22 @@ public class ExeRunner implements IExeRunner {
         }
     }
 
-    public CompletableFuture<OrError<String>> runThenGetStdout(Path exe, List<String> args, String stdin) {
-        return Subprocess.runThenGetStdout(exe, args, stdin).thenApply(output -> resultForOutput(output, output::stdout));
+    public CompletableFuture<OrError<String>> runThenGetStdout(
+            Path exe, List<String> args, Map<String, String> environment, String stdin) {
+        return Subprocess.runThenGetStdout(exe, args, environment, stdin)
+                .thenApply(output -> resultForOutput(output, output::stdout));
     }
 
     public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
             Path exe,
             List<String> args,
+            Map<String, String> environment,
             BlockingQueue<String> stdinBuffer,
             Callback<Void> onStart,
             Callback<String> onStdout) {
 
         return Subprocess.runStreamingStdinAndStdout(
-                        exe, args, stdinBuffer, onStart, onStdout, stdoutReaderExecutor, stdinWriterExecutor)
+                        exe, args, environment, stdinBuffer, onStart, onStdout, stdoutReaderExecutor, stdinWriterExecutor)
                 .thenApply(output -> resultForOutput(output, () -> null));
     }
 }

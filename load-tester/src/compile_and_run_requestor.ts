@@ -66,6 +66,8 @@ fun main() {
 
         const {code, stdin} = this.requestPayload()
 
+        // TODO: currently error are not counted as an outcome (e.g. 400 from initial request)
+
         ws.onopen = () => {
             toEventSeconds.set('opened', secondsSince(openTime))
             onStateChange(id, 'opened')

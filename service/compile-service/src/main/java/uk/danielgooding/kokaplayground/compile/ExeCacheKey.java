@@ -21,16 +21,20 @@ public class ExeCacheKey {
     /// Was this compiled with optimisations enabled
     private final boolean optimised;
 
+    private final boolean runStatsEnabled;
+
     public ExeCacheKey(
             @JsonProperty("sourceCodeHash") byte[] sourceCodeHash,
             @JsonProperty("optimised") boolean optimised,
+            @JsonProperty("runStatsEnabled") boolean runStatsEnabled,
             @JsonProperty("compilerHash") String compilerHash) {
         this.sourceCodeHash = sourceCodeHash;
         this.optimised = optimised;
+        this.runStatsEnabled = runStatsEnabled;
         this.compilerHash = compilerHash;
     }
 
-    public static ExeCacheKey forSourceCode(KokaSourceCode code, boolean optimised, String compilerHash) {
+    public static ExeCacheKey forSourceCode(KokaSourceCode code, CompilerArgs compilerArgs, String compilerHash) {
         MessageDigest md;
         try {
             md = MessageDigest.getInstance(digestAlgorithm);
@@ -41,7 +45,7 @@ public class ExeCacheKey {
         }
         md.update(code.getCode().getBytes(StandardCharsets.UTF_8));
         byte[] hash = md.digest();
-        return new ExeCacheKey(hash, optimised, compilerHash);
+        return new ExeCacheKey(hash, compilerArgs.shouldOptimise(), compilerArgs.enableRunStats(), compilerHash);
     }
 
     @JsonGetter("sourceCodeHash")
@@ -52,6 +56,11 @@ public class ExeCacheKey {
     @JsonGetter("optimised")
     public boolean isOptimised() {
         return optimised;
+    }
+
+    @JsonGetter("runStatsEnabled")
+    public boolean areRunStatsEnabled() {
+        return runStatsEnabled;
     }
 
     @JsonGetter("compilerHash")

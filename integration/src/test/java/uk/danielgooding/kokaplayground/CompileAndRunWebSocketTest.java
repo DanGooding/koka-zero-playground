@@ -1,6 +1,5 @@
 package uk.danielgooding.kokaplayground;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.runner.RunWith;
@@ -19,11 +18,11 @@ import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 import uk.danielgooding.kokaplayground.common.websocket.SessionId;
 import uk.danielgooding.kokaplayground.common.websocket.StatelessTypedWebSocketHandler;
 import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSession;
-import uk.danielgooding.kokaplayground.common.websocket.TypedWebSocketSessionAndState;
 import uk.danielgooding.kokaplayground.compile.ExeCacheKey;
 import uk.danielgooding.kokaplayground.compileandrun.*;
 import uk.danielgooding.kokaplayground.protocol.CompileAndRunStream;
 import uk.danielgooding.kokaplayground.protocol.RunStream;
+import uk.danielgooding.kokaplayground.run.RunStats;
 import uk.danielgooding.kokaplayground.run.RunnerService;
 import uk.danielgooding.kokaplayground.run.RunnerSessionState;
 import uk.danielgooding.kokaplayground.run.RunnerWebSocketHandler;
@@ -44,6 +43,8 @@ import static org.junit.Assert.assertThrows;
         "compiler.exe-path=UNUSED",
         "compiler.koka-zero-config-path=UNUSED",
         "compiler.version-hash=UNUSED",
+        "compiler.args.optimise=true",
+        "compiler.args.enable-run-stats=true",
         "runner.bubblewrap-path=UNUSED",
         "runner-service-hostname=UNUSED",
         "runner.max-buffered-stdin-items=10",
@@ -87,9 +88,10 @@ public class CompileAndRunWebSocketTest {
             Void,
             RunnerSessionState,
             RunnerSessionState.StateTag,
+            Void,
             Void>
-    createRunnerConnection(ProxyingRunnerClientState proxyingRunnerClientState) {
-        var runnerClientWebSocketHandler = new ProxyingRunnerClientWebSocketHandler(proxyingRunnerClientState);
+    createRunnerConnection(DownstreamSessionAndState downstreamSessionAndState) {
+        var runnerClientWebSocketHandler = new ProxyingRunnerClientWebSocketHandler(downstreamSessionAndState);
 
         return new TestWebSocketConnection<>(
                 runnerWebSocketHandler,
@@ -106,7 +108,8 @@ public class CompileAndRunWebSocketTest {
             Void,
             CompileAndRunSessionState,
             CompileAndRunSessionState.StateTag,
-            OrError<String>>
+            OrError<String>,
+            OrError<UserWorkStats>>
     createCompileAndRunConnection() {
         return new TestWebSocketConnection<>(
                 compileAndRunWebSocketHandler,
@@ -124,9 +127,9 @@ public class CompileAndRunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute(ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    ProxyingRunnerClientState proxyingRunnerClientState = invocation.getArgument(0);
+                    DownstreamSessionAndState downstreamSessionAndState = invocation.getArgument(0);
 
-                    var runnerConnection = createRunnerConnection(proxyingRunnerClientState);
+                    var runnerConnection = createRunnerConnection(downstreamSessionAndState);
                     runnerConnection.establishConnection();
 
                     return CompletableFuture.completedFuture(runnerConnection.getClientSessionAndState().getSession());
@@ -160,7 +163,7 @@ public class CompileAndRunWebSocketTest {
                             throw new RuntimeException(e);
                         }
 
-                        return OrCancelled.ok(OrError.ok(null));
+                        return OrCancelled.ok(OrError.ok(new RunStats(100, 10, 200)));
                     }, ForkJoinPool.commonPool());
                 });
 
@@ -191,9 +194,9 @@ public class CompileAndRunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute(ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    ProxyingRunnerClientState proxyingRunnerClientState = invocation.getArgument(0);
+                    DownstreamSessionAndState downstreamSessionAndState = invocation.getArgument(0);
 
-                    var runnerConnection = createRunnerConnection(proxyingRunnerClientState);
+                    var runnerConnection = createRunnerConnection(downstreamSessionAndState);
                     runnerConnection.establishConnection();
                     breakRunnerConnection.set(() ->
                     {
@@ -267,9 +270,9 @@ public class CompileAndRunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute(ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    ProxyingRunnerClientState proxyingRunnerClientState = invocation.getArgument(0);
+                    DownstreamSessionAndState downstreamSessionAndState = invocation.getArgument(0);
 
-                    var runnerConnection = createRunnerConnection(proxyingRunnerClientState);
+                    var runnerConnection = createRunnerConnection(downstreamSessionAndState);
                     runnerConnection.establishConnection();
 
                     return CompletableFuture.completedFuture(runnerConnection.getClientSessionAndState().getSession());
@@ -327,9 +330,9 @@ public class CompileAndRunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute(ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    ProxyingRunnerClientState proxyingRunnerClientState = invocation.getArgument(0);
+                    DownstreamSessionAndState downstreamSessionAndState = invocation.getArgument(0);
 
-                    var runnerConnection = createRunnerConnection(proxyingRunnerClientState);
+                    var runnerConnection = createRunnerConnection(downstreamSessionAndState);
                     runnerConnection.establishConnection();
 
                     return CompletableFuture.completedFuture(runnerConnection.getClientSessionAndState().getSession());
@@ -388,9 +391,9 @@ public class CompileAndRunWebSocketTest {
 
         Mockito.when(runnerWebSocketClientMock.execute(ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
-                    ProxyingRunnerClientState proxyingRunnerClientState = invocation.getArgument(0);
+                    DownstreamSessionAndState downstreamSessionAndState = invocation.getArgument(0);
 
-                    var runnerConnection = createRunnerConnection(proxyingRunnerClientState);
+                    var runnerConnection = createRunnerConnection(downstreamSessionAndState);
                     runnerConnection.establishConnection();
 
                     return CompletableFuture.completedFuture(runnerConnection.getClientSessionAndState().getSession());
