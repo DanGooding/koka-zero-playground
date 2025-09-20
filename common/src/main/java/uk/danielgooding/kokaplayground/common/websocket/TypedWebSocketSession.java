@@ -62,7 +62,7 @@ public class TypedWebSocketSession<OutboundMessage, Outcome> {
 
     public void closeExn(String message, Throwable exn) throws IOException {
         closedByThisSide = true;
-        outcomeFuture.completeExceptionally(exn);
+        outcomeFuture.completeExceptionally(new Exception(message, exn));
         session.close(CloseStatus.SERVER_ERROR);
     }
 
