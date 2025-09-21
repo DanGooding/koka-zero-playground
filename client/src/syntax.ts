@@ -8,12 +8,13 @@ export const kokaGrammar: Grammar = {
         greedy: true
     },
     number: /-?\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b/i,
+    // repurpose 'boolean' for any constructor
     boolean: {
-        pattern: /(:?[^a-z0-9_-])(?:False|True)(?=[^a-z0-9_-]|$)/,
+        pattern: /(:?[^a-z0-9_-])(?:False|True|Nil|Cons)(?=[^a-z0-9_-]|$)/,
         lookbehind: true,
     },
     keyword: {
-        pattern:/(:?[^a-z0-9_-]|^)(fun|fn|with|effect|control|ctl|handler|handle|if|then|else|elif|val)(?=[^a-z0-9_-]|$)/,
+        pattern:/(:?[^a-z0-9_-]|^)(fun|fn|with|effect|control|ctl|handler|handle|if|then|else|elif|val|match)(?=[^a-z0-9_-]|$)/,
         lookbehind: true,
     },
     builtin: {
@@ -31,7 +32,7 @@ export const kokaGrammar: Grammar = {
         lookbehind: true,
     },
     operator: /[+*/=!%-]|(==|!=|<=|>=|<|>|&&|\|\|)/,
-    punctuation: /[(){},;:]/,
+    punctuation: /[(){}[\],;:]/,
 }
 
 // rules for when to add closing brackets / indent within {}
