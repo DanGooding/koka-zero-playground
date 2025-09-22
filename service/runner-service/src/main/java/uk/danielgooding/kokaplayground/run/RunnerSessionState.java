@@ -12,7 +12,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 public class RunnerSessionState implements ISessionState<RunnerSessionState.StateTag> {
-    private @Nullable CancellableFuture<OrError<Void>> running;
+    private @Nullable CancellableFuture<?> running;
     private final BlockingQueue<String> stdinBuffer;
     private final Timer.Sample sessionSample;
     private StateTag state = StateTag.AWAITING_RUN;
@@ -35,7 +35,7 @@ public class RunnerSessionState implements ISessionState<RunnerSessionState.Stat
         return running != null && running.isDone();
     }
 
-    public void setRunning(CancellableFuture<OrError<Void>> running) {
+    public void setRunning(CancellableFuture<?> running) {
         this.running = running;
     }
 

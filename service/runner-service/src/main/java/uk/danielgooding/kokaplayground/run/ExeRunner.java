@@ -3,10 +3,7 @@ package uk.danielgooding.kokaplayground.run;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import uk.danielgooding.kokaplayground.common.Callback;
-import uk.danielgooding.kokaplayground.common.CancellableFuture;
-import uk.danielgooding.kokaplayground.common.OrError;
-import uk.danielgooding.kokaplayground.common.Subprocess;
+import uk.danielgooding.kokaplayground.common.*;
 
 import java.nio.file.Path;
 import java.time.Duration;
@@ -44,7 +41,7 @@ public class ExeRunner implements IExeRunner {
         return Subprocess.runThenGetStdout(exe, args, stdin).thenApply(output -> resultForOutput(output, output::stdout));
     }
 
-    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
+    public CancellableFuture<OrInterrupted<OrError<Void>>> runStreamingStdinAndStdout(
             Path exe,
             List<String> args,
             BlockingQueue<String> stdinBuffer,
@@ -55,6 +52,6 @@ public class ExeRunner implements IExeRunner {
         return Subprocess.runStreamingStdinAndStdout(
                         exe, args, stdinBuffer, onStart, onStdout, realTimeLimit,
                         runTimeLimiterExecutor, stdoutReaderExecutor, stdinWriterExecutor)
-                .thenApply(output -> resultForOutput(output, () -> null));
+                .thenApply(result -> result.map(output -> resultForOutput(output, () -> null)));
     }
 }

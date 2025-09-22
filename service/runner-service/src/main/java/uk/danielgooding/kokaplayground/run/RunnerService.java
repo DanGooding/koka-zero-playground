@@ -42,20 +42,20 @@ public class RunnerService {
         this.realTimeLimit = Duration.ofSeconds(realTimeLimitSeconds);
     }
 
-    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
+    public CancellableFuture<OrInterrupted<OrError<Void>>> runStreamingStdinAndStdout(
             ExeHandle handle, BlockingQueue<String> stdinBuffer, Callback<Void> onStart, Callback<String> onStdout) {
         try {
             Path exe;
             switch (exeStore.getExe(handle, workdir)) {
                 case Failed<?> failed -> {
-                    return CancellableFuture.completedFuture(failed.castValue());
+                    return CancellableFuture.completedFuture(OrInterrupted.ok(failed.castValue()));
                 }
                 case Ok<Path> okExe -> {
                     exe = okExe.getValue();
                 }
             }
 
-            CancellableFuture<OrError<Void>> runOutcome =
+            CancellableFuture<OrInterrupted<OrError<Void>>> runOutcome =
                     exeRunner.runStreamingStdinAndStdout(exe, List.of(), stdinBuffer, onStart, onStdout, realTimeLimit);
 
             return runOutcome.whenComplete((ignored, exn) -> {

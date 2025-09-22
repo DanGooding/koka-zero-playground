@@ -79,20 +79,26 @@ public class RunnerWebSocketHandler
                                 sessionState.getStdinBuffer(),
                                 onStart,
                                 onStdout)
-                        .thenApply(error -> {
+                        .thenApply(result -> {
                             try {
                                 session.sendMessage(
-                                        switch (error) {
-                                            case Ok<Void> ok -> new RunStream.Outbound.Done();
-                                            case Failed<?> failed -> {
-                                                String message = failed.getMessage();
-                                                if (message.length() > maxErrorBytes) {
-                                                    message = message.substring(0, maxErrorBytes) + "...";
-                                                }
-                                                yield new RunStream.Outbound.Error(message);
-                                            }
+                                        switch (result) {
+                                            case OrInterrupted.Interrupted<?> interrupted ->
+                                                    new RunStream.Outbound.Interrupted("runtime limit exceeded");
+
+                                            case OrInterrupted.Ok<OrError<Void>> resultNotInterrupted ->
+                                                    switch (resultNotInterrupted.getResult()) {
+                                                        case Ok<Void> ok -> new RunStream.Outbound.Done();
+                                                        case Failed<?> failed -> {
+                                                            String message = failed.getMessage();
+                                                            if (message.length() > maxErrorBytes) {
+                                                                message = message.substring(0, maxErrorBytes) + "...";
+                                                            }
+                                                            yield new RunStream.Outbound.Error(message);
+                                                        }
+                                                    };
                                         });
-                                return error;
+                                return result;
                             } catch (IOException e) {
                                 // next block will handle
                                 throw new UncheckedIOException(e);
@@ -101,6 +107,7 @@ public class RunnerWebSocketHandler
                         .whenComplete((result, exn) -> {
                             stopSessionTimer(sessionState, result, exn);
                             sessionState.setState(RunnerSessionState.StateTag.COMPLETE);
+
                             try {
                                 if (exn != null) {
                                     session.closeExn("failure in Runner service", exn);
@@ -154,14 +161,22 @@ public class RunnerWebSocketHandler
         sessionState.cancelCurrentRun();
     }
 
-    public void stopSessionTimer(RunnerSessionState state, OrCancelled<OrError<Void>> result, Throwable exn) {
+    public void stopSessionTimer(
+            RunnerSessionState state,
+            OrCancelled<OrInterrupted<OrError<Void>>> result,
+            Throwable exn) {
         String outcome =
                 exn != null ? "server-error" : switch (result) {
                     case OrCancelled.Cancelled<?> cancelled -> "ok";
-                    case OrCancelled.Ok<OrError<Void>> orError -> switch (orError.getResult()) {
-                        case Ok<Void> ignored -> "ok";
-                        case Failed<?> clientError -> "client-error";
-                    };
+                    case OrCancelled.Ok<OrInterrupted<OrError<Void>>> orInterrupted ->
+                            switch (orInterrupted.getResult()) {
+                                case OrInterrupted.Interrupted<?> interrupted -> "client-error";
+                                case OrInterrupted.Ok<OrError<Void>> orError -> switch (orError.getResult()) {
+                                    case Ok<Void> ignored -> "ok";
+                                    case Failed<?> clientError -> "client-error";
+                                };
+                            };
+
                 };
 
         Timer timer = timerProvider.withTags("outcome", outcome);

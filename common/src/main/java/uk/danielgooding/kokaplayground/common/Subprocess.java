@@ -22,6 +22,10 @@ public class Subprocess {
 
     public record Output(boolean interrupted, ExitCode exitCode, String stdout, String stderr) {
 
+        public boolean isInterrupted() {
+            return interrupted;
+        }
+
         public boolean isExitSuccess() {
             return !interrupted && exitCode.isSuccess();
         }
@@ -68,7 +72,7 @@ public class Subprocess {
     /// This spawns two java threads alongside the subprocess - one to read its stdout,
     /// and one to write stdin to it. To avoid deadlocks in limited-pool executors, callers
     /// can provide two separate executors for these jobs to be run in.
-    public static CancellableFuture<Output> runStreamingStdinAndStdout(
+    public static CancellableFuture<OrInterrupted<Output>> runStreamingStdinAndStdout(
             Path command,
             List<String> args,
             BlockingQueue<String> stdinBuffer,
@@ -117,7 +121,6 @@ public class Subprocess {
                     }
                 }, stdinWriterExecutor);
 
-                // TODO: cancellation?
                 CompletableFuture.runAsync(() -> {
                     try {
                         InputStream stdout = process.getInputStream();
@@ -136,17 +139,21 @@ public class Subprocess {
                 }, stdoutReaderExecutor);
 
                 boolean completedInTimeLimit = process.waitFor(realTimeLimit.toMillis(), TimeUnit.MILLISECONDS);
-                int exitCode = process.exitValue();
+
 
                 if (completedInTimeLimit) {
+                    int exitCode = process.exitValue();
                     logger.debug("process {} exited with code {}", command, exitCode);
-                } else {
-                    logger.debug("process {} timed out", command);
-                }
-                String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
 
-                Output output = new Output(!completedInTimeLimit, new ExitCode(exitCode), null, stderr);
-                return OrCancelled.ok(output);
+                    String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+                    Output output = new Output(false, new ExitCode(exitCode), null, stderr);
+
+                    return OrCancelled.ok(OrInterrupted.ok(output));
+                } else {
+                    logger.debug("process {} timed out (limit {})", command, realTimeLimit);
+
+                    return OrCancelled.ok(OrInterrupted.interrupted());
+                }
 
             } catch (InterruptedException | IOException e) {
                 canceler.cancel();
