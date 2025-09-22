@@ -40,4 +40,14 @@ public class RunnerServiceConfig {
                 "runner.stdout-reader-executor",
                 environment);
     }
+
+    @Bean(name = "run-time-limiter")
+    public Executor runTimeLimiterExecutor(MeterRegistry meterRegistry, Environment environment) {
+        return MonitoredThreadPoolExecutor.create(
+                meterRegistry,
+                "runTimeLimiter",
+                "run-time-limiter-",
+                "runner.run-time-limiter-executor",
+                environment);
+    }
 }

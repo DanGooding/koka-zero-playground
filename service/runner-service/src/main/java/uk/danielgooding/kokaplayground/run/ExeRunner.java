@@ -9,6 +9,7 @@ import uk.danielgooding.kokaplayground.common.OrError;
 import uk.danielgooding.kokaplayground.common.Subprocess;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -24,6 +25,10 @@ public class ExeRunner implements IExeRunner {
     @Autowired
     @Qualifier("stdout-reader")
     Executor stdoutReaderExecutor;
+
+    @Autowired
+    @Qualifier("run-time-limiter")
+    Executor runTimeLimiterExecutor;
 
     private <T> OrError<T> resultForOutput(Subprocess.Output output, Supplier<T> getOkResult) {
         if (output.isExitSuccess()) {
@@ -44,10 +49,12 @@ public class ExeRunner implements IExeRunner {
             List<String> args,
             BlockingQueue<String> stdinBuffer,
             Callback<Void> onStart,
-            Callback<String> onStdout) {
+            Callback<String> onStdout,
+            Duration realTimeLimit) {
 
         return Subprocess.runStreamingStdinAndStdout(
-                        exe, args, stdinBuffer, onStart, onStdout, stdoutReaderExecutor, stdinWriterExecutor)
+                        exe, args, stdinBuffer, onStart, onStdout, realTimeLimit,
+                        runTimeLimiterExecutor, stdoutReaderExecutor, stdinWriterExecutor)
                 .thenApply(output -> resultForOutput(output, () -> null));
     }
 }

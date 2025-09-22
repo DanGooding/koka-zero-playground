@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -19,10 +20,10 @@ public class Subprocess {
 
     private static final Logger logger = LoggerFactory.getLogger(Subprocess.class);
 
-    public record Output(ExitCode exitCode, String stdout, String stderr) {
+    public record Output(boolean interrupted, ExitCode exitCode, String stdout, String stderr) {
 
         public boolean isExitSuccess() {
-            return exitCode.isSuccess();
+            return !interrupted && exitCode.isSuccess();
         }
     }
 
@@ -48,7 +49,9 @@ public class Subprocess {
 
             int exitCode = process.waitFor();
             logger.debug("process exited {} with code {}", command, exitCode);
-            return CompletableFuture.completedFuture(new Output(new ExitCode(exitCode), stdout, stderr));
+
+            Output output = new Output(false, new ExitCode(exitCode), stdout, stderr);
+            return CompletableFuture.completedFuture(output);
 
         } catch (IOException | InterruptedException e) {
             return CompletableFuture.failedFuture(e);
@@ -71,6 +74,8 @@ public class Subprocess {
             BlockingQueue<String> stdinBuffer,
             Callback<Void> onStart,
             Callback<String> onStdout,
+            Duration realTimeLimit,
+            Executor runTimeLimiterExecutor,
             Executor stdoutReaderExecutor,
             Executor stdinWriterExecutor) {
 
@@ -112,20 +117,36 @@ public class Subprocess {
                     }
                 }, stdinWriterExecutor);
 
-                InputStream stdout = process.getInputStream();
+                // TODO: cancellation?
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        InputStream stdout = process.getInputStream();
 
-                byte[] buf = new byte[1024];
-                int numRead;
-                while ((numRead = stdout.read(buf)) > 0) {
-                    onStdout.call(new String(buf, 0, numRead, StandardCharsets.UTF_8));
+                        byte[] buf = new byte[1024];
+                        int numRead;
+                        while ((numRead = stdout.read(buf)) > 0) {
+                            onStdout.call(new String(buf, 0, numRead, StandardCharsets.UTF_8));
+                        }
+                        // exits normally on EOF
+
+                    } catch (IOException e) {
+                        canceler.cancel();
+                    }
+
+                }, stdoutReaderExecutor);
+
+                boolean completedInTimeLimit = process.waitFor(realTimeLimit.toMillis(), TimeUnit.MILLISECONDS);
+                int exitCode = process.exitValue();
+
+                if (completedInTimeLimit) {
+                    logger.debug("process {} exited with code {}", command, exitCode);
+                } else {
+                    logger.debug("process {} timed out", command);
                 }
-
-                int exitCode = process.waitFor();
-
-                logger.debug("process {} exited with code {}", command, exitCode);
                 String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
 
-                return OrCancelled.ok(new Output(new ExitCode(exitCode), null, stderr));
+                Output output = new Output(!completedInTimeLimit, new ExitCode(exitCode), null, stderr);
+                return OrCancelled.ok(output);
 
             } catch (InterruptedException | IOException e) {
                 canceler.cancel();
@@ -133,7 +154,7 @@ public class Subprocess {
             } catch (CancelledException e) {
                 return OrCancelled.cancelled();
             }
-        }, stdoutReaderExecutor);
+        }, runTimeLimiterExecutor);
 
     }
 
