@@ -34,30 +34,6 @@ public class RunnerService {
         this.workdir = workdir;
     }
 
-    public CompletableFuture<OrError<String>> runWithoutStdin(ExeHandle handle) {
-        try {
-            Path exe;
-            switch (exeStore.getExe(handle, workdir)) {
-                case Failed<?> failed -> {
-                    return CompletableFuture.completedFuture(failed.castValue());
-                }
-                case Ok<Path> okExe -> {
-                    exe = okExe.getValue();
-                }
-            }
-
-            CompletableFuture<OrError<String>> stdout =
-                    exeRunner.runThenGetStdout(exe, List.of(), "");
-
-            exeStore.deleteExe(handle);
-
-            return stdout;
-
-        } catch (IOException e) {
-            return CompletableFuture.failedFuture(e);
-        }
-    }
-
     public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
             ExeHandle handle, BlockingQueue<String> stdinBuffer, Callback<Void> onStart, Callback<String> onStdout) {
         try {
