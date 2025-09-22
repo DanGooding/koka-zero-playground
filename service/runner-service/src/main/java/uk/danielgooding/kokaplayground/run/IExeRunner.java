@@ -5,6 +5,7 @@ import uk.danielgooding.kokaplayground.common.CancellableFuture;
 import uk.danielgooding.kokaplayground.common.OrError;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
@@ -19,5 +20,6 @@ public interface IExeRunner {
             List<String> args,
             BlockingQueue<String> stdinBuffer,
             Callback<Void> onStart,
-            Callback<String> onStdout);
+            Callback<String> onStdout,
+            Duration realTimeLimit);
 }

@@ -8,6 +8,7 @@ import uk.danielgooding.kokaplayground.common.CancellableFuture;
 import uk.danielgooding.kokaplayground.common.OrError;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -52,8 +53,15 @@ public class SandboxedExeRunner implements IExeRunner {
     }
 
     @Override
-    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(Path exe, List<String> exeArgs, BlockingQueue<String> stdinBuffer, Callback<Void> onStart, Callback<String> onStdout) {
+    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
+            Path exe,
+            List<String> exeArgs,
+            BlockingQueue<String> stdinBuffer,
+            Callback<Void> onStart,
+            Callback<String> onStdout,
+            Duration realTimeLimit) {
         List<String> args = addBubblewrapArgs(exe, exeArgs);
-        return exeRunner.runStreamingStdinAndStdout(bubblewrapPath, args, stdinBuffer, onStart, onStdout);
+        return exeRunner.runStreamingStdinAndStdout(
+                bubblewrapPath, args, stdinBuffer, onStart, onStdout, realTimeLimit);
     }
 }

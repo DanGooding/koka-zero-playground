@@ -1,6 +1,7 @@
 package uk.danielgooding.kokaplayground.run;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.*;
 import uk.danielgooding.kokaplayground.common.exe.ExeHandle;
@@ -8,6 +9,7 @@ import uk.danielgooding.kokaplayground.common.exe.ExeStore;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -20,6 +22,8 @@ public class RunnerService {
 
     private final Workdir workdir;
 
+    private final Duration realTimeLimit;
+
     public RunnerService(
             @Autowired
             ExeStore exeStore,
@@ -28,10 +32,14 @@ public class RunnerService {
             SandboxedExeRunner exeRunner,
 
             @Autowired
-            Workdir.WebsocketServerSessionScoped workdir) {
+            Workdir.WebsocketServerSessionScoped workdir,
+
+            @Value("${runner.real-time-limit-seconds}")
+            int realTimeLimitSeconds) {
         this.exeStore = exeStore;
         this.exeRunner = exeRunner;
         this.workdir = workdir;
+        this.realTimeLimit = Duration.ofSeconds(realTimeLimitSeconds);
     }
 
     public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
@@ -47,15 +55,16 @@ public class RunnerService {
                 }
             }
 
-            return exeRunner
-                    .runStreamingStdinAndStdout(exe, List.of(), stdinBuffer, onStart, onStdout)
-                    .whenComplete((ignored, exn) -> {
-                        try {
-                            exeStore.deleteExe(handle);
-                        } catch (IOException e) {
-                            // best effort deletion - we can have some pruning
-                        }
-                    });
+            CancellableFuture<OrError<Void>> runOutcome =
+                    exeRunner.runStreamingStdinAndStdout(exe, List.of(), stdinBuffer, onStart, onStdout, realTimeLimit);
+
+            return runOutcome.whenComplete((ignored, exn) -> {
+                try {
+                    exeStore.deleteExe(handle);
+                } catch (IOException e) {
+                    // best effort deletion - we can have some pruning
+                }
+            });
 
         } catch (IOException e) {
             return CancellableFuture.failedFuture(e);
