@@ -3,6 +3,7 @@ package uk.danielgooding.kokaplayground.run;
 import uk.danielgooding.kokaplayground.common.Callback;
 import uk.danielgooding.kokaplayground.common.CancellableFuture;
 import uk.danielgooding.kokaplayground.common.OrError;
+import uk.danielgooding.kokaplayground.common.OrInterrupted;
 
 import java.nio.file.Path;
 import java.time.Duration;
@@ -15,7 +16,7 @@ public interface IExeRunner {
 
     CompletableFuture<OrError<String>> runThenGetStdout(Path exe, List<String> args, String stdin);
 
-    CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
+    CancellableFuture<OrInterrupted<OrError<Void>>> runStreamingStdinAndStdout(
             Path exe,
             List<String> args,
             BlockingQueue<String> stdinBuffer,

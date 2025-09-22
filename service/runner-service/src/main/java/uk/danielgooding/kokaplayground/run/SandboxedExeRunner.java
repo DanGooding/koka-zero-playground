@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import uk.danielgooding.kokaplayground.common.Callback;
 import uk.danielgooding.kokaplayground.common.CancellableFuture;
 import uk.danielgooding.kokaplayground.common.OrError;
+import uk.danielgooding.kokaplayground.common.OrInterrupted;
 
 import java.nio.file.Path;
 import java.time.Duration;
@@ -53,7 +54,7 @@ public class SandboxedExeRunner implements IExeRunner {
     }
 
     @Override
-    public CancellableFuture<OrError<Void>> runStreamingStdinAndStdout(
+    public CancellableFuture<OrInterrupted<OrError<Void>>> runStreamingStdinAndStdout(
             Path exe,
             List<String> exeArgs,
             BlockingQueue<String> stdinBuffer,
