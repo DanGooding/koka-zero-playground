@@ -10,7 +10,7 @@ export const kokaGrammar: Grammar = {
     number: /-?\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b/i,
     // repurpose 'boolean' for any constructor
     boolean: {
-        pattern: /(:?[^a-z0-9_-])(?:False|True|Nil|Cons)(?=[^a-z0-9_-]|$)/,
+        pattern: /(:?[^a-z0-9_-])(?:False|True|Nil|Cons|None|Some)(?=[^a-z0-9_-]|$)/,
         lookbehind: true,
     },
     keyword: {
@@ -23,7 +23,7 @@ export const kokaGrammar: Grammar = {
     },
     // types
     "class-name": {
-        pattern: /(:?:\s*|^)(int|bool)(?=[^a-zA-Z0-9_-]|$)/,
+        pattern: /(:?:\s*|^)(int|bool|list|option)(?=[^a-zA-Z0-9_-]|$)/,
         lookbehind: true,
     },
     identifier: {
