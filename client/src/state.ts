@@ -1,5 +1,5 @@
 export type RunStatus = "idle" | "connecting" | "requestedRun" | "compiling" | "startingRun" | "running"
-export type CodeExample = "fibonacciGenerator" | "pythagoreanSearch" | "blank"
+export type CodeExample = "fibonacciGenerator" | "pythagoreanSearch" | "coroutines" | "blank"
 
 export type State = {
     codeExampleState: {
